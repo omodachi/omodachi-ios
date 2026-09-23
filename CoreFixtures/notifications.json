@@ -1,0 +1,30 @@
+{
+  "notifications": [
+    {
+      "id": "1789608484220-52",
+      "app": "omarchy-action",
+      "summary": "Theme set",
+      "body": "gruvbox",
+      "glyph": "",
+      "urgency": "normal",
+      "timestamp": 1789608484220,
+      "has_action": false,
+      "active": false
+    },
+    {
+      "id": "1789711988810-1",
+      "app": "Omodachi",
+      "summary": "“QA companion” wants to connect",
+      "body": "Open Omodachi to approve or reject it.",
+      "glyph": "",
+      "urgency": "critical",
+      "timestamp": 1789711988810,
+      "has_action": true,
+      "active": true
+    }
+  ],
+  "cursor": "1789711988810-1",
+  "limit": 100,
+  "history_limit": 500,
+  "contract_revision": "omodachi.v1"
+}

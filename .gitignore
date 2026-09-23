@@ -1,0 +1,11 @@
+.build/
+packages/*/.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+._*
+/Omodachi.xcodeproj/project.xcworkspace/xcuserdata/
+
+# The check script is imported by nothing but itself; its bytecode is noise.
+scripts/__pycache__/

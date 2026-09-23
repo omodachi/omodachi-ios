@@ -1,0 +1,157 @@
+name: Omodachi
+options:
+  bundleIdPrefix: com.omodachi
+  # ARCH-1 §6. The source language is Simplified Chinese: the boards are drawn
+  # in it and it is what `Localizable.xcstrings` stores as each key's default
+  # value. English is a translation in the same catalog.
+  developmentLanguage: zh-Hans
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  RemoteInputCore:
+    path: packages/RemoteInputCore
+  OpenSSL:
+    url: https://github.com/krzyzanowskim/OpenSSL-Package.git
+    exactVersion: 3.3.2000
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm.git
+    exactVersion: 1.20.0
+  Citadel:
+    url: https://github.com/orlandos-nl/Citadel.git
+    exactVersion: 0.12.0
+targets:
+  Omodachi:
+    type: application
+    platform: iOS
+    sources:
+      - path: Omodachi
+        excludes: ["**/*.md"]
+      - path: Vendor/Moonlight/Crypto
+        excludes: [IdManager.m, IdManager.h]
+      - Vendor/Moonlight/Utility
+      - Vendor/Moonlight/Network
+      - Vendor/Moonlight/Stream
+    dependencies:
+      - package: RemoteInputCore
+      - framework: Vendor/LibVNCClient.xcframework
+        embed: false
+      - target: MoonlightCore
+      - package: OpenSSL
+      - sdk: AVFoundation.framework
+      - sdk: CoreImage.framework
+      - sdk: Network.framework
+      - sdk: VideoToolbox.framework
+      - sdk: AudioToolbox.framework
+      - sdk: CoreBluetooth.framework
+      - sdk: CoreHaptics.framework
+      - sdk: CoreMotion.framework
+      - sdk: GameController.framework
+      - sdk: Metal.framework
+      - sdk: OpenGLES.framework
+      - sdk: libxml2.tbd
+      - sdk: libz.tbd
+      - package: Citadel
+      - package: SwiftTerm
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omodachi.ios
+        SWIFT_VERSION: 6.0
+        # Resources/Brand.xcassets holds the two vendor marks (AGENT-2) and
+        # nothing else. The app has no icon set of its own yet, and actool
+        # fails a catalog it is told to find an "AppIcon" in.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
+        # The build stamp. scripts/build.sh overrides both on the xcodebuild
+        # command line with the git short sha and yyyymmddHHMM; Info.plist
+        # expands them into OmodachiBuildCommit and CFBundleVersion, so a build
+        # made outside the script still carries a well-formed pair.
+        OMODACHI_BUILD_COMMIT: unknown
+        OMODACHI_BUILD_TIME: "000000000000"
+        INFOPLIST_FILE: Omodachi/Info.plist
+        SWIFT_EMIT_LOC_STRINGS: YES
+        DEVELOPMENT_TEAM: ""
+        "CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"
+        "CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]": YES
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_OBJC_BRIDGING_HEADER: Omodachi/Remote/Omodachi-Bridging-Header.h
+        GCC_PREFIX_HEADER: Vendor/Moonlight/Moonlight-Prefix.pch
+        GCC_PRECOMPILE_PREFIX_HEADER: YES
+        CLANG_ENABLE_MODULES: YES
+        CLANG_ENABLE_OBJC_ARC: YES
+        GCC_C_LANGUAGE_STANDARD: gnu11
+        HEADER_SEARCH_PATHS:
+          - '$(TOOLCHAIN_DIR)/usr/include'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/Crypto'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/Utility'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/Network'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/Stream'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/Stream/Omodachi'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/common/src'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/common/enet/include'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/common/reedsolomon'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/SDL2/include'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/opus/include/opus'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/FFmpeg/include'
+          - '$(SDKROOT)/usr/include/libxml2'
+        'LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]':
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/SDL2/lib/iOS-Sim'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/opus/lib/iOS-Sim'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/FFmpeg/lib/iOS-Sim'
+        'LIBRARY_SEARCH_PATHS[sdk=iphoneos*]':
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/SDL2/lib/iOS'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/opus/lib/iOS'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/libs/FFmpeg/lib/iOS'
+        OTHER_LDFLAGS: ['$(inherited)', '-lSDL2', '-lopus', '-lavcodec', '-lavformat', '-lavutil']
+        TARGETED_DEVICE_FAMILY: "1,2"
+    scheme:
+      testTargets: [OmodachiTests, OmodachiUITests]
+  OmodachiTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: OmodachiTests
+      - path: CoreFixtures
+        type: folder
+        buildPhase: resources
+    dependencies: [{target: Omodachi}]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omodachi.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
+        SWIFT_OBJC_BRIDGING_HEADER: OmodachiTests/OmodachiTests-Bridging-Header.h
+
+  OmodachiUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [OmodachiUITests]
+    dependencies: [{target: Omodachi}]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omodachi.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
+        TEST_TARGET_NAME: Omodachi
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) $(OMODACHI_OPERATOR_SWIFT_CONDITION)"
+
+  MoonlightCore:
+    type: library.static
+    platform: iOS
+    sources:
+      - Vendor/Moonlight/common/src
+      - Vendor/Moonlight/common/reedsolomon
+      - path: Vendor/Moonlight/common/enet
+        includes: ['*.c']
+    dependencies:
+      - package: OpenSSL
+    settings:
+      base:
+        PRODUCT_NAME: OmodachiMoonlightCore
+        HEADER_SEARCH_PATHS:
+          - '$(TOOLCHAIN_DIR)/usr/include'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/common/src'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/common/reedsolomon'
+          - '$(PROJECT_DIR)/Vendor/Moonlight/common/enet/include'
+        GCC_C_LANGUAGE_STANDARD: gnu11
+        GCC_PREPROCESSOR_DEFINITIONS: ['$(inherited)', '__APPLE_USE_RFC_3542']
+        SKIP_INSTALL: YES

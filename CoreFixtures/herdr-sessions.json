@@ -1,0 +1,46 @@
+{
+  "selected": "omodachi",
+  "owned": "omodachi",
+  "sessions": [
+    {
+      "name": "omodachi",
+      "running": true,
+      "owned": true,
+      "herdr_default": false,
+      "readable": true,
+      "workspaces": 1,
+      "tabs": 1,
+      "panes": 2,
+      "agents": 1,
+      "protocol": 20,
+      "version": "0.8.2"
+    },
+    {
+      "name": "default",
+      "running": true,
+      "owned": false,
+      "herdr_default": true,
+      "readable": true,
+      "workspaces": 1,
+      "tabs": 1,
+      "panes": 2,
+      "agents": 1,
+      "protocol": 20,
+      "version": "0.8.2"
+    },
+    {
+      "name": "herdr2-probe",
+      "running": false,
+      "owned": false,
+      "herdr_default": false,
+      "readable": false,
+      "workspaces": null,
+      "tabs": null,
+      "panes": null,
+      "agents": null,
+      "protocol": null,
+      "version": null
+    }
+  ],
+  "contract_revision": "omodachi.v1"
+}

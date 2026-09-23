@@ -1,0 +1,10 @@
+{
+  "backend": "vnc",
+  "transport": "wss",
+  "path": "/v1/remote/sessions/rs_00000000000000000000000000000000/vnc",
+  "output_id": "OMODACHI-0123456789abcdef",
+  "framebuffer_pixels": {
+    "width": 1280,
+    "height": 894
+  }
+}

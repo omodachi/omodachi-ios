@@ -1,0 +1,24 @@
+{
+  "agent_id": "default",
+  "requests": [
+    {
+      "request_id": "8",
+      "kind": "commandExecution",
+      "summary": "rm -rf build",
+      "details": {
+        "item_id": "item-fixture-02",
+        "turn_id": "turn-fixture-01",
+        "command": "rm -rf build",
+        "cwd": "/home/fixture/workspace",
+        "command_kind": "command"
+      },
+      "decisions": [
+        "accept",
+        "acceptForSession",
+        "decline",
+        "cancel"
+      ]
+    }
+  ],
+  "contract_revision": "omodachi.v1"
+}

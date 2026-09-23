@@ -1,0 +1,20 @@
+{
+  "models": [
+    {
+      "id": "gpt-6-astra",
+      "model": "gpt-6-astra",
+      "display_name": "GPT-6-Astra",
+      "description": "Our most capable model for complex, demanding work.",
+      "hidden": false,
+      "is_default": true,
+      "default_effort": "medium",
+      "efforts": [
+        "low",
+        "medium",
+        "high"
+      ]
+    }
+  ],
+  "default": "gpt-6-astra",
+  "contract_revision": "omodachi.v1"
+}

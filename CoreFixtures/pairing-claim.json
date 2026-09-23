@@ -1,0 +1,20 @@
+{
+  "contract_revision": "omodachi.v1",
+  "request_id": "pair_00000000000000000000000000000000",
+  "device_id": "device-fixture-redacted",
+  "device_name": "Fixture iPad",
+  "status": "claimed",
+  "expires_at": 1789430700,
+  "credential": "fixture-redacted-device-credential",
+  "issued_at": 1789430400,
+  "credential_expires_at": 1792022400,
+  "host_id": "00000000000000000000000000000000",
+  "host_name": "omarchy-fixture",
+  "tls_fingerprint_sha256": "abababababababababababababababababababababababababababababababab",
+  "endpoints": [
+    {
+      "host": "192.168.1.10",
+      "port": 8099
+    }
+  ]
+}

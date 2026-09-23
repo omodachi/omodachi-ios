@@ -1,0 +1,40 @@
+{
+  "source": "shell.json",
+  "source_status": "fixture",
+  "position": "top",
+  "left": [
+    {
+      "id": "omarchy.menu",
+      "role": "logo"
+    },
+    {
+      "id": "omarchy.workspaces",
+      "role": "workspaces"
+    },
+    {
+      "id": "omarchy.active-window",
+      "role": "focused_window"
+    }
+  ],
+  "center": [
+    {
+      "id": "omarchy.clock",
+      "role": "clock"
+    }
+  ],
+  "right": [
+    {
+      "id": "omarchy.tray",
+      "role": "system_tray"
+    },
+    {
+      "id": "omarchy.agents",
+      "role": "agent"
+    },
+    {
+      "id": "omodachi.stream",
+      "role": "stream"
+    }
+  ],
+  "revision": "bb63213e1105eb0d"
+}

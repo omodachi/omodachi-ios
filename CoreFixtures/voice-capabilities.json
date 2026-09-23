@@ -1,0 +1,51 @@
+{
+  "voice_uplink_enabled": true,
+  "uplink": {
+    "supported": true,
+    "available": true,
+    "active": false,
+    "transport": "websocket",
+    "endpoint": "/v1/voice/uplink",
+    "source_name": "omodachi_mic",
+    "format": "s16le",
+    "rate": 48000,
+    "channels": 1,
+    "frame_samples": 960,
+    "frame_bytes": 1920,
+    "max_queued_frames": 3,
+    "reason": null
+  },
+  "dictation": {
+    "available": true,
+    "active": false,
+    "targets": [
+      "client",
+      "host",
+      "both"
+    ],
+    "route": "default_source",
+    "reason": null
+  },
+  "levels": {
+    "available": true,
+    "hz": 20
+  },
+  "voxtype": {
+    "installed": true,
+    "supported": true,
+    "wait_supported": true,
+    "service_active": true,
+    "state": "idle",
+    "device": "default",
+    "source_name": "omodachi_mic",
+    "devices": [
+      "default",
+      "pipewire"
+    ],
+    "names_sources": false,
+    "levels": true,
+    "install_command": null,
+    "reason": null
+  },
+  "contract_revision": "omodachi.v1"
+}

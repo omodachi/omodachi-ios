@@ -1,0 +1,47 @@
+{
+  "agent_id": "default",
+  "usage": {
+    "tokens": {
+      "last": {
+        "inputTokens": 1200,
+        "cachedInputTokens": 900,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 240,
+        "reasoningOutputTokens": 120,
+        "totalTokens": 1440
+      },
+      "total": {
+        "inputTokens": 24000,
+        "cachedInputTokens": 18000,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 3100,
+        "reasoningOutputTokens": 1400,
+        "totalTokens": 27100
+      },
+      "modelContextWindow": 400000
+    },
+    "rate_limits": {
+      "primary": {
+        "usedPercent": 12,
+        "resetsAt": 1789700000,
+        "windowDurationMins": 300
+      },
+      "secondary": {
+        "usedPercent": 41,
+        "resetsAt": 1790200000,
+        "windowDurationMins": 10080
+      },
+      "planType": "pro"
+    },
+    "model": "gpt-6-astra",
+    "effort": "high"
+  },
+  "status": {
+    "type": "active",
+    "activeFlags": [
+      "waitingOnApproval"
+    ],
+    "waiting": "approval"
+  },
+  "contract_revision": "omodachi.v1"
+}

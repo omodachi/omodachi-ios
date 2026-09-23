@@ -1,0 +1,15 @@
+{
+  "seq": 2,
+  "event_id": "resync_00000002",
+  "type": "resync.required",
+  "device_id": "device-fixture-redacted",
+  "payload": {
+    "since": 0,
+    "cursor": 2,
+    "reason": "history_gap",
+    "snapshot_required": true,
+    "instance_id": "daemon-instance-fixture"
+  },
+  "ts": 1789430400.0,
+  "contract_revision": "omodachi.v1.2026-09-16.1"
+}

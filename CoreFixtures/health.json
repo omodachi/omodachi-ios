@@ -1,0 +1,7 @@
+{
+  "contract_revision": "omodachi.v1",
+  "service": "omodachid",
+  "sunshine_required": false,
+  "host_id": "00000000000000000000000000000000",
+  "tls_fingerprint_sha256": "abababababababababababababababababababababababababababababababab"
+}

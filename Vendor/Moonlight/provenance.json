@@ -1,0 +1,9 @@
+{
+  "repository": "moonlight-stream/moonlight-ios",
+  "version": "9.0.2",
+  "commit": "85af0f75622bb2636481afda8b0fc5cc33d5956e",
+  "isolated_facade_commit": "183b01a949f2e4c6a198b989bc3ce49ff9c7e137",
+  "common_c_commit": "48d7f1ace168d07dad339718f1350979545f15d2",
+  "enet_commit": "0032f5e750bda820fb90b25f99af65fc07ca978a",
+  "integration": "Selected source, pinned bundled iOS archives, local patches recorded in PATCHES.md. No upstream app target or CoreData host store."
+}

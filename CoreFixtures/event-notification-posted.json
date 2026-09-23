@@ -1,0 +1,19 @@
+{
+  "seq": 3,
+  "event_id": "evt_00000003",
+  "type": "notification.posted",
+  "device_id": null,
+  "payload": {
+    "id": "1789711988810-1",
+    "app": "Omodachi",
+    "summary": "“QA companion” wants to connect",
+    "body": "Open Omodachi to approve or reject it.",
+    "glyph": "",
+    "urgency": "critical",
+    "timestamp": 1789711988810,
+    "has_action": true,
+    "active": true
+  },
+  "ts": 1789430400.0,
+  "contract_revision": "omodachi.v1"
+}

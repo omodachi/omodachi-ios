@@ -1,0 +1,175 @@
+{
+  "name": "fixture-slate",
+  "mode": "dark",
+  "colors": {
+    "accent": "#5a7fb0",
+    "selection": "#333a48",
+    "muted": "#4a5160",
+    "background": "#202530",
+    "dark_background": "#181c24",
+    "darker_background": "#101319",
+    "lighter_background": "#2c3240",
+    "foreground": "#d0d6e0",
+    "bright_foreground": "#e8edf5",
+    "light_foreground": "#a8b0bd",
+    "dark_foreground": "#606877",
+    "red": "#b05a60",
+    "yellow": "#c0a460",
+    "orange": "#c08050",
+    "green": "#7fa070",
+    "cyan": "#60a0a8",
+    "blue": "#5a7fb0",
+    "magenta": "#9a70b0",
+    "brown": "#6a5040",
+    "bright_red": "#c06a70",
+    "bright_yellow": "#d0b470",
+    "bright_green": "#8fb080",
+    "bright_cyan": "#70b0b8",
+    "bright_blue": "#6a8fc0",
+    "bright_magenta": "#aa80c0"
+  },
+  "shell": {
+    "bar": {
+      "background-alpha": 1.0,
+      "scale-with-font": true,
+      "size-horizontal": 26,
+      "size-vertical": 28,
+      "background": "#202530",
+      "text": "#d0d6e0",
+      "active": "#b05a60"
+    },
+    "controls": {
+      "normal-fill-alpha": 0.04,
+      "normal-border-width": 1,
+      "normal-border-alpha": 0.4,
+      "hover-cursor-fill-alpha": 0.08,
+      "hover-cursor-border-width": 1,
+      "hover-cursor-border-alpha": 0.25,
+      "focus-fill-alpha": 0.08,
+      "focus-border-width": 1,
+      "focus-border-alpha": 0.25,
+      "selected-fill-alpha": 0.18,
+      "selected-border-width": 0,
+      "selected-border-alpha": 1.0,
+      "pressed-fill-alpha": 0.22,
+      "selection-fill-alpha": 0.35,
+      "normal-color": "#d0d6e0",
+      "normal-border": "#d0d6e0",
+      "hover-cursor-color": "#d0d6e0"
+    },
+    "font": {
+      "base-size": 12,
+      "caption": 10,
+      "body-small": 11,
+      "body": 12,
+      "subtitle": 13,
+      "title": 14,
+      "heading": 16,
+      "display": 24,
+      "display-large": 28,
+      "icon-small": 11,
+      "icon": 14,
+      "icon-large": 18
+    },
+    "hyprland": {
+      "active-border": "#5a7fb0",
+      "active-border-foreground": "#d0d6e0"
+    },
+    "image-picker": {
+      "scrim-alpha": 0.5,
+      "selected-border-alpha": 1.0,
+      "unselected-border-alpha": 0.28
+    },
+    "launcher": {
+      "background-alpha": 0.95,
+      "border": "#d0d6e0",
+      "border-alpha": 1.0,
+      "scrim-alpha": 0.5,
+      "selected-background-alpha": 0.08,
+      "selected-border": "#d0d6e0",
+      "selected-border-alpha": 0.25
+    },
+    "lock": {
+      "background-alpha": 0.8,
+      "border": "#5a7fb0",
+      "border-active": "#5a7fb0",
+      "border-alpha": 1.0,
+      "selection-alpha": 0.45
+    },
+    "menu": {
+      "background-alpha": 1.0,
+      "border": "#d0d6e0",
+      "border-alpha": 1.0,
+      "scrim-alpha": 0.5,
+      "selected-background-alpha": 0.08,
+      "selected-border": "#d0d6e0",
+      "selected-border-alpha": 0.25,
+      "background": "#202530",
+      "text": "#d0d6e0",
+      "scrim": "#202530",
+      "selected-background": "#d0d6e0",
+      "selected-text": "#5a7fb0"
+    },
+    "notifications": {
+      "background-alpha": 1.0,
+      "border": "#5a7fb0",
+      "border-alpha": 1.0,
+      "border-width": 2
+    },
+    "polkit": {
+      "background-alpha": 1.0,
+      "border": "#5a7fb0",
+      "border-alpha": 1.0,
+      "scrim-alpha": 0.5
+    },
+    "popups": {
+      "background-alpha": 1.0,
+      "border": "#5a7fb0",
+      "border-alpha": 1.0,
+      "border-width": 2,
+      "background": "#202530",
+      "text": "#d0d6e0"
+    },
+    "spacing": {
+      "scale": 1.0,
+      "scale-with-font": true,
+      "xxs": 2,
+      "xs": 3,
+      "sm": 4,
+      "md": 6,
+      "lg": 8,
+      "xl": 10,
+      "xxl": 12,
+      "xxxl": 14,
+      "huge": 18,
+      "control-gap": 8,
+      "control-padding-x": 10,
+      "control-padding-y": 6,
+      "input-padding-y": 7,
+      "control-height": 28,
+      "popup-row-height": 28,
+      "row-gap": 8,
+      "row-padding-x": 12,
+      "label-gap": 4,
+      "panel-gap": 14,
+      "panel-padding": 18,
+      "popup-padding": 14,
+      "dropdown-width": 240,
+      "searchable-dropdown-width": 260,
+      "number-field-width": 120,
+      "searchable-popup-min-height": 220
+    },
+    "tooltip": {
+      "background-alpha": 0.97,
+      "border": "#d0d6e0",
+      "border-alpha": 1.0
+    }
+  },
+  "background": {
+    "sha256": "acb5a69e1be02010cd9239266ca004cf71b87b11a35dd98710035a70961fedc3",
+    "bytes": 74,
+    "content_type": "image/png"
+  },
+  "revision": 1,
+  "contract_revision": "omodachi.v1"
+}

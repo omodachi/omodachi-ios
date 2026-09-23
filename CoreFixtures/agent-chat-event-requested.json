@@ -1,0 +1,28 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-01"
+  },
+  "sequence": 1,
+  "event": {
+    "type": "agent.approval.requested",
+    "request_id": "7",
+    "kind": "commandExecution",
+    "summary": "ls -la",
+    "details": {
+      "item_id": "item-fixture-01",
+      "turn_id": "turn-fixture-01",
+      "command": "ls -la",
+      "cwd": "/home/fixture/workspace",
+      "command_kind": "command"
+    },
+    "decisions": [
+      "accept",
+      "acceptForSession",
+      "decline",
+      "cancel"
+    ]
+  }
+}

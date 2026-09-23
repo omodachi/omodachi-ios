@@ -1,0 +1,2005 @@
+{
+  "seq": 8,
+  "event_id": "evt_00000008",
+  "type": "catalog.changed",
+  "device_id": null,
+  "payload": {
+    "catalog": {
+      "contract_revision": "omodachi.v1.2026-09-16.1",
+      "revision": "008a589a5e4ed049",
+      "source_revision": "b403c630eb4a0709",
+      "entries": [
+        {
+          "label": "Go",
+          "parent": "",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "root",
+          "kind": "menu",
+          "parent_id": "",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 0,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "root",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Apps",
+          "provider": "fixture.apps",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "apps",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "provider_state": {
+            "status": "available",
+            "row_count": 1
+          },
+          "order": 1,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "apps",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Learn",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "learn",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 2,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "learn",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Trigger",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "trigger",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 3,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "trigger",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Style",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "style",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 4,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "style",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Setup",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "setup",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 5,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "setup",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Install",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "install",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 6,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "install",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Remove",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "remove",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 7,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "remove",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Update",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "update",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 8,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "update",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "About",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "about",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 9,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "about",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "System",
+          "parent": "root",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "system",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 10,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "system",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Toggle",
+          "parent": "trigger",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "trigger.toggle",
+          "kind": "menu",
+          "parent_id": "trigger",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 11,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "trigger.toggle",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Notifications",
+          "aliases": [
+            "quiet"
+          ],
+          "action": "fixture-toggle-notifications",
+          "checked": "fixture.notifications",
+          "parent": "trigger.toggle",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "id": "trigger.toggle.notifications",
+          "kind": "action",
+          "parent_id": "trigger.toggle",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": false
+            }
+          },
+          "visible": true,
+          "checked_state": false,
+          "order": 12,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "fixture-toggle-notifications"
+            ],
+            "entry_id": "trigger.toggle.notifications",
+            "ready": true
+          }
+        },
+        {
+          "label": "Install demonstration",
+          "action": "omarchy-launch-terminal 'printf install-demo'",
+          "parent": "install",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "install.demo",
+          "kind": "action",
+          "parent_id": "install",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 13,
+          "route": {
+            "route": "terminal",
+            "supported": true,
+            "argv": [
+              "printf",
+              "install-demo"
+            ],
+            "entry_id": "install.demo",
+            "ready": true
+          }
+        },
+        {
+          "label": "Update demonstration",
+          "action": "omarchy-launch-terminal 'printf update-demo'",
+          "parent": "update",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "update.demo",
+          "kind": "action",
+          "parent_id": "update",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 14,
+          "route": {
+            "route": "terminal",
+            "supported": true,
+            "argv": [
+              "printf",
+              "update-demo"
+            ],
+            "entry_id": "update.demo",
+            "ready": true
+          }
+        },
+        {
+          "label": "About demonstration",
+          "action": "omarchy-launch-terminal 'printf about-demo'",
+          "parent": "about",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "about.demo",
+          "kind": "action",
+          "parent_id": "about",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 15,
+          "route": {
+            "route": "terminal",
+            "supported": true,
+            "argv": [
+              "printf",
+              "about-demo"
+            ],
+            "entry_id": "about.demo",
+            "ready": true
+          }
+        },
+        {
+          "label": "Terminal demonstration",
+          "action": "omarchy-launch-terminal 'printf demo'",
+          "parent": "learn",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "learn.demo",
+          "kind": "action",
+          "parent_id": "learn",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 16,
+          "route": {
+            "route": "terminal",
+            "supported": true,
+            "argv": [
+              "printf",
+              "demo"
+            ],
+            "entry_id": "learn.demo",
+            "ready": true
+          }
+        },
+        {
+          "label": "Omodachi",
+          "icon": "",
+          "parent": "root",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi",
+          "kind": "menu",
+          "parent_id": "root",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 17,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "omodachi",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Remote screen",
+          "surface": "desktop",
+          "parent": "omodachi",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi.desktop",
+          "kind": "menu",
+          "parent_id": "omodachi",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 18,
+          "route": {
+            "route": "desktop",
+            "supported": true,
+            "entry_id": "omodachi.desktop",
+            "ready": false,
+            "readiness_reason": "capability_unavailable"
+          }
+        },
+        {
+          "label": "Agent",
+          "surface": "terminal",
+          "parent": "omodachi",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi.agent",
+          "kind": "menu",
+          "parent_id": "omodachi",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 19,
+          "route": {
+            "route": "terminal",
+            "supported": true,
+            "argv": [
+              "herdr",
+              "agent",
+              "attach",
+              "default"
+            ],
+            "entry_id": "omodachi.agent",
+            "ready": true
+          }
+        },
+        {
+          "label": "Herdr",
+          "surface": "terminal",
+          "parent": "omodachi",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi.herdr",
+          "kind": "menu",
+          "parent_id": "omodachi",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 20,
+          "route": {
+            "route": "terminal",
+            "supported": true,
+            "argv": [
+              "herdr",
+              "session",
+              "attach",
+              "session-fixture-01"
+            ],
+            "entry_id": "omodachi.herdr",
+            "ready": true
+          }
+        },
+        {
+          "label": "Configuration plan",
+          "surface": "native:config-plan",
+          "parent": "omodachi",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi.config",
+          "kind": "menu",
+          "parent_id": "omodachi",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 21,
+          "route": {
+            "route": "native",
+            "supported": true,
+            "native_view": "config-plan",
+            "entry_id": "omodachi.config",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspaces",
+          "aliases": [
+            "workspace",
+            "ws"
+          ],
+          "parent": "omodachi",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace",
+          "kind": "menu",
+          "parent_id": "omodachi",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 22,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "omodachi.workspace",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Switch workspace",
+          "parent": "omodachi.workspace",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select",
+          "kind": "menu",
+          "parent_id": "omodachi.workspace",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 23,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "omodachi.workspace.select",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Move focused window",
+          "parent": "omodachi.workspace",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "action": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.move",
+          "kind": "menu",
+          "parent_id": "omodachi.workspace",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 24,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "omodachi.workspace.move",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        },
+        {
+          "label": "Workspace 1",
+          "aliases": [
+            "1",
+            "workspace 1",
+            "ws 1"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 1",
+          "workspace": {
+            "id": 1,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.1",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 25,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "1"
+            ],
+            "entry_id": "omodachi.workspace.select.1",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 1",
+          "aliases": [
+            "move to 1",
+            "move workspace 1"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 1",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 1,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.1",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 26,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "1"
+            ],
+            "entry_id": "omodachi.workspace.move.1",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 2",
+          "aliases": [
+            "2",
+            "workspace 2",
+            "ws 2"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 2",
+          "workspace": {
+            "id": 2,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.2",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 27,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "2"
+            ],
+            "entry_id": "omodachi.workspace.select.2",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 2",
+          "aliases": [
+            "move to 2",
+            "move workspace 2"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 2",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 2,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.2",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 28,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "2"
+            ],
+            "entry_id": "omodachi.workspace.move.2",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 3",
+          "aliases": [
+            "3",
+            "workspace 3",
+            "ws 3"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 3",
+          "workspace": {
+            "id": 3,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.3",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 29,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "3"
+            ],
+            "entry_id": "omodachi.workspace.select.3",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 3",
+          "aliases": [
+            "move to 3",
+            "move workspace 3"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 3",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 3,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.3",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 30,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "3"
+            ],
+            "entry_id": "omodachi.workspace.move.3",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 4",
+          "aliases": [
+            "4",
+            "workspace 4",
+            "ws 4"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 4",
+          "workspace": {
+            "id": 4,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.4",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 31,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "4"
+            ],
+            "entry_id": "omodachi.workspace.select.4",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 4",
+          "aliases": [
+            "move to 4",
+            "move workspace 4"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 4",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 4,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.4",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 32,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "4"
+            ],
+            "entry_id": "omodachi.workspace.move.4",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 5",
+          "aliases": [
+            "5",
+            "workspace 5",
+            "ws 5"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 5",
+          "workspace": {
+            "id": 5,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.5",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 33,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "5"
+            ],
+            "entry_id": "omodachi.workspace.select.5",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 5",
+          "aliases": [
+            "move to 5",
+            "move workspace 5"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 5",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 5,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.5",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 34,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "5"
+            ],
+            "entry_id": "omodachi.workspace.move.5",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 6",
+          "aliases": [
+            "6",
+            "workspace 6",
+            "ws 6"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 6",
+          "workspace": {
+            "id": 6,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.6",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 35,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "6"
+            ],
+            "entry_id": "omodachi.workspace.select.6",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 6",
+          "aliases": [
+            "move to 6",
+            "move workspace 6"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 6",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 6,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.6",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 36,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "6"
+            ],
+            "entry_id": "omodachi.workspace.move.6",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 7",
+          "aliases": [
+            "7",
+            "workspace 7",
+            "ws 7"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 7",
+          "workspace": {
+            "id": 7,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.7",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 37,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "7"
+            ],
+            "entry_id": "omodachi.workspace.select.7",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 7",
+          "aliases": [
+            "move to 7",
+            "move workspace 7"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 7",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 7,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.7",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 38,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "7"
+            ],
+            "entry_id": "omodachi.workspace.move.7",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 8",
+          "aliases": [
+            "8",
+            "workspace 8",
+            "ws 8"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 8",
+          "workspace": {
+            "id": 8,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.8",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 39,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "8"
+            ],
+            "entry_id": "omodachi.workspace.select.8",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 8",
+          "aliases": [
+            "move to 8",
+            "move workspace 8"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 8",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 8,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.8",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 40,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "8"
+            ],
+            "entry_id": "omodachi.workspace.move.8",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 9",
+          "aliases": [
+            "9",
+            "workspace 9",
+            "ws 9"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 9",
+          "workspace": {
+            "id": 9,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.9",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 41,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "9"
+            ],
+            "entry_id": "omodachi.workspace.select.9",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 9",
+          "aliases": [
+            "move to 9",
+            "move workspace 9"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 9",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 9,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.9",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 42,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "9"
+            ],
+            "entry_id": "omodachi.workspace.move.9",
+            "ready": true
+          }
+        },
+        {
+          "label": "Workspace 10",
+          "aliases": [
+            "10",
+            "workspace 10",
+            "ws 10"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace select 10",
+          "workspace": {
+            "id": 10,
+            "operation": "select"
+          },
+          "parent": "omodachi.workspace.select",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "when": "",
+          "checked": "",
+          "id": "omodachi.workspace.select.10",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.select",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 43,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.select",
+              "10"
+            ],
+            "entry_id": "omodachi.workspace.select.10",
+            "ready": true
+          }
+        },
+        {
+          "label": "Move focused window to Workspace 10",
+          "aliases": [
+            "move to 10",
+            "move workspace 10"
+          ],
+          "surface": "host",
+          "action": "omodachi-host workspace move-focused 10",
+          "when": "omodachi-focus-available",
+          "workspace": {
+            "id": 10,
+            "operation": "move_focused"
+          },
+          "parent": "omodachi.workspace.move",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "checked": "",
+          "id": "omodachi.workspace.move.10",
+          "kind": "action",
+          "parent_id": "omodachi.workspace.move",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 44,
+          "route": {
+            "route": "host",
+            "supported": true,
+            "argv": [
+              "workspace.move",
+              "10"
+            ],
+            "entry_id": "omodachi.workspace.move.10",
+            "ready": true
+          }
+        },
+        {
+          "id": "apps.demo",
+          "label": "Demo application",
+          "action": "unregistered-demo",
+          "parent": "apps",
+          "kind": "action",
+          "icon": "",
+          "iconFont": "",
+          "title": "",
+          "target": "",
+          "description": "",
+          "provider": "",
+          "aliases": [],
+          "when": "",
+          "checked": "",
+          "parent_id": "apps",
+          "providerMenu": "apps",
+          "conditions": {
+            "when": {
+              "status": "available",
+              "value": true
+            },
+            "checked": {
+              "status": "available",
+              "value": null
+            }
+          },
+          "visible": true,
+          "checked_state": null,
+          "order": 45,
+          "route": {
+            "route": "host",
+            "supported": false,
+            "reason": "route adapter is not registered",
+            "entry_id": "apps.demo",
+            "ready": false,
+            "readiness_reason": "route adapter is not registered"
+          }
+        }
+      ]
+    },
+    "revision": 8
+  },
+  "ts": 1789430400.0,
+  "contract_revision": "omodachi.v1.2026-09-16.1"
+}

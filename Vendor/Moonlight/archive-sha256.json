@@ -1,0 +1,12 @@
+{
+  "libs/SDL2/lib/iOS/libSDL2.a": "8794ed9b30bfa9cf7992ca971a7ca86365cf4a575f44e83516d4969619b1c345",
+  "libs/SDL2/lib/iOS-Sim/libSDL2.a": "a68b763366f4d603180232227d086acc05575467e5012040dea776bd45cee91f",
+  "libs/opus/lib/iOS/libopus.a": "a2fbb2ac4e2c11177c6a8ec696c5e3a097527811c58f49afde70edd60dacb213",
+  "libs/opus/lib/iOS-Sim/libopus.a": "3296f7c993aba55396ba0e9efcd9cd12dc3c092c906d4af3de60a6fa74c2b32d",
+  "libs/FFmpeg/lib/iOS/libavutil.a": "c6d210e33c59f0cffadcc3825504a6a2bc4855934fec6aee3591f2be3398065a",
+  "libs/FFmpeg/lib/iOS/libavcodec.a": "6e9c99a06a9d4bd64634f487a3265eca15d956d59804f28ec64e3899312d86e4",
+  "libs/FFmpeg/lib/iOS/libavformat.a": "7a881ad35ae365806a446f194267ac761f3a6e52c65e00edc9f840b6a6388051",
+  "libs/FFmpeg/lib/iOS-Sim/libavutil.a": "3caab4eea739d5a2f8e0de6a9144e27feb7b840606e9cdead7836feece4e12d6",
+  "libs/FFmpeg/lib/iOS-Sim/libavcodec.a": "318fd5ca480e69d95d98dd26d53f38c7a020de0958bed505a801a12bdd9550cc",
+  "libs/FFmpeg/lib/iOS-Sim/libavformat.a": "0aa7ff175f943d7f1722bf51c5ca72f8d69208338e950f15c9a0321b495bd84c"
+}

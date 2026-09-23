@@ -1,0 +1,15 @@
+{
+  "note": "The only font packaged with this app. Body text and Omarchy's icon font come from the host over GET /v1/fonts (omodachi-core/docs/fonts.md); this face carries symbols only and is the fallback for Nerd Font code points when the host monospace family is not a Nerd Font. Licence and provenance are recorded in docs/THIRD-PARTY.md.",
+  "upstream_release": "https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.5.1",
+  "files": [
+    {
+      "file": "SymbolsNerdFontMono-Regular.ttf",
+      "family": "Symbols Nerd Font Mono",
+      "postscript_name": "SymbolsNFM",
+      "bytes": 2610012,
+      "sha256": "fe471e538392f51910faab985fa8e192a39dd3426125edd15b71b3680df0e749",
+      "source": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.zip",
+      "licence": "MIT (nerd-fonts, Copyright (c) 2014 Ryan L McIntyre)"
+    }
+  ]
+}

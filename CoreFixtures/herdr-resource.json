@@ -1,0 +1,71 @@
+{
+  "contract_revision": "omodachi.v1.2026-09-16.1",
+  "available": true,
+  "agent_count": 1,
+  "agent_count_scope": "default_agent_only",
+  "snapshot": {
+    "server_installed": true,
+    "server_running": true,
+    "socket_available": true,
+    "schema_probe": "available",
+    "supported_kinds": [
+      "claude",
+      "codex",
+      "grok",
+      "hermes",
+      "opencode"
+    ],
+    "agents": [
+      {
+        "agent_id": "default",
+        "kind": "codex",
+        "status": "working",
+        "pane_id": "pane-fixture-01",
+        "pane_available": true,
+        "target": {
+          "agent_id": "default",
+          "pane_id": "pane-fixture-01"
+        }
+      }
+    ],
+    "pane_count": 2,
+    "checked_at": "2026-09-15T00:00:00Z",
+    "diagnostics": []
+  },
+  "agent": {
+    "kind": "codex",
+    "exists": true,
+    "pane_available": true,
+    "status": "working",
+    "default_agent": {
+      "omarchy_default_agent": "codex",
+      "omarchy_probe": "available",
+      "herdr_supported_kinds": [
+        "claude",
+        "codex",
+        "grok",
+        "hermes",
+        "opencode"
+      ],
+      "herdr_probe": "available",
+      "default_agent_exists": true,
+      "default_agent_probe": "available",
+      "pane_probe": "available",
+      "agent_id": "default",
+      "pane_id": "pane-fixture-01",
+      "pane_available": true,
+      "agent_status": "working",
+      "configured_kind": "codex",
+      "actual_kind": "codex",
+      "kind_mismatch": false,
+      "herdr_available": true,
+      "checked_at": "2026-09-15T00:00:00Z",
+      "diagnostics": [],
+      "configured": true,
+      "kind_supported": true,
+      "ready_to_attach": true,
+      "ready_to_start": false
+    },
+    "last_confirmed": null
+  }
+}

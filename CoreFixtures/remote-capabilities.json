@@ -1,0 +1,36 @@
+{
+  "backends": {
+    "sunshine": {
+      "available": false,
+      "reason": "backend_not_installed"
+    },
+    "vnc": {
+      "available": false,
+      "reason": "backend_not_installed"
+    }
+  },
+  "modes": [
+    "extend",
+    "takeover"
+  ],
+  "placement_options": [
+    "right",
+    "left",
+    "above",
+    "below"
+  ],
+  "lock_local_input_supported": true,
+  "encoder_limits": {
+    "max_width": 4096,
+    "max_height": 4096,
+    "max_pixels": 16777216,
+    "max_fps": 60,
+    "max_bitrate_kbps": 40000,
+    "width_alignment": 2,
+    "height_alignment": 2,
+    "codecs": [
+      "h264"
+    ]
+  },
+  "contract_revision": "omodachi.v1"
+}

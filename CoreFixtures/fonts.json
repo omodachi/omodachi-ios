@@ -1,0 +1,98 @@
+{
+  "revision": 1,
+  "fonts": [
+    {
+      "id": "mono-regular",
+      "role": "mono",
+      "family": "FixtureMono Nerd Font",
+      "path": "/usr/share/fonts/fixture/FixtureMono-Regular.ttf",
+      "sha256": "71899d0c05af9cecb66bdd96ecda12fa891b7bff46725c4f84fb4a4f26bddbe5",
+      "bytes": 34,
+      "content_type": "font/ttf"
+    },
+    {
+      "id": "mono-bold",
+      "role": "mono",
+      "family": "FixtureMono Nerd Font",
+      "path": "/usr/share/fonts/fixture/FixtureMono-Bold.ttf",
+      "sha256": "4fad443c28aa84fa1ac81c9bbefdce198dc4d449ee509f8a6c120c69bf6dce5c",
+      "bytes": 31,
+      "content_type": "font/ttf"
+    },
+    {
+      "id": "icons",
+      "role": "icons",
+      "family": "omarchy",
+      "path": "/usr/share/fonts/fixture/omarchy.ttf",
+      "sha256": "3c95528ef41971df916cd06420e39089101b026acda69de1b664a566f15bab92",
+      "bytes": 31,
+      "content_type": "font/ttf"
+    },
+    {
+      "id": "fallback-symbols",
+      "role": "fallback",
+      "family": "FixtureSymbols Nerd Font",
+      "path": "/usr/share/fonts/fixture/FixtureSymbols-Regular.ttf",
+      "sha256": "7c05572362aa0b2175a148e0e34f2978aac0de61464ba6678280f7038016af20",
+      "bytes": 29,
+      "content_type": "font/ttf"
+    },
+    {
+      "id": "fallback-cjk",
+      "role": "fallback",
+      "family": "FixtureCJK Mono",
+      "path": "/usr/share/fonts/fixture/FixtureCJKMono-Regular.ttc",
+      "sha256": "a8ba2d139418872f5fd8ce86f8176f3561c734bd3b967a194b4e00dc0f2a8076",
+      "bytes": 30,
+      "content_type": "font/collection"
+    },
+    {
+      "id": "fallback-emoji",
+      "role": "fallback",
+      "family": "FixtureEmoji",
+      "path": "/usr/share/fonts/fixture/FixtureEmoji-Regular.ttf",
+      "sha256": "697aee68682cfec67b19cda680e3a462a539edcbf57211b8b23a04c156c17ef6",
+      "bytes": 27,
+      "content_type": "font/ttf"
+    }
+  ],
+  "fallback_chain": [
+    {
+      "coverage": "symbols",
+      "family": "FixtureSymbols Nerd Font",
+      "font": "fallback-symbols",
+      "probes": [
+        "U+E0B0",
+        "U+E615",
+        "U+F07B",
+        "U+F0249"
+      ]
+    },
+    {
+      "coverage": "symbols",
+      "family": "FixtureMono Nerd Font",
+      "font": "mono-regular",
+      "probes": [
+        "U+F00C"
+      ]
+    },
+    {
+      "coverage": "cjk",
+      "family": "FixtureCJK Mono",
+      "font": "fallback-cjk",
+      "probes": [
+        "U+4E2D",
+        "U+3042"
+      ]
+    },
+    {
+      "coverage": "emoji",
+      "family": "FixtureEmoji",
+      "font": "fallback-emoji",
+      "probes": [
+        "U+1F600"
+      ]
+    }
+  ],
+  "contract_revision": "omodachi.v1"
+}

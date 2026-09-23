@@ -1,0 +1,17 @@
+{
+  "contract_revision": "omodachi.v1.2026-09-16.1",
+  "sunshine": false,
+  "terminal": true,
+  "desktop": false,
+  "native": [
+    "config-plan"
+  ],
+  "config": {
+    "plan": true,
+    "apply": false,
+    "owned_path": "~/.config/hypr/omodachi.lua"
+  },
+  "demo": true,
+  "desktop_lease": true,
+  "desktop_media": false
+}

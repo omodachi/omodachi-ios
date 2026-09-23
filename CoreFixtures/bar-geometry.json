@@ -1,0 +1,89 @@
+{
+  "source": "shell.json",
+  "source_status": "fixture",
+  "position": "top",
+  "modules": [
+    {
+      "id": "omarchy.network",
+      "role": "network",
+      "status": null
+    },
+    {
+      "id": "omarchy.audio",
+      "role": "audio",
+      "status": null
+    },
+    {
+      "id": "omarchy.power",
+      "role": "power",
+      "status": null
+    }
+  ],
+  "geometry": {
+    "output": "OMODACHI-0123456789abcdef",
+    "logical_size": {
+      "width": 1280.0,
+      "height": 894.0
+    },
+    "position": "top",
+    "bar": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 1280.0,
+      "height": 30.0
+    },
+    "logo": {
+      "x": 9.0,
+      "y": 0.0,
+      "width": 32.0,
+      "height": 30.0
+    }
+  },
+  "left": [
+    {
+      "id": "omarchy.menu",
+      "role": "logo"
+    },
+    {
+      "id": "omarchy.workspaces",
+      "role": "workspaces"
+    },
+    {
+      "id": "omarchy.active-window",
+      "role": "focused_window"
+    }
+  ],
+  "center": [
+    {
+      "id": "omarchy.clock",
+      "role": "clock"
+    }
+  ],
+  "right": [
+    {
+      "id": "omarchy.tray",
+      "role": "system_tray"
+    },
+    {
+      "id": "omarchy.agents",
+      "role": "agent_usage"
+    },
+    {
+      "id": "omarchy.network",
+      "role": "network"
+    },
+    {
+      "id": "omarchy.audio",
+      "role": "audio"
+    },
+    {
+      "id": "omarchy.power",
+      "role": "power"
+    },
+    {
+      "id": "omodachi.stream",
+      "role": "stream"
+    }
+  ],
+  "revision": "3a9ba60594402cef"
+}

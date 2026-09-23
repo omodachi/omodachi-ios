@@ -1,0 +1,13 @@
+{
+  "seq": 4,
+  "event_id": "evt_00000004",
+  "type": "voice.transcript",
+  "device_id": "device-fixture-redacted",
+  "payload": {
+    "text": "make the bar taller",
+    "chars": 19,
+    "status": "ok"
+  },
+  "ts": 1789430400.0,
+  "contract_revision": "omodachi.v1"
+}

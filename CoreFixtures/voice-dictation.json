@@ -1,0 +1,9 @@
+{
+  "target": "client",
+  "route": "default_source",
+  "text": "make the bar taller",
+  "chars": 19,
+  "status": "ok",
+  "delivered_to_host": null,
+  "contract_revision": "omodachi.v1"
+}

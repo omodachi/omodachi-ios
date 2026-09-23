@@ -1,0 +1,473 @@
+diff --git a/Limelight/Stream/Connection.m b/Limelight/Stream/Connection.m
+index f0d9af7..13a82ab 100644
+--- a/Limelight/Stream/Connection.m
++++ b/Limelight/Stream/Connection.m
+@@ -28,6 +28,8 @@ @implementation Connection {
+     char _gfeVersionString[32];
+     char _rtspSessionUrl[128];
+     uint64_t _generation;
++    BOOL _stopRequested;
++    BOOL _stopCompleted;
+ }
+ 
+ static NSLock* initLock;
+@@ -204,6 +206,10 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
+     int err;
+     SDL_AudioSpec want, have;
+     
++    // The SwiftUI app has its own main(), so reproduce stock Moonlight's
++    // SDL_SetMainReady before using SDL audio without SDL_main.
++    static dispatch_once_t sdlReady;
++    dispatch_once(&sdlReady, ^{ SDL_SetMainReady(); });
+     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+         Log(LOG_E, @"Failed to initialize audio subsystem: %s\n", SDL_GetError());
+         return -1;
+@@ -370,23 +376,27 @@ -(void) terminate
+ 
+ -(void) terminateWithCompletion:(ConnectionStopCompletion)completion
+ {
+-    // Interrupt any action blocking LiStartConnection(). This is
+-    // thread-safe and done outside initLock on purpose, since we
+-    // won't be able to acquire it if LiStartConnection is in
+-    // progress.
++    @synchronized (self) { _stopRequested = YES; }
+     LiInterruptConnection();
+-
+-    // LiStopConnection() is not thread-safe and common-c has no stop
+-    // completion callback. The wrapper ACK is therefore emitted only after
+-    // the call returns and initLock has been released.
+     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+         EnsureConnectionLocks();
+-        [initLock lock];
+-        LiStopConnection();
+-        [initLock unlock];
+-        if (completion != nil) {
+-            completion(self.generation);
++        // Repeated interrupt closes the race where LiStartConnection resets its
++        // interrupted flag immediately after an early cancellation. No later
++        // owner is permitted until the real stop returns and lock is released.
++        while (![initLock tryLock]) {
++            LiInterruptConnection();
++            struct timespec pause = { .tv_sec = 0, .tv_nsec = 10000000 };
++            nanosleep(&pause, NULL);
+         }
++        BOOL stopped;
++        @synchronized (self) { stopped = self->_stopCompleted; }
++        if (!stopped) {
++            LiStopConnection();
++            renderer = nil; _callbacks = nil;
++            @synchronized (self) { self->_stopCompleted = YES; }
++        }
++        [initLock unlock];
++        if (completion) completion(self.generation);
+     });
+ }
+ 
+@@ -500,6 +510,7 @@ -(void) main
+ {
+     EnsureConnectionLocks();
+     [initLock lock];
++    @synchronized (self) { if (_stopRequested) { [initLock unlock]; return; } }
+     LiStartConnection(&_serverInfo,
+                       &_streamConfig,
+                       &_clCallbacks,
+diff --git a/Limelight/Stream/Omodachi/OmodachiMediaFacade.h b/Limelight/Stream/Omodachi/OmodachiMediaFacade.h
+index 53f0f9f..536bb2f 100644
+--- a/Limelight/Stream/Omodachi/OmodachiMediaFacade.h
++++ b/Limelight/Stream/Omodachi/OmodachiMediaFacade.h
+@@ -55,6 +55,8 @@ typedef void (^OmodachiMediaCompletion)(NSError * _Nullable error);
+ /// it does not perform pairing, output management, or product UI work.
+ @interface OmodachiMediaFacade : NSObject
+ 
+++ (BOOL)isProcessIdle;
++
+ @property(nonatomic, weak, readonly) UIView *view;
+ @property(nonatomic, weak, readonly, nullable) id<OmodachiMediaFacadeDelegate> delegate;
+ @property(nonatomic, readonly) uint64_t generation;
+diff --git a/Limelight/Stream/Omodachi/OmodachiMediaFacade.m b/Limelight/Stream/Omodachi/OmodachiMediaFacade.m
+index d73a66f..c8bda66 100644
+--- a/Limelight/Stream/Omodachi/OmodachiMediaFacade.m
++++ b/Limelight/Stream/Omodachi/OmodachiMediaFacade.m
+@@ -9,10 +9,10 @@
+ 
+ #import "Connection.h"
+ #import "ConnectionCallbacks.h"
+-#import "StreamView.h"
++
+ 
+ static NSLock *OmodachiOwnerLock;
+-static __weak OmodachiMediaFacade *OmodachiActiveOwner;
++static OmodachiMediaFacade *OmodachiActiveOwner;
+ static dispatch_once_t OmodachiOwnerOnce;
+ 
+ static void OmodachiEnsureOwnerLock(void)
+@@ -72,15 +72,16 @@ - (instancetype)initWithView:(UIView *)view
+     return self;
+ }
+ 
+-- (void)dealloc
+-{
+-    [_ownerQueue cancelAllOperations];
++// Active owner is strongly retained until invalidate's actual-stop completion.
++// A forgotten invalidate leaks the owner safely rather than allowing a second
++// common-c session while callbacks/decoder threads remain alive.
+++ (BOOL)isProcessIdle {
+     OmodachiEnsureOwnerLock();
+     [OmodachiOwnerLock lock];
+-    if (OmodachiActiveOwner == self) {
+-        OmodachiActiveOwner = nil;
+-    }
++    OmodachiMediaFacade *owner = OmodachiActiveOwner;
++    BOOL idle = owner == nil || (owner->_lifecycleState == OmodachiMediaLifecycleStateIdle && owner->_connection == nil);
+     [OmodachiOwnerLock unlock];
++    return idle;
+ }
+ 
+ - (BOOL)isActiveOwner
+@@ -129,80 +130,39 @@ - (BOOL)startWithGeneration:(uint64_t)generation error:(NSError **)error
+ 
+     _generation = generation;
+     _lifecycleState = OmodachiMediaLifecycleStateStarting;
++    NSAssert([NSThread isMainThread], @"Media lifecycle is main-thread owned");
++    _renderer = [[VideoDecoderRenderer alloc] initWithView:_view callbacks:self
++        streamAspectRatio:(float)_configuration.width / MAX(1, _configuration.height)
++        useFramePacing:_configuration.useFramePacing];
++    _renderer.mediaGeneration = generation;
+     __weak OmodachiMediaFacade *weakSelf = self;
+-    [_ownerQueue addOperationWithBlock:^{
+-        OmodachiMediaFacade *strongSelf = weakSelf;
+-        if (strongSelf == nil || strongSelf->_invalidated) return;
+-
+-        [strongSelf syncToMainQueue:^{
+-            StreamView *streamView = (StreamView *)strongSelf->_view;
+-            strongSelf->_renderer = [[VideoDecoderRenderer alloc] initWithView:streamView
+-                                                                       callbacks:strongSelf
+-                                                              streamAspectRatio:(strongSelf->_configuration.height > 0 ?
+-                                                                                 (float)strongSelf->_configuration.width / (float)strongSelf->_configuration.height : 1.0f)
+-                                                                useFramePacing:strongSelf->_configuration.useFramePacing];
+-            strongSelf->_renderer.mediaGeneration = generation;
+-            __weak OmodachiMediaFacade *handlerSelf = strongSelf;
+-            strongSelf->_renderer.formatDescriptionHandler = ^(uint64_t callbackGeneration, int width, int height, int videoFormat) {
+-                OmodachiMediaFacade *facade = handlerSelf;
+-                if (facade != nil) {
+-                    [facade dispatchDecodedDimensionsForGeneration:callbackGeneration width:width height:height videoFormat:videoFormat];
+-                }
+-            };
+-            strongSelf->_renderer.presentationObservationHandler = ^(VideoPresentationObservation observation) {
+-                OmodachiMediaFacade *facade = handlerSelf;
+-                if (facade != nil) {
+-                    [facade dispatchPresentationObservation:observation];
+-                }
+-            };
+-            [strongSelf->_renderer setupWithVideoFormat:VIDEO_FORMAT_H264
+-                                                   width:strongSelf->_configuration.width
+-                                                  height:strongSelf->_configuration.height
+-                                               frameRate:strongSelf->_configuration.frameRate];
+-        }];
+-
+-        strongSelf->_connection = [[Connection alloc] initWithConfig:strongSelf->_configuration
+-                                                              renderer:strongSelf->_renderer
+-                                                   connectionCallbacks:strongSelf
+-                                                             generation:generation];
+-        // The connection operation's finished state is not a quiesced signal;
+-        // stop completion is driven only by terminateWithCompletion: below.
+-        [strongSelf->_ownerQueue addOperation:strongSelf->_connection];
+-    }];
++    _renderer.formatDescriptionHandler = ^(uint64_t gen, int width, int height, int format) {
++        [weakSelf dispatchDecodedDimensionsForGeneration:gen width:width height:height videoFormat:format];
++    };
++    _renderer.presentationObservationHandler = ^(VideoPresentationObservation observation) {
++        [weakSelf dispatchPresentationObservation:observation];
++    };
++    // DrDecoderSetup/DrStart own renderer setup and start exactly once.
++    _connection = [[Connection alloc] initWithConfig:_configuration renderer:_renderer connectionCallbacks:self generation:generation];
++    [_ownerQueue addOperation:_connection];
+     return YES;
+ }
+ 
+-- (BOOL)stopWithCompletion:(OmodachiMediaCompletion)completion error:(NSError **)error
+-{
+-    if (![self isActiveOwner]) {
+-        return [self fail:error code:20 description:@"another media facade owns the process-wide stock connection"];
+-    }
+-
++- (BOOL)stopWithCompletion:(OmodachiMediaCompletion)completion error:(NSError **)error {
++    NSAssert([NSThread isMainThread], @"Media lifecycle is main-thread owned");
++    if (![self isActiveOwner]) return [self fail:error code:20 description:@"another media owner is active"];
++    if (_lifecycleState == OmodachiMediaLifecycleStateIdle) { if (completion) completion(nil); return YES; }
++    if (_lifecycleState == OmodachiMediaLifecycleStateStopping) return [self fail:error code:22 description:@"media is still stopping"];
+     uint64_t generation = _generation;
+-    NSError *gateError = nil;
+-    if (![_gate beginStopForGeneration:generation error:&gateError]) {
+-        if (error != NULL) *error = gateError;
+-        return NO;
+-    }
++    if (![_gate beginStopForGeneration:generation error:error]) return NO;
+     _lifecycleState = OmodachiMediaLifecycleStateStopping;
+-
+-    __weak OmodachiMediaFacade *weakSelf = self;
+-    [_ownerQueue addOperationWithBlock:^{
+-        OmodachiMediaFacade *strongSelf = weakSelf;
+-        if (strongSelf == nil) return;
+-        Connection *connection = strongSelf->_connection;
+-        if (connection == nil) {
+-            [strongSelf finishStopForGeneration:generation completion:completion error:NULL];
+-            return;
+-        }
+-        [connection terminateWithCompletion:^(uint64_t callbackGeneration) {
+-            [strongSelf->_ownerQueue addOperationWithBlock:^{
+-                if (callbackGeneration != strongSelf->_generation || strongSelf->_lifecycleState != OmodachiMediaLifecycleStateStopping) {
+-                    return;
+-                }
+-                [strongSelf finishStopForGeneration:callbackGeneration completion:completion error:NULL];
+-            }];
+-        }];
++    // Release real held input while the input channel still exists, before interrupt.
++    if (_inputReleaseHandler) _inputReleaseHandler(generation);
++    [_connection terminateWithCompletion:^(uint64_t stoppedGeneration) {
++        dispatch_async(dispatch_get_main_queue(), ^{
++            if (stoppedGeneration != self->_generation || self->_lifecycleState != OmodachiMediaLifecycleStateStopping) return;
++            [self finishStopForGeneration:stoppedGeneration completion:completion error:NULL];
++        });
+     }];
+     return YES;
+ }
+@@ -215,9 +175,6 @@ - (void)finishStopForGeneration:(uint64_t)generation
+         [self->_renderer stop];
+     }];
+ 
+-    if (_inputReleaseHandler != nil) {
+-        _inputReleaseHandler(generation);
+-    }
+ 
+     NSError *gateError = nil;
+     if (![_gate completeStopForGeneration:generation inputReleased:YES error:&gateError]) {
+@@ -304,26 +261,26 @@ - (void)dispatchDecodedDimensionsForGeneration:(uint64_t)generation
+                                         height:(int)height
+                                   videoFormat:(int)videoFormat
+ {
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         if (generation != self->_generation || self->_lifecycleState == OmodachiMediaLifecycleStateIdle) {
+             return;
+         }
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didReceiveDecodedWidth:height:videoFormat:generation:)]) {
+             [self->_delegate mediaFacade:self didReceiveDecodedWidth:width height:height videoFormat:videoFormat generation:generation];
+         }
+-    }];
++    });
+ }
+ 
+ - (void)dispatchPresentationObservation:(VideoPresentationObservation)observation
+ {
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         if (observation.generation != self->_generation || self->_lifecycleState == OmodachiMediaLifecycleStateIdle) {
+             return;
+         }
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didObservePresentation:)]) {
+             [self->_delegate mediaFacade:self didObservePresentation:observation];
+         }
+-    }];
++    });
+ }
+ 
+ #pragma mark - ConnectionCallbacks
+@@ -331,7 +288,7 @@ - (void)dispatchPresentationObservation:(VideoPresentationObservation)observatio
+ - (void)connectionStarted
+ {
+     uint64_t generation = _generation;
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         NSError *gateError = nil;
+         if (![self->_gate markRunningForGeneration:generation error:&gateError]) {
+             return;
+@@ -340,56 +297,56 @@ - (void)connectionStarted
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didStartGeneration:)]) {
+             [self->_delegate mediaFacade:self didStartGeneration:generation];
+         }
+-    }];
++    });
+ }
+ 
+ - (void)connectionTerminated:(int)errorCode
+ {
+     uint64_t generation = _generation;
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         if (generation != self->_generation || self->_lifecycleState == OmodachiMediaLifecycleStateStopping || self->_lifecycleState == OmodachiMediaLifecycleStateIdle) {
+             return;
+         }
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didTerminateUnexpectedlyForGeneration:errorCode:)]) {
+             [self->_delegate mediaFacade:self didTerminateUnexpectedlyForGeneration:generation errorCode:errorCode];
+         }
+-    }];
++    });
+ }
+ 
+ - (void)stageStarting:(const char *)stageName
+ {
+     NSString *name = stageName != NULL ? [NSString stringWithUTF8String:stageName] : @"";
+     uint64_t generation = _generation;
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         if (generation != self->_generation || self->_lifecycleState == OmodachiMediaLifecycleStateIdle) return;
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didStartStage:generation:)]) {
+             [self->_delegate mediaFacade:self didStartStage:name generation:generation];
+         }
+-    }];
++    });
+ }
+ 
+ - (void)stageComplete:(const char *)stageName
+ {
+     NSString *name = stageName != NULL ? [NSString stringWithUTF8String:stageName] : @"";
+     uint64_t generation = _generation;
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         if (generation != self->_generation || self->_lifecycleState == OmodachiMediaLifecycleStateIdle) return;
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didCompleteStage:generation:)]) {
+             [self->_delegate mediaFacade:self didCompleteStage:name generation:generation];
+         }
+-    }];
++    });
+ }
+ 
+ - (void)stageFailed:(const char *)stageName withError:(int)errorCode portTestFlags:(int)portTestFlags
+ {
+     NSString *name = stageName != NULL ? [NSString stringWithUTF8String:stageName] : @"";
+     uint64_t generation = _generation;
+-    [_ownerQueue addOperationWithBlock:^{
++    dispatch_async(dispatch_get_main_queue(), ^{
+         if (generation != self->_generation || self->_lifecycleState == OmodachiMediaLifecycleStateIdle) return;
+         if ([self->_delegate respondsToSelector:@selector(mediaFacade:didFailStage:errorCode:portTestFlags:generation:)]) {
+             [self->_delegate mediaFacade:self didFailStage:name errorCode:errorCode portTestFlags:portTestFlags generation:generation];
+         }
+-    }];
++    });
+ }
+ 
+ - (void)launchFailed:(NSString *)message { (void)message; }
+@@ -403,7 +360,7 @@ - (void)videoContentShown { /* legacy enqueue/unhide only; never present proof *
+ 
+ - (void)videoFormatDescriptionReceivedForGeneration:(uint64_t)generation width:(int)width height:(int)height videoFormat:(int)videoFormat
+ {
+-    [self dispatchDecodedDimensionsForGeneration:generation width:width height:height videoFormat:videoFormat];
++    (void)generation; (void)width; (void)height; (void)videoFormat;
+ }
+ 
+ - (void)videoFrameEnqueuedForGeneration:(uint64_t)generation width:(int)width height:(int)height presentConfirmed:(BOOL)presentConfirmed
+diff --git a/Limelight/Stream/VideoDecoderRenderer.m b/Limelight/Stream/VideoDecoderRenderer.m
+index 89e7a23..3c7bd1a 100644
+--- a/Limelight/Stream/VideoDecoderRenderer.m
++++ b/Limelight/Stream/VideoDecoderRenderer.m
+@@ -7,7 +7,7 @@
+ //
+ 
+ #import "VideoDecoderRenderer.h"
+-#import "StreamView.h"
++
+ 
+ #include <libavcodec/avcodec.h>
+ #include <libavcodec/cbs.h>
+@@ -20,7 +20,7 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
+                               int write_seq_header);
+ 
+ @implementation VideoDecoderRenderer {
+-    StreamView* _view;
++    UIView* _view;
+     id<ConnectionCallbacks> _callbacks;
+     float _streamAspectRatio;
+     
+@@ -44,6 +44,11 @@ @implementation VideoDecoderRenderer {
+ @synthesize formatDescriptionHandler = _formatDescriptionHandler;
+ @synthesize presentationObservationHandler = _presentationObservationHandler;
+ 
++- (void)dealloc {
++    [[NSNotificationCenter defaultCenter] removeObserver:self];
++    if (formatDesc) CFRelease(formatDesc);
++}
++
+ - (void)reinitializeDisplayLayer
+ {
+     CALayer *oldLayer = displayLayer;
+@@ -96,7 +101,7 @@ - (void)reinitializeDisplayLayer
+     }
+ }
+ 
+-- (id)initWithView:(StreamView*)view callbacks:(id<ConnectionCallbacks>)callbacks streamAspectRatio:(float)aspectRatio useFramePacing:(BOOL)useFramePacing
++- (id)initWithView:(UIView*)view callbacks:(id<ConnectionCallbacks>)callbacks streamAspectRatio:(float)aspectRatio useFramePacing:(BOOL)useFramePacing
+ {
+     self = [super init];
+     
+@@ -134,6 +139,7 @@ - (BOOL)getDecodedFormatDimensions:(CGSize*)dimensions videoFormat:(int*)format
+ 
+ - (VideoPresentationObservation)presentationObservation
+ {
++    [self layoutVideo];
+     VideoPresentationObservation observation;
+     memset(&observation, 0, sizeof(observation));
+     observation.generation = _mediaGeneration;
+@@ -182,7 +188,9 @@ - (void)displayLayerReadyForDisplayDidChange:(NSNotification*)notification
+ {
+     // Apple documents this notification as a ready-for-display transition,
+     // not KVO and not a scanout/present completion callback.
+-    [self emitPresentationObservation];
++    dispatch_async(dispatch_get_main_queue(), ^{
++        if (notification.object == self->displayLayer) [self emitPresentationObservation];
++    });
+ }
+ 
+ - (void)publishReceivedFormatDescription
+@@ -205,8 +213,20 @@ - (void)publishReceivedFormatDescription
+     }
+ }
+ 
++- (void)layoutVideo {
++    CGSize decoded;
++    if ([self getDecodedFormatDimensions:&decoded videoFormat:NULL]) _streamAspectRatio = decoded.width / decoded.height;
++    CGSize bounds = _view.bounds.size;
++    CGFloat width = MIN(bounds.width, bounds.height * _streamAspectRatio);
++    CGFloat height = width / MAX(_streamAspectRatio, 0.01);
++    [CATransaction begin]; [CATransaction setDisableActions:YES];
++    displayLayer.frame = CGRectMake((bounds.width-width)/2, (bounds.height-height)/2, width, height);
++    [CATransaction commit];
++}
++
+ - (void)start
+ {
++    if (_displayLink != nil) return;
+     _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
+     if (@available(iOS 15.0, tvOS 15.0, *)) {
+         _displayLink.preferredFrameRateRange = CAFrameRateRangeMake(self->frameRate, self->frameRate, self->frameRate);
+@@ -214,7 +234,7 @@ - (void)start
+     else {
+         _displayLink.preferredFramesPerSecond = self->frameRate;
+     }
+-    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
++    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+ }
+ 
+ // TODO: Refactor this
+@@ -222,6 +242,8 @@ - (void)start
+ 
+ - (void)displayLinkCallback:(CADisplayLink *)sender
+ {
++    [self layoutVideo];
++    [self emitPresentationObservation];
+     VIDEO_FRAME_HANDLE handle;
+     PDECODE_UNIT du;
+     
+@@ -249,6 +271,12 @@ - (void)displayLinkCallback:(CADisplayLink *)sender
+ - (void)stop
+ {
+     [_displayLink invalidate];
++    _displayLink = nil;
++    void (^cleanup)(void) = ^{
++        [self->displayLayer flushAndRemoveImage];
++        [self->displayLayer removeFromSuperlayer];
++    };
++    if (NSThread.isMainThread) cleanup(); else dispatch_async(dispatch_get_main_queue(), cleanup);
+ }
+ 
+ #define NALU_START_PREFIX_SIZE 3

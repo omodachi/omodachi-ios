@@ -1,0 +1,16 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-01"
+  },
+  "sequence": 6,
+  "event": {
+    "type": "agent.approval.resolved",
+    "request_id": "7",
+    "kind": "commandExecution",
+    "decision": "accept",
+    "source": "client"
+  }
+}

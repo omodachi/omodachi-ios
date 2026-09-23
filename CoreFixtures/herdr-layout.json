@@ -1,0 +1,70 @@
+{
+  "session": "omodachi",
+  "protocol": 20,
+  "version": "0.8.2",
+  "focused": {
+    "workspace_id": "w1",
+    "tab_id": "w1:t1",
+    "pane_id": "w1:p1"
+  },
+  "workspaces": [
+    {
+      "id": "w1",
+      "label": "~",
+      "number": 1,
+      "focused": true,
+      "active_tab_id": "w1:t1",
+      "agent_status": "working",
+      "tabs": [
+        {
+          "id": "w1:t1",
+          "label": "1",
+          "number": 1,
+          "focused": true,
+          "zoomed": false,
+          "agent_status": "working",
+          "panes": [
+            {
+              "id": "w1:p1",
+              "tab_id": "w1:t1",
+              "workspace_id": "w1",
+              "title": "user@host:~",
+              "cwd": "/home/user",
+              "focused": true,
+              "zoomed": false,
+              "agent_status": "unknown",
+              "agent": null,
+              "size": {
+                "cols": 47,
+                "rows": 39
+              },
+              "revision": 3
+            },
+            {
+              "id": "w1:p2",
+              "tab_id": "w1:t1",
+              "workspace_id": "w1",
+              "title": "codex",
+              "cwd": "/home/user",
+              "focused": false,
+              "zoomed": false,
+              "agent_status": "working",
+              "agent": {
+                "name": "default",
+                "kind": "codex",
+                "status": "working"
+              },
+              "size": {
+                "cols": 47,
+                "rows": 39
+              },
+              "revision": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revision": 1,
+  "contract_revision": "omodachi.v1"
+}
