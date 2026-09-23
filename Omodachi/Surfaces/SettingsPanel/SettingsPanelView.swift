@@ -30,6 +30,9 @@ struct SettingsPanelView: View {
     /// written down. Read once when the page is drawn, like the transcripts.
     @State private var sshKey: SSHKeyReport?
     @State private var sshKeyUnread = false
+    /// STORE-2 §4. The licence page opens in ⑥, under its row (A-55).
+    @State private var licenceOpen = false
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         GeometryReader { proxy in
@@ -477,10 +480,30 @@ struct SettingsPanelView: View {
 
     // MARK: - About
 
+    /// STORE-2 §4 and DISTRIBUTION.md: which release this is, what licence it
+    /// is under and where its source is. None of it depends on a host, so it
+    /// is here in the demo as well.
     @ViewBuilder private var about: some View {
         GroupLabel(text: Strings.settingsAbout)
-        ValueLine(name: Strings.settingsVersion, value: BuildStamp.summary, identifier: "setup.buildStamp")
+        ValueLine(name: Strings.settingsVersion, value: BuildStamp.versionLine, identifier: "settings-version")
+        ValueLine(name: Strings.settingsBuild, value: BuildStamp.summary, identifier: "setup.buildStamp")
         ValueLine(name: Strings.settingsContract, value: "omodachi.v1", identifier: "settings-contract")
+        Row(title: Strings.settingsLicence, detail: Strings.settingsLicenceDetail,
+            icon: licenceOpen ? Icon.chevronUp : Icon.chevronDown, selected: licenceOpen,
+            identifier: "settings-licence") {
+            licenceOpen.toggle()
+        }
+        if licenceOpen {
+            LicencePage()
+        }
+        Row(title: Strings.settingsSourceCode, detail: LicenceNotice.sourceURL.absoluteString,
+            icon: Icon.chevronRight, identifier: "settings-source-code") {
+            openURL(LicenceNotice.sourceURL)
+        }
+        Row(title: Strings.settingsPrivacy, detail: LicenceNotice.privacyURL.absoluteString,
+            icon: Icon.chevronRight, identifier: "settings-privacy") {
+            openURL(LicenceNotice.privacyURL)
+        }
     }
 
     // MARK: - Pieces

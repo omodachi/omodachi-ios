@@ -1,6 +1,6 @@
 name: Omodachi
 options:
-  bundleIdPrefix: com.omodachi
+  bundleIdPrefix: app.omodachi
   # ARCH-1 §6. The source language is Simplified Chinese: the boards are drawn
   # in it and it is what `Localizable.xcstrings` stores as each key's default
   # value. English is a translation in the same catalog.
@@ -26,6 +26,21 @@ targets:
     sources:
       - path: Omodachi
         excludes: ["**/*.md"]
+      # STORE-1 §1. The demo reads three of the canonical host fixtures; they
+      # are synthetic, and DemoModeTests checks they name nobody.
+      - path: CoreFixtures/state.json
+        buildPhase: resources
+      - path: CoreFixtures/notifications.json
+        buildPhase: resources
+      - path: CoreFixtures/shortcuts.json
+        buildPhase: resources
+      # STORE-2 §4. Settings ⑥'s licence page reads both from the bundle rather
+      # than carrying a copy of either: the GPL text is the repository's own
+      # LICENSE, and the component list is parsed out of THIRD-PARTY.md.
+      - path: LICENSE
+        buildPhase: resources
+      - path: docs/THIRD-PARTY.md
+        buildPhase: resources
       - path: Vendor/Moonlight/Crypto
         excludes: [IdManager.m, IdManager.h]
       - Vendor/Moonlight/Utility
@@ -42,6 +57,13 @@ targets:
       - sdk: Network.framework
       - sdk: VideoToolbox.framework
       - sdk: AudioToolbox.framework
+      # STORE-2 §3. Not ours: `-ObjC` (xcodegen adds it for the static
+      # dependencies) loads every Objective-C member of libSDL2.a, and its
+      # hidapi `hid.o` references CBCentralManager / CBUUID. Without this line
+      # the link fails with exactly those three undefined symbols. Nothing
+      # initialises SDL's joystick subsystem (Moonlight uses SDL for audio
+      # only), so Bluetooth is never scanned; Info.plist says so in
+      # NSBluetoothAlwaysUsageDescription, which the upload check requires.
       - sdk: CoreBluetooth.framework
       - sdk: CoreHaptics.framework
       - sdk: CoreMotion.framework
@@ -54,12 +76,15 @@ targets:
       - package: SwiftTerm
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.omodachi.ios
+        PRODUCT_BUNDLE_IDENTIFIER: app.omodachi
+        # STORE-1 §3. CFBundleShortVersionString, the same number the plugin
+        # and the tag carry. CFBundleVersion stays the build stamp below.
+        MARKETING_VERSION: 0.1.0
         SWIFT_VERSION: 6.0
-        # Resources/Brand.xcassets holds the two vendor marks (AGENT-2) and
-        # nothing else. The app has no icon set of its own yet, and actool
-        # fails a catalog it is told to find an "AppIcon" in.
-        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        # STORE-2 §1. Resources/AppIcon.xcassets, rendered from the brand's v6
+        # symbol by scripts/render_app_icon.py. Brand.xcassets stays the two
+        # vendor marks (AGENT-2) and nothing else.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
         # The build stamp. scripts/build.sh overrides both on the xcodebuild
         # command line with the git short sha and yyyymmddHHMM; Info.plist
@@ -116,7 +141,7 @@ targets:
     dependencies: [{target: Omodachi}]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.omodachi.ios.tests
+        PRODUCT_BUNDLE_IDENTIFIER: app.omodachi.tests
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: 6.0
         SWIFT_OBJC_BRIDGING_HEADER: OmodachiTests/OmodachiTests-Bridging-Header.h
@@ -128,7 +153,7 @@ targets:
     dependencies: [{target: Omodachi}]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.omodachi.ios.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: app.omodachi.uitests
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: 6.0
         TEST_TARGET_NAME: Omodachi

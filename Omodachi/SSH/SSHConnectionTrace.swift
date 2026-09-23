@@ -17,7 +17,7 @@ import OSLog
 /// This is not a control path. It names steps that already happen and never
 /// changes a connection, a key or a pin.
 enum SSHConnectionTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "ssh.connect")
+    private static let log = Logger(subsystem: "app.omodachi", category: "ssh.connect")
 
     /// UX-3 §2. The same lines, kept in memory so Settings ⑥ can print them
     /// and a person holding the iPad can copy them. `log show` needs a Mac;

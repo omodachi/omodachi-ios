@@ -113,7 +113,9 @@ struct ConnectionScreen: View {
 
     @ViewBuilder private var content: some View {
         switch flow.stage {
-        case .list: list
+        case .list:
+            list
+            demoRow
         case .manual: manual
         case .pairing: PairingCard(flow: flow)
         }
@@ -271,6 +273,37 @@ struct ConnectionScreen: View {
         }
         
         .accessibilityIdentifier("connect-add-manual")
+    }
+
+    /// STORE-1 §1. The first screen's last row: a way to see the app without
+    /// an Omarchy computer — App Review's way in, among others. It is only on
+    /// the unpaired first screen; the list reached from a paired Panel has a
+    /// host to show already.
+    @ViewBuilder private var demoRow: some View {
+        if onDismiss == nil {
+            FlowRule()
+            Tap(action: { home.enterDemo() }) {
+                HStack(spacing: 10) {
+                    HostGlyphView(glyph: "\u{f144}", fallbackSymbol: "play.rectangle", size: 16)
+                        .foregroundStyle(OmodachiTheme.secondaryText)
+                        .frame(width: 22)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(Strings.demoEnter)
+                            .font(OmodachiTheme.font(size: 13))
+                            .foregroundStyle(OmodachiTheme.text)
+                        Text(Strings.demoEnterDetail)
+                            .font(OmodachiTheme.font(size: 11))
+                            .foregroundStyle(OmodachiTheme.tertiaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, OmodachiTheme.rowPaddingX)
+                .frame(minHeight: ConnectionParts.actionHeight)
+                .contentShape(Rectangle())
+            }
+            .accessibilityIdentifier("demo-enter")
+        }
     }
 
     // MARK: - §12 ⑤ manual add

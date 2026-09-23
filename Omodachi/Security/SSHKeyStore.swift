@@ -95,7 +95,7 @@ enum SSHKeyStoreError: Error, Equatable {
 /// Stores an SSH private key on this device only. Passwords are deliberately
 /// outside this type: authentication is delegated to the reviewed SSH layer.
 final class SSHKeyStore: @unchecked Sendable {
-    static let defaultService = "com.omodachi.ios.ssh.keys"
+    static let defaultService = "app.omodachi.ssh.keys"
 
     private let service: String
     private let records: any KeychainRecordStore

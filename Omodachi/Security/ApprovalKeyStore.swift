@@ -112,7 +112,7 @@ private final class PromptBox: @unchecked Sendable {
 }
 
 final class ApprovalKeyStore: ApprovalSigning, @unchecked Sendable {
-    static let defaultTagPrefix = "com.omodachi.ios.approval."
+    static let defaultTagPrefix = "app.omodachi.approval."
 
     private let tagPrefix: String
     /// Injected so tests can drive every branch without a real enclave, a real

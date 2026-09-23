@@ -18,7 +18,10 @@ struct SSHPanelView: View {
     @EnvironmentObject private var sessions: SessionStore
     @State private var selected: UUID?
 
-    private var runtimes: [TerminalRuntime] { sessions.runtimes }
+    /// STORE-1 §1: the demo only ever shows the demo's own sessions.
+    private var runtimes: [TerminalRuntime] {
+        sessions.runtimes.filter { !home.demoActive || $0.descriptor.host.mock }
+    }
 
     var body: some View {
         Group {

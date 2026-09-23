@@ -11,7 +11,7 @@ import OSLog
 /// changes a request, a profile or a frame.
 enum RemoteGeometryTrace {
     #if DEBUG
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "perf")
+    private static let log = Logger(subsystem: "app.omodachi", category: "perf")
     private static func emit(_ line: String) { log.info("\(line, privacy: .public)") }
     #else
     private static func emit(_ line: String) {}

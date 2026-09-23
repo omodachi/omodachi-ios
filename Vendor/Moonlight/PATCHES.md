@@ -30,7 +30,7 @@ Local changes:
   that invalidates that geometry turns it back on. The aspect fit no longer
   reassigns an unchanged layer frame. A Debug-only counter reports received /
   rendered / observed frames and main-thread time per tick to os_log
-  (`com.omodachi.ios`, category `perf`) once a second.
+  (`app.omodachi`, category `perf`) once a second.
 - STREAM-1: `OmodachiMediaFacade.copyStreamStats:` returns the one-second
   window `Connection` already counts (total / received / network-dropped
   frames, Sunshine's host processing latency), `LiGetEstimatedRttInfo`, the

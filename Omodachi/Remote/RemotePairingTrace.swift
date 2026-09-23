@@ -12,7 +12,7 @@ import OSLog
 /// bearer tokens are never traced.
 enum RemotePairingTrace {
     #if DEBUG
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "pairing")
+    private static let log = Logger(subsystem: "app.omodachi", category: "pairing")
     static func emit(_ line: String) { log.info("pair.\(line, privacy: .public)") }
     #else
     static func emit(_ line: String) {}

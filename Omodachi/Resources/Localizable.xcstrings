@@ -2092,6 +2092,125 @@
         }
       }
     },
+    "demo.banner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo · not a real computer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "演示 · 不是真的电脑"
+          }
+        }
+      }
+    },
+    "demo.enter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore the demo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "看看演示"
+          }
+        }
+      }
+    },
+    "demo.enterDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Omarchy computer needed. The demo connects to nothing."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有 Omarchy 电脑也能先看看。演示不连接任何设备。"
+          }
+        }
+      }
+    },
+    "demo.exit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit demo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出演示"
+          }
+        }
+      }
+    },
+    "demo.remoteDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Above is a sketch Omodachi draws itself, not a picture of any computer."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上面是 Omodachi 自己画的示意，不是任何电脑的画面。"
+          }
+        }
+      }
+    },
+    "demo.remoteNeedsHost": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The remote screen needs a real Omarchy computer."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "远程画面需要一台真的 Omarchy 电脑。"
+          }
+        }
+      }
+    },
+    "demo.remoteSketch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop sketch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桌面示意图"
+          }
+        }
+      }
+    },
     "discovery.permissionDenied": {
       "extractionState": "manual",
       "localizations": {
@@ -4281,6 +4400,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "用这个面板自己的控件。"
+          }
+        }
+      }
+    },
+    "licence.combined": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moonlight and LibVNCClient are GPL-licensed and built into the same app, so the app as a whole is distributed under GPL-3.0. The source code address above has everything this build is made from."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moonlight 和 LibVNCClient 按 GPL 授权并编进了同一个 App，所以整个 App 按 GPL-3.0 分发。你可以在上面的源代码地址拿到构建这个版本的全部源码。"
+          }
+        }
+      }
+    },
+    "licence.components": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Components in the app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App 里带的组件"
+          }
+        }
+      }
+    },
+    "licence.componentsNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list is read from the copy of docs/THIRD-PARTY.md inside the app, the same file the source repository carries."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这份清单读自 App 内附带的 docs/THIRD-PARTY.md，和源码仓库里的是同一个文件。"
+          }
+        }
+      }
+    },
+    "licence.fullText": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GNU General Public License v3, full text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GNU GPL 第 3 版全文"
+          }
+        }
+      }
+    },
+    "licence.unreadable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file could not be read from the app bundle."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App 包里读不到这个文件。"
           }
         }
       }
@@ -11153,6 +11357,23 @@
         }
       }
     },
+    "settings.build": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "构建"
+          }
+        }
+      }
+    },
     "settings.buildStamp": {
       "extractionState": "manual",
       "localizations": {
@@ -11799,6 +12020,40 @@
         }
       }
     },
+    "settings.licence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licence · GPL-3.0"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "许可证 · GPL-3.0"
+          }
+        }
+      }
+    },
+    "settings.licenceDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Components and the full GPL text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "组件清单和 GPL 全文"
+          }
+        }
+      }
+    },
     "settings.mode": {
       "extractionState": "manual",
       "localizations": {
@@ -11986,6 +12241,23 @@
         }
       }
     },
+    "settings.privacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私"
+          }
+        }
+      }
+    },
     "settings.remote": {
       "extractionState": "manual",
       "localizations": {
@@ -12067,6 +12339,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "主机把这几条快捷键绑在 Lua 函数上，没有可执行的记录，这台设备永远跑不了。打开后它们回到列表里，仍然是灰的。"
+          }
+        }
+      }
+    },
+    "settings.sourceCode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source code"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源代码"
           }
         }
       }

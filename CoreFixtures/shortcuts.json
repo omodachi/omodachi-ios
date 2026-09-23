@@ -1,0 +1,102 @@
+{
+  "contract_revision": "omodachi.v1",
+  "revision": "f510faeef3e91fc2",
+  "source": "hyprland",
+  "available": true,
+  "reason": null,
+  "items": [
+    {
+      "id": "omodachi.shortcut.276ab852ca3046159fa64eed",
+      "label": "Omarchy menu",
+      "shortcut_display": "SUPER + SPACE",
+      "order": 0,
+      "enabled": true,
+      "disabled_reason": null,
+      "disabled_reason_detail": null,
+      "action_ref": "omodachi.shortcut.276ab852ca3046159fa64eed",
+      "requires_target": false,
+      "hidden": false,
+      "execution": {
+        "kind": "exec",
+        "detail": "omarchy-menu toggle"
+      }
+    },
+    {
+      "id": "omodachi.shortcut.c451ecd0a830dcbd92a674e7",
+      "label": "Terminal",
+      "shortcut_display": "SUPER + RETURN",
+      "order": 1,
+      "enabled": true,
+      "disabled_reason": null,
+      "disabled_reason_detail": null,
+      "action_ref": "omodachi.shortcut.c451ecd0a830dcbd92a674e7",
+      "requires_target": false,
+      "hidden": false,
+      "execution": {
+        "kind": "exec",
+        "detail": "omarchy-launch-terminal"
+      }
+    },
+    {
+      "id": "omodachi.shortcut.9d875406641062ece3f134b1",
+      "label": "Switch to workspace 3",
+      "shortcut_display": "SUPER + 3",
+      "order": 2,
+      "enabled": true,
+      "disabled_reason": null,
+      "disabled_reason_detail": null,
+      "action_ref": "omodachi.shortcut.9d875406641062ece3f134b1",
+      "requires_target": false,
+      "hidden": false,
+      "execution": {
+        "kind": "eval",
+        "detail": "hl.dsp.focus({ workspace = \"3\" })"
+      }
+    },
+    {
+      "id": "omodachi.shortcut.2d152f1ffda55864bdfee4cb",
+      "label": "Close window",
+      "shortcut_display": "SUPER + W",
+      "order": 3,
+      "enabled": true,
+      "disabled_reason": null,
+      "disabled_reason_detail": null,
+      "action_ref": "omodachi.shortcut.2d152f1ffda55864bdfee4cb",
+      "requires_target": true,
+      "hidden": false,
+      "execution": {
+        "kind": "eval",
+        "detail": "hl.dsp.window.close()"
+      }
+    },
+    {
+      "id": "omodachi.shortcut.4339c9539f9fbdba5c879d6e",
+      "label": "Download Video from Web App",
+      "shortcut_display": "SHIFT ALT + D",
+      "order": 4,
+      "enabled": true,
+      "disabled_reason": null,
+      "disabled_reason_detail": null,
+      "action_ref": "omodachi.shortcut.4339c9539f9fbdba5c879d6e",
+      "requires_target": true,
+      "hidden": false,
+      "execution": {
+        "kind": "sendshortcut",
+        "detail": "SHIFT ALT,D,"
+      }
+    },
+    {
+      "id": "omodachi.shortcut.684c7ce4b80da7057b0cf831",
+      "label": "Universal copy",
+      "shortcut_display": "SUPER + C",
+      "order": 5,
+      "enabled": false,
+      "disabled_reason": "binding_adapter_unavailable",
+      "disabled_reason_detail": "host record carries no executable binding: dispatcher=\"\" arg=\"\"",
+      "action_ref": null,
+      "requires_target": false,
+      "hidden": true,
+      "execution": null
+    }
+  ]
+}

@@ -110,6 +110,12 @@ is never used as a mark of Omodachi's own.
 ## Libraries
 
 Dependency versions and why each one is here are in the root `README.md`.
+
+This file is also bundled into the app (STORE-2 §4): Settings ⑥ → About →
+Licence lists every row of the two tables below, read by
+`Omodachi/Host/LicenceNotice.swift` from any table whose first header cell is
+`Component` or `Package` and which has a `Licence` column. Keep that shape when
+adding a row, and the app's list follows.
 `Vendor/Moonlight/PATCHES.md` records every deviation from upstream Moonlight.
 
 ### Vendored in this repository

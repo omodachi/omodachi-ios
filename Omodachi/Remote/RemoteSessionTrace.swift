@@ -12,7 +12,7 @@ import OSLog
 /// This is not a control path. It reads values that already exist and never
 /// changes a request, a session or a phase.
 enum RemoteSessionTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "remote.session")
+    private static let log = Logger(subsystem: "app.omodachi", category: "remote.session")
 
     private static func stamp() -> String { String(format: "%.3f", Date().timeIntervalSince1970) }
 

@@ -29,7 +29,9 @@ struct RemotePanelView: View {
                 // of the same truth — the stage only exists while a session
                 // does (N-32) — so the two cannot disagree about whether there
                 // is something to go back to.
-                if controller.hasSession || router.stage == .picture {
+                if home.demoActive {
+                    demoPlaceholder
+                } else if controller.hasSession || router.stage == .picture {
                     sessionCard(narrow: PanelMeasure.isNarrow(proxy.size.width))
                 } else {
                     RemoteEntryCards(controller: controller, hostName: hostName,
@@ -49,6 +51,21 @@ struct RemotePanelView: View {
             case .connecting, .resizing, .streaming: router.enterPicture()
             default: break
             }
+        }
+    }
+
+    /// STORE-1 §1. The demo has no computer to stream, so the panel shows a
+    /// desktop the app draws itself and says what the real thing needs.
+    private var demoPlaceholder: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            DesktopSketch()
+                .frame(maxWidth: 560)
+                .padding(OmodachiTheme.rowPaddingX)
+                .accessibilityElement()
+                .accessibilityLabel(Strings.demoRemoteSketch)
+                .accessibilityIdentifier("demo-remote-sketch")
+            EmptyState(title: Strings.demoRemoteNeedsHost, detail: Strings.demoRemoteDetail,
+                       identifier: "demo-remote-needs-host")
         }
     }
 

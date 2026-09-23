@@ -3,6 +3,13 @@
 The Omodachi app: an iPhone and iPad client for one
 [Omarchy](https://omarchy.org) desktop you own.
 
+<p>
+  <img src="https://omodachi.app/img/shots/demo-ipad-menu.webp" width="560" alt="The app on an iPad in demo mode: the Omarchy menu beside the keybindings">
+  <img src="https://omodachi.app/img/shots/demo-iphone-menu.webp" width="200" alt="The app on an iPhone in demo mode: the Omarchy menu">
+</p>
+
+<sub>Demo mode, on mock data. More at <a href="https://omodachi.app">omodachi.app</a>.</sub>
+
 ## Where this sits
 
 Omodachi turns an iPhone or iPad into an extension of an Omarchy desktop. It
@@ -54,6 +61,14 @@ monospace family and Omarchy's private icon font from `GET /v1/fonts`.
 **TestFlight and the App Store are coming.** Until then, the app is built from
 source.
 
+The app is version **0.1.0** (`MARKETING_VERSION` in `project.yml`), the same
+number as the Omarchy plugin and the release tag. `CFBundleVersion` is not a
+version: it is the build minute stamped by `scripts/build.sh`.
+
+No Omarchy computer yet? The first screen's last row, **Explore the demo**,
+opens the app over made-up data. It connects to nothing, and a banner on top
+says so.
+
 What you need: a Mac with **Xcode 27** (the iOS 27 simulator runtime for the
 simulator targets), `xcodegen`, and `python3`. The Swift packages below are
 resolved by Xcode through Swift Package Manager on the first build; nothing
@@ -64,6 +79,7 @@ scripts/build.sh generate      # xcodegen -> Omodachi.xcodeproj
 scripts/build.sh build-sim     # Debug build for the iPhone simulator
 scripts/build.sh test          # unit and UI, iPhone and iPad destinations
 scripts/build.sh build-device  # generic/platform=iOS, CODE_SIGNING_ALLOWED=NO
+scripts/build.sh archive       # Release archive, generic/platform=iOS, unsigned
 scripts/build.sh all
 ```
 
@@ -82,7 +98,7 @@ directly.
 `project.yml`). For a build you can run on your own device, open
 `Omodachi.xcodeproj` in Xcode, pick the `Omodachi` scheme, set **Signing &
 Capabilities → Team** to your own Apple Development team for the `Omodachi`
-target, change the bundle identifier `com.omodachi.ios` to one your team can
+target, change the bundle identifier `app.omodachi` to one your team can
 register, and run. The computer needs `omodachi-core` installed and reachable
 on the same network; the Omarchy plugin installs it.
 

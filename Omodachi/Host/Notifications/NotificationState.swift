@@ -12,6 +12,7 @@ extension HomeStore {
     /// when the Panel's notification group first appears and after a reconnect,
     /// never on a timer: the event stream is what keeps it fresh.
     func loadNotifications() async {
+        if demoActive, profile.mock { notifications.replace(with: DemoHost.notifications()); return }
         guard !profile.mock, companionConnected, let client = client as? CompanionHostClient else { return }
         let current = connectionGeneration
         do {

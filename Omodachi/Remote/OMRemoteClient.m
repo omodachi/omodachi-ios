@@ -14,7 +14,7 @@ static void OMPairTrace(NSString *format, ...) {
     va_list args; va_start(args, format);
     NSString *line=[[NSString alloc] initWithFormat:format arguments:args];
     va_end(args);
-    os_log_info(os_log_create("com.omodachi.ios", "pairing"), "pair.%{public}s", line.UTF8String);
+    os_log_info(os_log_create("app.omodachi", "pairing"), "pair.%{public}s", line.UTF8String);
 }
 #else
 static void OMPairTrace(NSString *format, ...) {}
@@ -27,7 +27,7 @@ static void OMInputTrace(NSString *format, ...) {
     va_list args; va_start(args, format);
     NSString *line=[[NSString alloc] initWithFormat:format arguments:args];
     va_end(args);
-    os_log_info(os_log_create("com.omodachi.ios", "input"), "remote.input %{public}s", line.UTF8String);
+    os_log_info(os_log_create("app.omodachi", "input"), "remote.input %{public}s", line.UTF8String);
 }
 #else
 static void OMInputTrace(NSString *format, ...) {}
@@ -321,7 +321,7 @@ static void OMInputTrace(NSString *format, ...) {}
             if (failure) { [self event:@"error" values:@{@"message":failure}]; return; }
 #if DEBUG
             // PERF-1: the numbers Moonlight is actually given, once per start.
-            os_log_info(os_log_create("com.omodachi.ios", "perf"),
+            os_log_info(os_log_create("app.omodachi", "perf"),
                         "remote.stream_configuration width=%{public}d height=%{public}d frame_rate=%{public}d bit_rate=%{public}d video_formats=0x%{public}x",
                         config.width, config.height, config.frameRate, config.bitRate, config.supportedVideoFormats);
 #endif

@@ -20,6 +20,9 @@ struct DiagnosticBlock: View {
     let copiedTitle: String
     let emptyTitle: String
     var identifier: String
+    /// How tall the scrolling text may grow before it scrolls. STORE-2's
+    /// licence page is the one caller that is not a transcript.
+    var maxHeight: CGFloat = 180
 
     @State private var copied = false
 
@@ -58,7 +61,7 @@ struct DiagnosticBlock: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(OmodachiTheme.space("md"))
                 }
-                .frame(maxHeight: 180)
+                .frame(maxHeight: maxHeight)
                 .background(OmodachiTheme.normalFill)
                 .accessibilityIdentifier(identifier)
             }

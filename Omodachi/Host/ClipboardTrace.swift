@@ -9,7 +9,7 @@ import OSLog
 /// stop, and the lines carry a reason and a length — the same rule the host's
 /// own trace follows.
 enum ClipboardTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "clipboard")
+    private static let log = Logger(subsystem: "app.omodachi", category: "clipboard")
 
     static func pushStopped(_ reason: String) {
         log.notice("clipboard.push stopped reason=\(reason, privacy: .public)")

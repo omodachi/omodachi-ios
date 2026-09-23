@@ -57,7 +57,7 @@ extern int ff_isom_write_av1c(AVIOContext *pb, const uint8_t *buf, int size,
 #if DEBUG
 static os_log_t OMRemotePerfLog(void) {
     static os_log_t log; static dispatch_once_t once;
-    dispatch_once(&once, ^{ log = os_log_create("com.omodachi.ios", "perf"); });
+    dispatch_once(&once, ^{ log = os_log_create("app.omodachi", "perf"); });
     return log;
 }
 #endif

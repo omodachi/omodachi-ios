@@ -13,7 +13,7 @@ import OSLog
 /// It is not a control path. Every value here already exists; nothing is
 /// delayed, retried or changed because of a line being written.
 enum AgentChatTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "agent.chat")
+    private static let log = Logger(subsystem: "app.omodachi", category: "agent.chat")
 
     private static func stamp() -> String { String(format: "%.3f", Date().timeIntervalSince1970) }
 

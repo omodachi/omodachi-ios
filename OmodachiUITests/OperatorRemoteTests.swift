@@ -202,7 +202,7 @@ import XCTest
     }
 
     /// PERF-1 — one Sunshine session held open long enough to measure. The
-    /// numbers come out of the app's own `com.omodachi.ios`/`perf` os_log
+    /// numbers come out of the app's own `app.omodachi`/`perf` os_log
     /// signal, which the harness streams from the Simulator in parallel; this
     /// case only opens the session, keeps it up and lets go of it again. Mode
     /// and hold time come from the launch arguments so the same case measures

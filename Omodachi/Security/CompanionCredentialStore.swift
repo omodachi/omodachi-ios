@@ -3,7 +3,7 @@ import Foundation
 /// Companion device credentials use a separate Keychain service from both SSH
 /// private keys and host-key pins. Tokens never enter UserDefaults or logs.
 final class CompanionCredentialStore: CompanionCredentialProviding, @unchecked Sendable {
-    static let defaultService = "com.omodachi.ios.companion"
+    static let defaultService = "app.omodachi.companion"
 
     private let service: String
     private let records: any KeychainRecordStore

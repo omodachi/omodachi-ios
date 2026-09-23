@@ -45,6 +45,11 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
         }
     }
     @Published var profile: HostProfile { didSet { if oldValue != profile { saveProfile() } } }
+    /// STORE-1 §1. The demo is on (`Host/DemoHost.swift`). It is never stored:
+    /// a relaunch is back at the host list.
+    @Published var demoActive = false
+    /// The profile the demo stood in for, put back when it ends.
+    var demoReturnProfile: HostProfile?
     @Published var askText = ""
     @Published var submitting = false
     @Published var workspaceLayoutOffer: WorkspaceLayoutOffer?
@@ -385,7 +390,8 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     }
 
     func saveProfile() {
-        if let data = try? JSONEncoder().encode(profile) { defaults.set(data, forKey: "omodachi.profile.v1") }
+        // STORE-1 §1: the demo profile is never written down.
+        if !demoActive, let data = try? JSONEncoder().encode(profile) { defaults.set(data, forKey: "omodachi.profile.v1") }
         connectionWanted = false
         stopActiveConnection()
         askText = ""
@@ -410,8 +416,10 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
         state.online = profile.mock
         state.focusWindow = "—"
         state.streamState = "Disconnected"
-        if profile.mock { menu = MockCatalog.roots }
-        else {
+        if profile.mock {
+            menu = MockCatalog.roots
+            if demoActive { applyDemoFixtures() }
+        } else {
             state.workspace = 0; state.occupiedWorkspaces = []; state.toggles = [:]; menu = []
         }
     }
@@ -443,6 +451,7 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     }
 
     func loadShortcuts() async throws -> ShortcutSnapshot {
+        if demoActive, profile.mock { return try DemoHost.shortcuts() }
         guard companionConnected, let client else { throw ShortcutWireError.unavailableContext }
         return try await client.fetchShortcuts()
     }

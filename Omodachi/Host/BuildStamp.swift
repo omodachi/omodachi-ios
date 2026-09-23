@@ -21,6 +21,19 @@ enum BuildStamp {
     /// The one line the Settings surface shows.
     static var summary: String { Strings.settingsBuildStamp(commit, time) }
 
+    /// `CFBundleShortVersionString` — `project.yml`'s `MARKETING_VERSION`, the
+    /// number the plugin and the tag carry (STORE-1 §3).
+    static var marketingVersion: String { string("CFBundleShortVersionString") ?? "" }
+
+    /// STORE-2 §4. What About says the version is: the release number and the
+    /// build, the pair App Store Connect shows for a build — `0.1.0 (202609232039)`.
+    static var versionLine: String { versionLine(marketingVersion, version) }
+
+    static func versionLine(_ marketing: String, _ build: String) -> String {
+        guard !build.isEmpty else { return marketing }
+        return marketing.isEmpty ? build : "\(marketing) (\(build))" // non-copy: two numbers
+    }
+
     static func readableTime(_ raw: String) -> String {
         let digits = raw.trimmingCharacters(in: .whitespaces)
         guard digits.count == 12, digits.allSatisfy(\.isNumber) else { return digits }

@@ -52,7 +52,7 @@ struct HostPin: Codable, Equatable, Sendable {
 /// and SSH material, and are keyed by the same account string the credential
 /// uses so one endpoint has exactly one identity.
 final class HostPinStore: @unchecked Sendable {
-    static let defaultService = "com.omodachi.ios.hostpin"
+    static let defaultService = "app.omodachi.hostpin"
     private let service: String
     private let records: any KeychainRecordStore
 

@@ -13,7 +13,7 @@ import OSLog
 /// `RemoteSessionTrace` and `ShortcutTrace` already use, and it is left in
 /// place because a number nobody can reproduce is a number that rots.
 enum PanelPerfTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "perf")
+    private static let log = Logger(subsystem: "app.omodachi", category: "perf")
 
     /// Wall clock, so the host's own log can be lined up against this one.
     private static func stamp() -> String { String(format: "%.3f", Date().timeIntervalSince1970) }

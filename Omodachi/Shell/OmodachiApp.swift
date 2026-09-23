@@ -89,6 +89,9 @@ struct ShellView: View {
     /// mock data with no host of its own. A launch that threw a credential away
     /// is never that run, so the clause cannot hide a rejection.
     private var needsPairing: Bool {
+        // STORE-1 §1: the demo is the Panel over the demo profile, entered
+        // from this very gate, and leaving it is how the gate comes back.
+        if home.demoActive { return false }
         guard directory.records.isEmpty, home.profile.companionURL.isEmpty else { return false }
         if gate.discardedCredential { return true }
         let arguments = ProcessInfo.processInfo.arguments
@@ -429,9 +432,23 @@ struct ShellView: View {
     /// A-55: one panel, filling the block. The registry owns which panels exist;
     /// this owns which one is on screen.
     private var panelArea: some View {
-        PanelHost(id: router.panel, router: router, remote: remote,
-                  directory: directory, preferences: $preferences)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 0) {
+            // STORE-1 §1: on top of every panel for as long as the demo is on.
+            if home.demoActive {
+                DemoBanner(title: Strings.demoBanner, exitTitle: Strings.demoExit, exit: exitDemo)
+            }
+            PanelHost(id: router.panel, router: router, remote: remote,
+                      directory: directory, preferences: $preferences)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    /// STORE-1 §1. The demo's SSH sessions are the demo's; they go with it,
+    /// and the host list comes back.
+    private func exitDemo() {
+        let demo = sessions.runtimes.filter { $0.descriptor.host.mock && $0.descriptor.host.id == DemoHost.profileID }
+        Task { for runtime in demo { await sessions.remove(runtime) } }
+        home.exitDemo()
     }
 
     // MARK: - Remote's toast (A-58's one exception)

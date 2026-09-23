@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  STORE-2 §2. The app's own privacy manifest. It collects nothing and tracks
+  nobody (docs/release/app-privacy-questionnaire.md); the three required-reason
+  API categories below are the ones the linked binary actually imports, each
+  with the one reason that describes how it is used. Evidence per entry, with
+  file:line and the `nm -u` output it was read from: docs/specs/STORE-2-report.md
+  in the workspace.
+
+  UserDefaults  CA92.1  AppDefaults.shared (Shell/DevelopmentLaunch.swift) and
+                        the preference stores; this app's own domain only.
+  SystemBootTime 35F9.1 ProcessInfo.systemUptime deadlines (Voice/, Remote/)
+                        and SDL2's timer (mach_absolute_time); elapsed time
+                        inside the app, never sent anywhere.
+  FileTimestamp C617.1  stat/fstat/lstat, statically linked from SwiftTerm
+                        (KittyGraphics, files in the app's temporary directory),
+                        swift-nio (NIOPosix), LibVNCClient and FFmpeg's
+                        libavutil; files inside the app container only.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

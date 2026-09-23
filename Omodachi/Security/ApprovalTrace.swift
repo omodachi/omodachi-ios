@@ -20,7 +20,7 @@ import OSLog
 /// `biometric-keys.json`; the private half is in the Secure Enclave and cannot
 /// be exported by anything, including this.
 enum ApprovalTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "auth.approval")
+    private static let log = Logger(subsystem: "app.omodachi", category: "auth.approval")
 
     static let transcript = DiagnosticsTranscript()
 

@@ -6,7 +6,7 @@ import OSLog
 /// host's own reason is readable without a debugger — the same shape
 /// `RemoteGeometryTrace` and `RemotePairingTrace` already use.
 enum ShortcutTrace {
-    private static let log = Logger(subsystem: "com.omodachi.ios", category: "shortcut")
+    private static let log = Logger(subsystem: "app.omodachi", category: "shortcut")
 
     static func executionRetried(entry: String, reason: String) {
         log.notice("shortcut.execute retrying entry=\(entry, privacy: .public) after=\(reason, privacy: .public)")

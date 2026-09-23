@@ -19,7 +19,7 @@ enum HostKeyStoreError: Error, Equatable {
 /// Persists SHA-256 host-key pins independently from SSH private keys. Call
 /// `confirm` only after presenting the first-seen fingerprint to the user.
 final class HostKeyStore: @unchecked Sendable {
-    static let defaultService = "com.omodachi.ios.ssh.hostkeys"
+    static let defaultService = "app.omodachi.ssh.hostkeys"
 
     private let service: String
     private let records: any KeychainRecordStore

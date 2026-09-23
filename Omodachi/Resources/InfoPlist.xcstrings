@@ -86,6 +86,23 @@
           }
         }
       }
+    },
+    "NSBluetoothAlwaysUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moonlight's game-controller support may use Bluetooth. Omodachi never scans for or connects to Bluetooth devices on its own."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moonlight 的手柄支持可能用到蓝牙；Omodachi 不会主动扫描或连接蓝牙设备。"
+          }
+        }
+      }
     }
   }
 }

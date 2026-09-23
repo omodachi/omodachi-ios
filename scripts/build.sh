@@ -93,6 +93,12 @@ usage: scripts/build.sh <command>
                 Screenshots are exported from the result bundle into
                 $OMODACHI_ACCEPTANCE_OUT (default $DERIVED/acceptance).
   build-device  Device build with signing disabled, for source verification.
+  archive       Release archive for generic/platform=iOS with signing disabled
+                (STORE-1 §2): catches what only the Release configuration
+                trips — optimisation, `#if DEBUG` branches, type-check time —
+                on a machine with no team. The .xcarchive lands in
+                $OMODACHI_DERIVED_DATA/archive; it is not signed and cannot
+                be uploaded.
   all           generate, build-sim, test, build-device.
 
 Every build carries a stamp: CFBundleVersion is the build minute
@@ -216,6 +222,25 @@ build_device() {
     CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 }
 
+# STORE-1 §2. The archive the App Store build will be, minus the signature.
+# The log is kept next to the archive so the warnings can be counted and read.
+archive() {
+  require_project
+  local out="$DERIVED/archive" started ended status=0
+  mkdir -p "$out"
+  rm -rf "$out/Omodachi.xcarchive"
+  started="$(date +%s)"
+  xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+    -destination 'generic/platform=iOS' -derivedDataPath "$DERIVED" "${FLAGS[@]}" \
+    -archivePath "$out/Omodachi.xcarchive" "${STAMP[@]}" \
+    CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+    2>&1 | tee "$out/archive.log" || status=$?
+  ended="$(date +%s)"
+  echo "==> archive: $out/Omodachi.xcarchive ($((ended - started)) s)"
+  echo "==> warnings: $(grep -c ': warning: ' "$out/archive.log" || true) (log: $out/archive.log)"
+  return "$status"
+}
+
 case "${1:-}" in
   generate) generate ;;
   lint) lint_views ;;
@@ -223,6 +248,7 @@ case "${1:-}" in
   test) run_tests ;;
   acceptance) shift; acceptance "$@" ;;
   build-device) build_device ;;
+  archive) archive ;;
   all) generate; build_sim; run_tests; build_device ;;
   ""|-h|--help|help) usage ;;
   *) usage; exit 2 ;;
