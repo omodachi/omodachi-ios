@@ -42,8 +42,13 @@ actor FakeRemoteHost: RemoteSessionServing {
         return value
     }
 
+    /// REMOTE-SAFE-1: a host that takes `bar_occlusion_points`. Off by
+    /// default, which is every host from before it.
+    private var barOcclusion = false
+    func setBarOcclusion(_ value: Bool) { barOcclusion = value }
     func remoteCapabilities() async throws -> RemoteCapabilitiesDTO {
-        try JSONDecoder().decode(RemoteCapabilitiesDTO.self, from: Data(#"{"backends":{"sunshine":{"available":true,"reason":null},"vnc":{"available":true,"reason":null,"audio":false}},"modes":["extend","takeover"],"placement_options":["right"],"lock_local_input_supported":true,"encoder_limits":null}"#.utf8))
+        let extra = barOcclusion ? #","bar_occlusion":true"# : ""
+        return try JSONDecoder().decode(RemoteCapabilitiesDTO.self, from: Data((#"{"backends":{"sunshine":{"available":true,"reason":null},"vnc":{"available":true,"reason":null,"audio":false}},"modes":["extend","takeover"],"placement_options":["right"],"lock_local_input_supported":true,"encoder_limits":null"# + extra + "}").utf8))
     }
     func createRemoteSession(_ body: RemoteCreateRequest) async throws -> RemoteSessionDTO {
         if let failure = failNextCreate { failNextCreate = nil; throw failure }

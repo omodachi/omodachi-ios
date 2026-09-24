@@ -58,6 +58,9 @@ import UIKit
     /// SPEC-I §1.2: who is holding the host, when a create was refused for it.
     @Published private(set) var sessionOwner: RemoteRequestError.Owner?
     @Published var logicalLongEdge = 1280
+    /// REMOTE-SAFE-1: which corners of this window are the display's rounded
+    /// ones, as the window last reported them.
+    private(set) var displayCorners = DisplayCorners.square
     private(set) var preferences = RemotePreferences.load()
     /// STREAM-1. This device's own point on the host's quality table.
     @Published private(set) var streamChoice = RemoteStreamChoice.load()
@@ -576,6 +579,11 @@ import UIKit
                     hostPreferences = answer
                     hostQuality = answer?.quality
                 }
+                // REMOTE-SAFE-1: whether the host takes the corners is in its
+                // capabilities; a start that raced their first read asks once.
+                if capabilities == nil {
+                    capabilities = try? await client.remoteCapabilities()
+                }
                 adaptive = RemoteAdaptiveQuality()
                 pendingRequality = false
                 let body = RemoteCreateRequest(backend: backend, mode: mode, geometry: geometry(),
@@ -789,7 +797,10 @@ import UIKit
 
     /// UIKit reports intermediate sizes during a rotation. Only a size that has
     /// been stable for 300 ms is worth a host round trip.
-    func viewportChanged(size: CGSize, orientation: String) {
+    func viewportChanged(size: CGSize, orientation: String, corners: DisplayCorners? = nil) {
+        // REMOTE-SAFE-1. Kept whatever happens below: the corners are a fact
+        // about the window, and the next request that does go out uses them.
+        if let corners { displayCorners = corners }
         guard size.width >= 64, size.height >= 64 else { return }
         // A-61 (rev 5, review item 1). **The soft keyboard is a layer over the
         // picture and never a geometry change.** REMOTE-2 measured what the old
@@ -906,8 +917,33 @@ import UIKit
                                             quality: quality)
         request.quality_preset = plan.preset
         request.adaptive = plan.adaptive
+        // REMOTE-SAFE-1 / 1b. Both modes: a takeover puts the whole desktop,
+        // bar included, on the same device-shaped output, so its ends hit the
+        // same corners. Only to a host that says it takes the field. Zeros are
+        // sent, not omitted: a window that moved off the display's corners has
+        // to be able to take back what an earlier request asked for.
+        if capabilities?.bar_occlusion == true {
+            request.bar_occlusion_points = barOcclusion()
+        }
         RemoteGeometryTrace.request(request, mode: mode, backend: backend)
         return request
+    }
+
+    /// The corners' reach into each end of a bar of the host's thickness, in
+    /// this device's points. The host's bar is `lastBarGeometry.bar` in the
+    /// owned output's logical px once a session has one (the thinner side is
+    /// the thickness); before that, Omarchy's own 26. One logical px is
+    /// `viewport long edge / logicalLongEdge` points: the output is planned to
+    /// exactly that long edge (`profile.py` requires it).
+    func barOcclusion() -> RemoteBarOcclusion {
+        let long = max(viewport.width, viewport.height)
+        guard long > 0, logicalLongEdge > 0 else { return .init(top: 0, bottom: 0, left: 0, right: 0) }
+        let pointsPerPixel = long / CGFloat(logicalLongEdge)
+        var thickness = DisplayCorners.defaultBarThickness
+        if let bar = lastBarGeometry?.bar, min(bar.width, bar.height) >= 1, min(bar.width, bar.height) <= 256 {
+            thickness = min(bar.width, bar.height)
+        }
+        return displayCorners.barOcclusion(thickness: thickness * pointsPerPixel)
     }
 
     // MARK: - STREAM-1: presets, statistics, 自动

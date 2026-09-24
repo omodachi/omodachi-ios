@@ -20,6 +20,7 @@
     "below"
   ],
   "lock_local_input_supported": true,
+  "bar_occlusion": true,
   "encoder_limits": {
     "max_width": 4096,
     "max_height": 4096,

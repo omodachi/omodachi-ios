@@ -143,7 +143,7 @@ struct RemoteStageView: View {
     }
 
     @ViewBuilder private var canvas: some View {
-        RemoteViewportReader(changed: controller.viewportChanged,
+        RemoteViewportReader(changed: { controller.viewportChanged(size: $0, orientation: $1) },
                              orientationLock: controller.rotationLocked) {
             if controller.backend == .vnc, let vnc = controller.vnc {
                 VNCBackendCanvas(adapter: vnc.adapter)

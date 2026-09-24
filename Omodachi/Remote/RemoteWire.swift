@@ -187,6 +187,9 @@ struct RemoteCapabilitiesDTO: Decodable, Equatable, Sendable {
     /// no opinion shows this rather than inventing a constant of its own, which
     /// is what made core say sunshine while this app said vnc.
     let default_backend: RemoteBackend?
+    /// REMOTE-SAFE-1: the host takes `bar_occlusion_points`. Absent on a host
+    /// from before it, which is the same as `false`.
+    var bar_occlusion: Bool? = nil
 
     func available(_ backend: RemoteBackend) -> Bool { backends[backend.rawValue]?.available == true }
     /// Whether this backend can carry the host's sound at all.
@@ -366,6 +369,10 @@ struct RemoteGeometryRequest: Encodable, Equatable, Sendable {
     /// would refuse.
     var quality_preset: String? = nil
     var adaptive: Bool? = nil
+    /// REMOTE-SAFE-1. How much of each end of the host's bar this display's
+    /// corners hide, in points. Sent only to a host whose capabilities say
+    /// `bar_occlusion`; absent, a host from before it is never refused.
+    var bar_occlusion_points: RemoteBarOcclusion? = nil
 }
 
 struct RemoteCreateRequest: Encodable, Sendable {
@@ -381,6 +388,7 @@ struct RemoteCreateRequest: Encodable, Sendable {
     let ttl_seconds: Double
     let quality_preset: String?
     let adaptive: Bool?
+    let bar_occlusion_points: RemoteBarOcclusion?
     init(backend: RemoteBackend, mode: RemoteMode, geometry: RemoteGeometryRequest,
          placement: RemotePlacement = .right, lockLocalInput: Bool = false, ttlSeconds: Double) {
         self.backend = backend
@@ -397,6 +405,7 @@ struct RemoteCreateRequest: Encodable, Sendable {
         ttl_seconds = ttlSeconds
         quality_preset = geometry.quality_preset
         adaptive = geometry.adaptive
+        bar_occlusion_points = geometry.bar_occlusion_points
     }
 }
 
@@ -409,6 +418,7 @@ struct RemoteResizeRequest: Encodable, Sendable {
     let decoder: RemoteDecoderLimits
     let quality_preset: String?
     let adaptive: Bool?
+    let bar_occlusion_points: RemoteBarOcclusion?
     init(expectedRevision: Int, geometry: RemoteGeometryRequest) {
         expected_revision = expectedRevision
         viewport_points = geometry.viewport_points
@@ -418,6 +428,7 @@ struct RemoteResizeRequest: Encodable, Sendable {
         decoder = geometry.decoder
         quality_preset = geometry.quality_preset
         adaptive = geometry.adaptive
+        bar_occlusion_points = geometry.bar_occlusion_points
     }
 }
 

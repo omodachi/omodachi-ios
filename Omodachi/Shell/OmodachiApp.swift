@@ -533,14 +533,15 @@ struct ShellView: View {
     private var insetsReader: some View {
         WindowInteractionInsetsReader(
             changed: { windowInsets = $0 },
-            windowChanged: { size in
+            windowChanged: { size, corners in
                 windowSize = size
                 placement.update(width: size.width, height: size.height, reason: .windowGeometry)
                 // A-61: the *window* is the viewport. The soft keyboard shrinks
                 // the safe area, not the window, so it can never reach this and
                 // can never make the host re-plan its output.
                 remote.viewportChanged(size: size,
-                                       orientation: size.width >= size.height ? "landscape_left" : "portrait") // non-copy: wire value
+                                       orientation: size.width >= size.height ? "landscape_left" : "portrait", // non-copy: wire value
+                                       corners: corners)
             })
         .frame(width: 0, height: 0).allowsHitTesting(false).accessibilityHidden(true)
     }
