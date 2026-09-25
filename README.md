@@ -58,8 +58,9 @@ monospace family and Omarchy's private icon font from `GET /v1/fonts`.
 
 ## Install
 
-**TestFlight and the App Store are coming.** Until then, the app is built from
-source.
+**Not yet available from the App Store.** Version 0.1.0 was submitted to App
+Store review on 2026-09-25 and is not live. TestFlight is open to an internal
+testing group only. Until a public release, the app is built from source.
 
 The app is version **0.1.0** (`MARKETING_VERSION` in `project.yml`), the same
 number as the Omarchy plugin and the release tag. `CFBundleVersion` is not a
@@ -137,7 +138,7 @@ None here. The site draws the interface: **omodachi.app**.
 | [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) | 1.20.0 | terminal emulator view |
 | [OpenSSL-Package](https://github.com/krzyzanowskim/OpenSSL-Package) | 3.3.2000 | required by the Moonlight crypto and pairing code |
 | Moonlight iOS | 9.0.2, vendored | the streaming client: common-c, ENet, SDL2, Opus, FFmpeg |
-| LibVNCClient | vendored xcframework | the VNC fallback backend |
+| LibVNCClient | 0.9.15, vendored xcframework, rebuilt by `scripts/build_libvncclient.sh` | the VNC fallback backend |
 | `asyncssh` | 2.21.1, pip, test only | backs `Tools/SSHFixture/server.py` |
 
 `Package.resolved` pins `swift-nio-ssh` to `github.com/Joannis/swift-nio-ssh`
@@ -163,8 +164,30 @@ bundle and the licence each one carries.
 The rest of Omodachi is not bound by this. `omodachi-core` and the Omarchy
 plugin are MIT; only this app is GPL-3.0.
 
-A TestFlight build and a free App Store listing are coming, offered under the
-same GPL-3.0 with this repository as the source. There is no date.
+Four of the vendored components are prebuilt static libraries: LibVNCClient,
+FFmpeg, Opus and SDL2. The exact upstream source and build recipe of each is
+recorded in `Vendor/LibVNCClient.xcframework/BUILD.md` and
+`Vendor/Moonlight/libs/PROVENANCE.md`. LibVNCClient is rebuilt from its pinned
+upstream tag by `scripts/build_libvncclient.sh`, and that rebuild matches the
+committed binary; it carries one small iOS change to upstream, shown in
+`BUILD.md`. FFmpeg is LGPL and statically linked; since this whole app is
+source, it can be rebuilt against a modified FFmpeg.
+
+**Distribution.** The app is offered free, under the same GPL-3.0, with this
+repository as the source. Where that stands on 2026-09-25:
+
+- TestFlight: open to an internal testing group only.
+- App Store: version 0.1.0 was submitted for review on 2026-09-25. It is not
+  live.
+- The FSF has held Apple's store terms to conflict with the GPL, so the
+  maintainers of Moonlight and LibVNCServer were asked on 2026-09-25 for an
+  additional permission covering App Store distribution. **No permission has
+  been granted.** LibVNCServer's maintainer replied that he is not the only
+  copyright holder and cannot grant or refuse one on the others' behalf, and
+  left it to our own judgement; that is not a permission. Moonlight has not
+  replied. The App Store build goes ahead on that basis, at our own risk: any
+  copyright holder of either project can ask Apple to take it down, and
+  building from source stays available whatever happens there.
 
 ## Contributing
 

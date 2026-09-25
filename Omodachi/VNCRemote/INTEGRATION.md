@@ -10,17 +10,18 @@ B owns output/backend/session APIs. No Host or Simulator operations performed.
 Pinned LibVNCServer-0.9.15 / LibVNCClient, source SHA256
 `62352c7795e231dfce044beb96156065a05a05c974e5de9e023d688d8ff675d7`.
 Official source: https://github.com/LibVNC/libvncserver/tree/LibVNCServer-0.9.15
-License GPL-2.0-or-later: source archive and upstream COPYING retained. This is a
+License GPL-2.0-or-later: GPLv2 text at `Vendor/LibVNCClient.xcframework/LICENSE`. This is a
 functional candidate, not a claim that final project/App Store distribution and
 licensing have been reviewed.
 
-Built dependency: `/tmp/omodachi-vnc-dependency-v1/LibVNCClient.xcframework`
-contains arm64 iOS Simulator and arm64 iOS device static libraries. Build receipt:
-`/tmp/omodachi-vnc-dependency-v1/dependency.json`.
+Built dependency: `Vendor/LibVNCClient.xcframework` contains arm64 iOS
+Simulator and arm64 iOS device static libraries. Source, changes, build flags
+and a byte-level reproduction check: `Vendor/LibVNCClient.xcframework/BUILD.md`.
 
-Rebuild:
+Rebuild (the original `Tools/VNCRemoteTests/build_dependency.py` was removed in
+`afa7a61`; this script performs the same steps):
 
-    python3 Tools/VNCRemoteTests/build_dependency.py --output /tmp/CHOSEN_NEW_DIR --ninja /path/to/ninja
+    scripts/build_libvncclient.sh --compare
 
 The script fixes the immutable source archive hash. Only source patch disables
 unused reverse-listen fork on iOS. `-include unistd.h` fixes upstream missing POSIX

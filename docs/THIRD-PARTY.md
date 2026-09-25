@@ -126,16 +126,44 @@ adding a row, and the app's list follows.
 | moonlight-common-c | `Vendor/Moonlight/common/` | **GPL-3.0** | `Vendor/Moonlight/common/LICENSE.txt` |
 | ENet | `Vendor/Moonlight/common/enet/` | MIT | `Vendor/Moonlight/common/enet/LICENSE` |
 | Reed-Solomon FEC | `Vendor/Moonlight/common/reedsolomon/` | BSD-2-Clause | the header of `rs.c`, Luigi Rizzo and Alain Knaff |
-| SDL2 | `Vendor/Moonlight/libs/SDL2/` | zlib | `Vendor/Moonlight/libs/SDL2/include/SDL_copying.h` |
-| Opus | `Vendor/Moonlight/libs/opus/` | BSD-3-Clause | the header of `include/opus/opus.h` |
-| FFmpeg | `Vendor/Moonlight/libs/FFmpeg/` | LGPL-2.1-or-later | the header of `include/libavcodec/avcodec.h` |
-| LibVNCClient | `Vendor/LibVNCClient.xcframework/` | **GPL-2.0-or-later** | the header notice in `Headers/rfb/rfbclient.h`; full text now vendored at `Vendor/LibVNCClient.xcframework/LICENSE` |
+| SDL2 | `Vendor/Moonlight/libs/SDL2/` | zlib | `Vendor/Moonlight/libs/SDL2/LICENSE.txt` (upstream, release-2.28.5) |
+| Opus | `Vendor/Moonlight/libs/opus/` | BSD-3-Clause | `Vendor/Moonlight/libs/opus/COPYING` (upstream, v1.4) |
+| FFmpeg | `Vendor/Moonlight/libs/FFmpeg/` | LGPL-2.1-or-later | `Vendor/Moonlight/libs/FFmpeg/COPYING.LGPLv2.1` and `LICENSE.md` (upstream, `3f890fbfd9`) |
+| LibVNCClient | `Vendor/LibVNCClient.xcframework/` | **GPL-2.0-or-later** | `Vendor/LibVNCClient.xcframework/LICENSE`; source and build in `BUILD.md` there |
 | Symbols Nerd Font Mono | `Omodachi/Resources/Fonts/` | MIT | reproduced above |
 
-Opus, FFmpeg and SDL2 arrive as prebuilt static libraries, built from
-`github.com/cgutman/moonlight-mobile-deps` as `Vendor/Moonlight/libs/Build.txt`
-records. Their own licence texts are not in this tree; the headers that are
-carry the notices the table cites.
+### Corresponding source of the prebuilt binaries
+
+Four vendored components arrive as compiled static libraries rather than
+source. Each one's exact upstream source and build recipe is recorded:
+
+| Binary | Upstream source | Build recipe | Record |
+| --- | --- | --- | --- |
+| `libvncclient.a` (both slices) | LibVNC/libvncserver tag `LibVNCServer-0.9.15`, commit `9b54b1ec3273`, archive sha256 `62352c77…d675d7` | `scripts/build_libvncclient.sh`: one-line change to `listen.c` (no fork on iOS), `-include unistd.h`, every optional dependency off | `Vendor/LibVNCClient.xcframework/BUILD.md` |
+| `libavcodec.a`, `libavformat.a`, `libavutil.a` | FFmpeg commit `3f890fbfd9014843c51408c8f7ab3ba4aef7d354` (`N-112686-g3f890fbfd9`), LGPL build (no `--enable-gpl`) | cgutman/moonlight-mobile-deps `dad1ce6d964b`, `FFmpeg.sh`; configure line embedded in each archive | `Vendor/Moonlight/libs/PROVENANCE.md` |
+| `libopus.a` | Opus 1.4 release tarball (tag `v1.4`), sha256 `c9b32b42…ce49c51f` | cgutman/moonlight-mobile-deps `02c97bc2e0b3`, `opus.sh` | `Vendor/Moonlight/libs/PROVENANCE.md` |
+| `libSDL2.a` | SDL tag `release-2.28.5`, commit `15ead9a40d09` | cgutman/moonlight-mobile-deps `02c97bc2e0b3`, `SDL-ios.sh` | `Vendor/Moonlight/libs/PROVENANCE.md` |
+
+How firm each line is:
+
+- **LibVNCClient is reproduced.** Rebuilding with the script on 2026-09-25
+  gave archive members byte-identical to the committed ones, both slices. It
+  is upstream 0.9.15 plus the one-line change `BUILD.md` shows — not an
+  unmodified upstream build.
+- **SDL2, Opus and FFmpeg are identified, not reproduced.** The archives and
+  headers are byte-identical to the ones in upstream Moonlight iOS 9.0.2
+  (`85af0f7`), and the versions and build commits come from what the archives
+  embed (FFmpeg's configure line and version, `libopus 1.4`, SDL's build
+  paths) matched against moonlight-mobile-deps' history. They were built on
+  AppVeyor with Xcode 14.1 and have not been rebuilt here.
+  `Vendor/Moonlight/libs/Build.txt` is upstream Moonlight's note and names no
+  commit; `PROVENANCE.md` beside it does.
+
+FFmpeg is LGPL-2.1-or-later and is linked statically. LGPL-2.1 §6 is met by
+the whole app being public source: a user can build FFmpeg from the source
+above, replace the three archives and rebuild the app with
+`scripts/build.sh` (`Vendor/Moonlight/libs/PROVENANCE.md` §4). SDL2 is zlib and
+Opus is BSD-3-Clause; neither asks for relinking.
 
 ### Resolved by Swift Package Manager
 
@@ -160,5 +188,18 @@ free choice.
 
 The same fact bears on TestFlight and the App Store. Apple's terms restrict
 what a recipient may do with the binary in ways GPL-3.0 does not allow, and
-that conflict has removed GPL apps from the store before. TestFlight is not
-open, and this has to be resolved before the first build goes out.
+that conflict has removed GPL apps from the store before. Where this stands
+(2026-09-25):
+
+- TestFlight is open to an internal testing group.
+- Version 0.1.0 was submitted to App Store review on 2026-09-25. It is not
+  live. Its licence agreement is a custom EULA carrying the GPL-3.0 text and
+  naming this repository as the source.
+- The maintainers of both GPL components were written to on 2026-09-25,
+  asking for an additional permission for App Store distribution. **No such
+  permission exists.** LibVNCServer's maintainer replied that he is not the
+  sole copyright holder and so cannot grant or refuse one, and left the
+  decision to us; that is not a permission. Moonlight has not replied.
+- The App Store submission went ahead on that basis, at Omodachi's own risk:
+  any copyright holder of Moonlight or LibVNCServer can ask Apple to remove
+  the app.
