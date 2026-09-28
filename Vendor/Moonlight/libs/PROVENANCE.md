@@ -79,6 +79,21 @@ here.
 | SDL2 | 2.28.5 (tag `release-2.28.5`, commit `15ead9a40d09a1eb9972215cceac2bf29c9b77f6`) | <https://github.com/libsdl-org/SDL/tree/release-2.28.5> | zlib |
 | Build scripts | moonlight-mobile-deps `dad1ce6d…` (FFmpeg), `02c97bc2…` (SDL2, Opus; identical to `dad1ce6` for both) | <https://github.com/cgutman/moonlight-mobile-deps/tree/dad1ce6d964b6d4cc61116f1b7170954eb08ef20> (`appveyor.yml`, `FFmpeg.sh`, `opus.sh`, `SDL-ios.sh`, `archive.sh`) | no licence file in that repository |
 
+The same sources are attached to this repository's release of the App Store
+build, tag `v0.1.0-b202609250225`, in addition to the upstream links above:
+[`FFmpeg-3f890fbfd9014843c51408c8f7ab3ba4aef7d354.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/FFmpeg-3f890fbfd9014843c51408c8f7ab3ba4aef7d354.tar.gz),
+[`opus-1.4.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/opus-1.4.tar.gz) (the sha256 above),
+[`SDL-release-2.28.5.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/SDL-release-2.28.5.tar.gz), and the two build-script
+snapshots
+[`moonlight-mobile-deps-dad1ce6d964b6d4cc61116f1b7170954eb08ef20.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/moonlight-mobile-deps-dad1ce6d964b6d4cc61116f1b7170954eb08ef20.tar.gz)
+and
+[`moonlight-mobile-deps-02c97bc2e0b3a93394e7e9ba2b843e922c601e0c.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/moonlight-mobile-deps-02c97bc2e0b3a93394e7e9ba2b843e922c601e0c.tar.gz),
+with their sha256 in [`SHA256SUMS`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/SHA256SUMS). The FFmpeg, SDL and
+moonlight-mobile-deps archives are GitHub's archives of the commits named
+above (`git get-tar-commit-id` prints each one); GitHub leaves submodules out,
+so the two moonlight-mobile-deps snapshots carry empty `FFmpeg/` and `SDL/`
+directories, whose sources are the FFmpeg and SDL archives.
+
 Licence texts, copied verbatim from those exact upstream commits on
 2026-09-25:
 

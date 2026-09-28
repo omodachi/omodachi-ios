@@ -159,6 +159,22 @@ How firm each line is:
   `Vendor/Moonlight/libs/Build.txt` is upstream Moonlight's note and names no
   commit; `PROVENANCE.md` beside it does.
 
+The upstream sources above are also attached to this repository's release of
+the App Store build, tag `v0.1.0-b202609250225`, in addition to where upstream
+keeps them. Each GitHub archive's embedded commit
+(`git get-tar-commit-id`) is the commit named above, and the LibVNCServer and
+Opus archives have the sha256 recorded above:
+
+| File | What it is |
+| --- | --- |
+| [`LibVNCServer-0.9.15.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/LibVNCServer-0.9.15.tar.gz) | LibVNCServer 0.9.15, the source of `libvncclient.a` |
+| [`FFmpeg-3f890fbfd9014843c51408c8f7ab3ba4aef7d354.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/FFmpeg-3f890fbfd9014843c51408c8f7ab3ba4aef7d354.tar.gz) | FFmpeg at `3f890fbfd9`, the source of `libavcodec.a`, `libavformat.a` and `libavutil.a` |
+| [`opus-1.4.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/opus-1.4.tar.gz) | the Opus 1.4 release tarball, the source of `libopus.a` |
+| [`SDL-release-2.28.5.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/SDL-release-2.28.5.tar.gz) | SDL at `release-2.28.5`, the source of `libSDL2.a` |
+| [`moonlight-mobile-deps-dad1ce6d964b6d4cc61116f1b7170954eb08ef20.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/moonlight-mobile-deps-dad1ce6d964b6d4cc61116f1b7170954eb08ef20.tar.gz) | the build scripts that built FFmpeg |
+| [`moonlight-mobile-deps-02c97bc2e0b3a93394e7e9ba2b843e922c601e0c.tar.gz`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/moonlight-mobile-deps-02c97bc2e0b3a93394e7e9ba2b843e922c601e0c.tar.gz) | the build scripts that built Opus and SDL2 |
+| [`SHA256SUMS`](https://github.com/omodachi/omodachi-ios/releases/download/v0.1.0-b202609250225/SHA256SUMS) | the SHA-256 of each archive above |
+
 FFmpeg is LGPL-2.1-or-later and is linked statically. LGPL-2.1 §6 is met by
 the whole app being public source: a user can build FFmpeg from the source
 above, replace the three archives and rebuild the app with
