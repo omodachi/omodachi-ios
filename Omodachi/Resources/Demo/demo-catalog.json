@@ -1,0 +1,6371 @@
+{
+ "revision": "demo-1",
+ "entries": [
+  {
+   "id": "root",
+   "parent_id": "",
+   "label": "Go",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 1,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "root",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "apps",
+   "parent_id": "root",
+   "label": "Apps",
+   "kind": "menu",
+   "icon": "󰀻",
+   "iconFont": "",
+   "aliases": [
+    "app",
+    "applications"
+   ],
+   "visible": true,
+   "order": 2,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "apps",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "apps.alacritty",
+   "parent_id": "apps",
+   "label": "Alacritty",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 3,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.alacritty",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.chromium",
+   "parent_id": "apps",
+   "label": "Chromium",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 4,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.chromium",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.files",
+   "parent_id": "apps",
+   "label": "Files",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 5,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.files",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.image-viewer",
+   "parent_id": "apps",
+   "label": "Image Viewer",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 6,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.image-viewer",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.libreoffice-writer",
+   "parent_id": "apps",
+   "label": "LibreOffice Writer",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 7,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.libreoffice-writer",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.media-player",
+   "parent_id": "apps",
+   "label": "Media Player",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 8,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.media-player",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.neovim",
+   "parent_id": "apps",
+   "label": "Neovim",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 9,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.neovim",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.print-settings",
+   "parent_id": "apps",
+   "label": "Print Settings",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 10,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.print-settings",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.text-editor",
+   "parent_id": "apps",
+   "label": "Text Editor",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 11,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.text-editor",
+    "ready": true
+   }
+  },
+  {
+   "id": "apps.calculator",
+   "parent_id": "apps",
+   "label": "Calculator",
+   "kind": "app",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 12,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "apps.calculator",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn",
+   "parent_id": "root",
+   "label": "Learn",
+   "kind": "menu",
+   "icon": "󰧑",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 13,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "learn",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger",
+   "parent_id": "root",
+   "label": "Trigger",
+   "kind": "menu",
+   "icon": "󱓞",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 14,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "style",
+   "parent_id": "root",
+   "label": "Style",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 15,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "style",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup",
+   "parent_id": "root",
+   "label": "Setup",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "settings"
+   ],
+   "visible": true,
+   "order": 16,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install",
+   "parent_id": "root",
+   "label": "Install",
+   "kind": "menu",
+   "icon": "󰉉",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 17,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove",
+   "parent_id": "root",
+   "label": "Remove",
+   "kind": "menu",
+   "icon": "󰭌",
+   "iconFont": "",
+   "aliases": [
+    "uninstall"
+   ],
+   "visible": true,
+   "order": 18,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "update",
+   "parent_id": "root",
+   "label": "Update",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "restart",
+    "refresh"
+   ],
+   "visible": true,
+   "order": 19,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "update",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "about",
+   "parent_id": "root",
+   "label": "About",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 20,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "about",
+    "ready": true
+   }
+  },
+  {
+   "id": "system",
+   "parent_id": "root",
+   "label": "System",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "power-menu"
+   ],
+   "visible": true,
+   "order": 21,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "system",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "system.screensaver",
+   "parent_id": "system",
+   "label": "Screensaver",
+   "kind": "action",
+   "icon": "󱄄",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 22,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "system.screensaver",
+    "ready": true
+   }
+  },
+  {
+   "id": "system.lock",
+   "parent_id": "system",
+   "label": "Lock",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 23,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "system.lock",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "system.suspend",
+   "parent_id": "system",
+   "label": "Suspend",
+   "kind": "action",
+   "icon": "󰒲",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 24,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "system.suspend",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "system.logout",
+   "parent_id": "system",
+   "label": "Logout",
+   "kind": "action",
+   "icon": "󰍃",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 25,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "system.logout",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "system.reboot",
+   "parent_id": "system",
+   "label": "Reboot",
+   "kind": "action",
+   "icon": "󰜉",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 26,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "system.reboot",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "system.shutdown",
+   "parent_id": "system",
+   "label": "Shutdown",
+   "kind": "action",
+   "icon": "󰐥",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 27,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "system.shutdown",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "learn.keybindings",
+   "parent_id": "learn",
+   "label": "Keybindings",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 28,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.keybindings",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.hyprland",
+   "parent_id": "learn",
+   "label": "Hyprland",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 29,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.hyprland",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.arch",
+   "parent_id": "learn",
+   "label": "Arch",
+   "kind": "action",
+   "icon": "󰣇",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 30,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.arch",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.neovim",
+   "parent_id": "learn",
+   "label": "Neovim",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 31,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.neovim",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.bash",
+   "parent_id": "learn",
+   "label": "Bash",
+   "kind": "action",
+   "icon": "󱆃",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 32,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.bash",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.tmux-keybindings",
+   "parent_id": "learn",
+   "label": "Tmux",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 33,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.tmux-keybindings",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.herdr-keybindings",
+   "parent_id": "learn",
+   "label": "Herdr",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 34,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.herdr-keybindings",
+    "ready": true
+   }
+  },
+  {
+   "id": "learn.community",
+   "parent_id": "learn",
+   "label": "Community",
+   "kind": "action",
+   "icon": "󰙯",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 35,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "learn.community",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.emoji",
+   "parent_id": "trigger",
+   "label": "Emoji",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "emoji",
+    "emojis"
+   ],
+   "visible": true,
+   "order": 36,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.emoji",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.reminder",
+   "parent_id": "trigger",
+   "label": "Reminder",
+   "kind": "menu",
+   "icon": "󰢌",
+   "iconFont": "",
+   "aliases": [
+    "reminder"
+   ],
+   "visible": true,
+   "order": 37,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger.reminder",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger.capture",
+   "parent_id": "trigger",
+   "label": "Capture",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "capture",
+    "screenshot",
+    "screenrecord",
+    "screen-record",
+    "screenrecording"
+   ],
+   "visible": true,
+   "order": 38,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger.capture",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger.capture.screenshot",
+   "parent_id": "trigger.capture",
+   "label": "Screenshot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 39,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.screenshot",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.capture.screenrecord",
+   "parent_id": "trigger.capture",
+   "label": "Screenrecord",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 40,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger.capture.screenrecord",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger.capture.text",
+   "parent_id": "trigger.capture",
+   "label": "Text",
+   "kind": "action",
+   "icon": "󰴑",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 41,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.text",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.capture.qr",
+   "parent_id": "trigger.capture",
+   "label": "QR Code",
+   "kind": "action",
+   "icon": "󰐲",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 42,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.qr",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.capture.color",
+   "parent_id": "trigger.capture",
+   "label": "Color",
+   "kind": "action",
+   "icon": "󰃉",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 43,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.color",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.capture.screenrecord.no-audio",
+   "parent_id": "trigger.capture.screenrecord",
+   "label": "With no audio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 44,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.screenrecord.no-audio",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.capture.screenrecord.desktop-audio",
+   "parent_id": "trigger.capture.screenrecord",
+   "label": "With desktop audio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 45,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.screenrecord.desktop-audio",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.capture.screenrecord.microphone",
+   "parent_id": "trigger.capture.screenrecord",
+   "label": "With desktop + microphone audio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 46,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.capture.screenrecord.microphone",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.transcode",
+   "parent_id": "trigger",
+   "label": "Transcode",
+   "kind": "action",
+   "icon": "󰧸",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 47,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.transcode",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.share",
+   "parent_id": "trigger",
+   "label": "Share",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "share"
+   ],
+   "visible": true,
+   "order": 48,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger.share",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger.toggle",
+   "parent_id": "trigger",
+   "label": "Toggle",
+   "kind": "menu",
+   "icon": "󰔎",
+   "iconFont": "",
+   "aliases": [
+    "toggle",
+    "toggles"
+   ],
+   "visible": true,
+   "order": 49,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger.toggle",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger.tests",
+   "parent_id": "trigger",
+   "label": "Speed Test",
+   "kind": "menu",
+   "icon": "󰓅",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 51,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "trigger.tests",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "trigger.reminder.set",
+   "parent_id": "trigger.reminder",
+   "label": "Set one",
+   "kind": "action",
+   "icon": "󰢌",
+   "iconFont": "",
+   "aliases": [
+    "reminder-set",
+    "remind"
+   ],
+   "visible": true,
+   "order": 53,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.reminder.set",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.reminder.show",
+   "parent_id": "trigger.reminder",
+   "label": "Show all",
+   "kind": "action",
+   "icon": "󰢌",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 54,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.reminder.show",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.reminder.clear",
+   "parent_id": "trigger.reminder",
+   "label": "Clear all",
+   "kind": "action",
+   "icon": "󰢌",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 55,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.reminder.clear",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.share.clipboard",
+   "parent_id": "trigger.share",
+   "label": "Clipboard",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 56,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.share.clipboard",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.share.file",
+   "parent_id": "trigger.share",
+   "label": "File",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 57,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.share.file",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.share.folder",
+   "parent_id": "trigger.share",
+   "label": "Folder",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 58,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.share.folder",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.share.receive",
+   "parent_id": "trigger.share",
+   "label": "Receive",
+   "kind": "action",
+   "icon": "󰥦",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 59,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.share.receive",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.toggle.idle-lock",
+   "parent_id": "trigger.toggle",
+   "label": "Stay Awake",
+   "kind": "action",
+   "icon": "󰅶",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 60,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.idle-lock",
+    "ready": true
+   },
+   "checked_state": false
+  },
+  {
+   "id": "trigger.toggle.notifications",
+   "parent_id": "trigger.toggle",
+   "label": "Notifications",
+   "kind": "action",
+   "icon": "󰂛",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 61,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.notifications",
+    "ready": true
+   },
+   "checked_state": false
+  },
+  {
+   "id": "trigger.toggle.crash-capture",
+   "parent_id": "trigger.toggle",
+   "label": "Crash Capture",
+   "kind": "action",
+   "icon": "󱚡",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 62,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.crash-capture",
+    "ready": true
+   },
+   "checked_state": false
+  },
+  {
+   "id": "trigger.toggle.screensaver",
+   "parent_id": "trigger.toggle",
+   "label": "Screensaver",
+   "kind": "action",
+   "icon": "󱄄",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 63,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.screensaver",
+    "ready": true
+   },
+   "checked_state": true
+  },
+  {
+   "id": "trigger.toggle.nightlight",
+   "parent_id": "trigger.toggle",
+   "label": "Nightlight",
+   "kind": "action",
+   "icon": "󰔎",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 64,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.nightlight",
+    "ready": true
+   },
+   "checked_state": false
+  },
+  {
+   "id": "trigger.toggle.top-bar",
+   "parent_id": "trigger.toggle",
+   "label": "Menu Bar",
+   "kind": "action",
+   "icon": "󰍜",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 65,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.top-bar",
+    "ready": true
+   },
+   "checked_state": true
+  },
+  {
+   "id": "trigger.toggle.workspace-layout",
+   "parent_id": "trigger.toggle",
+   "label": "Workspace Layout",
+   "kind": "action",
+   "icon": "󱂬",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 66,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.workspace-layout",
+    "ready": true
+   },
+   "checked_state": false
+  },
+  {
+   "id": "trigger.toggle.window-gaps",
+   "parent_id": "trigger.toggle",
+   "label": "Window Gaps",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 67,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.window-gaps",
+    "ready": true
+   },
+   "checked_state": true
+  },
+  {
+   "id": "trigger.toggle.one-window-ratio",
+   "parent_id": "trigger.toggle",
+   "label": "1-Window Ratio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 68,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.toggle.one-window-ratio",
+    "ready": true
+   },
+   "checked_state": false
+  },
+  {
+   "id": "trigger.tests.network-speedtest",
+   "parent_id": "trigger.tests",
+   "label": "Network Speed Test",
+   "kind": "action",
+   "icon": "󰓅",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 69,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.tests.network-speedtest",
+    "ready": true
+   }
+  },
+  {
+   "id": "trigger.tests.disk-speedtest",
+   "parent_id": "trigger.tests",
+   "label": "Disk Speed Test",
+   "kind": "action",
+   "icon": "󰋊",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 70,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "trigger.tests.disk-speedtest",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.theme",
+   "parent_id": "style",
+   "label": "Theme",
+   "kind": "action",
+   "icon": "󰸌",
+   "iconFont": "",
+   "aliases": [
+    "theme",
+    "themes"
+   ],
+   "visible": true,
+   "order": 71,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.theme",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.background",
+   "parent_id": "style",
+   "label": "Background",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "background",
+    "wallpaper"
+   ],
+   "visible": true,
+   "order": 72,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.background",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.unlock",
+   "parent_id": "style",
+   "label": "Unlock",
+   "kind": "action",
+   "icon": "󰟵",
+   "iconFont": "",
+   "aliases": [
+    "unlock"
+   ],
+   "visible": true,
+   "order": 73,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.unlock",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.font",
+   "parent_id": "style",
+   "label": "Font",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 74,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "style.font",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "style.font.jetbrains-mono",
+   "parent_id": "style.font",
+   "label": "JetBrains Mono",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 75,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.font.jetbrains-mono",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.font.cascadia-mono",
+   "parent_id": "style.font",
+   "label": "Cascadia Mono",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 76,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.font.cascadia-mono",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.font.fira-code",
+   "parent_id": "style.font",
+   "label": "Fira Code",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 77,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.font.fira-code",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.font.iosevka",
+   "parent_id": "style.font",
+   "label": "Iosevka",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 78,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.font.iosevka",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.font.source-code-pro",
+   "parent_id": "style.font",
+   "label": "Source Code Pro",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 79,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.font.source-code-pro",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.bar",
+   "parent_id": "style",
+   "label": "Menu Bar",
+   "kind": "menu",
+   "icon": "󰍜",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 80,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "style.bar",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "style.bar.position",
+   "parent_id": "style.bar",
+   "label": "Position",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 81,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "style.bar.position",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "style.bar.transparency",
+   "parent_id": "style.bar",
+   "label": "Transparency",
+   "kind": "action",
+   "icon": "󰂵",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 82,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.bar.transparency",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.hyprland",
+   "parent_id": "style",
+   "label": "Hyprland",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 83,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.hyprland",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.screensaver",
+   "parent_id": "style",
+   "label": "Screensaver",
+   "kind": "menu",
+   "icon": "󱄄",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 84,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "style.screensaver",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "style.about",
+   "parent_id": "style",
+   "label": "About",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 85,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "style.about",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "style.bar.position.top",
+   "parent_id": "style.bar.position",
+   "label": "Top",
+   "kind": "action",
+   "icon": "󰁝",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 86,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.bar.position.top",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.bar.position.bottom",
+   "parent_id": "style.bar.position",
+   "label": "Bottom",
+   "kind": "action",
+   "icon": "󰁅",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 87,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.bar.position.bottom",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.bar.position.left",
+   "parent_id": "style.bar.position",
+   "label": "Left",
+   "kind": "action",
+   "icon": "󰁍",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 88,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.bar.position.left",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.bar.position.right",
+   "parent_id": "style.bar.position",
+   "label": "Right",
+   "kind": "action",
+   "icon": "󰁔",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 89,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.bar.position.right",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.about.text",
+   "parent_id": "style.about",
+   "label": "Edit Text",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 90,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.about.text",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.about.image",
+   "parent_id": "style.about",
+   "label": "Set From Image",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 91,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.about.image",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.about.default",
+   "parent_id": "style.about",
+   "label": "Restore Default",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 92,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.about.default",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.screensaver.text",
+   "parent_id": "style.screensaver",
+   "label": "Edit Text",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 93,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.screensaver.text",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.screensaver.image",
+   "parent_id": "style.screensaver",
+   "label": "Set From Image",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 94,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.screensaver.image",
+    "ready": true
+   }
+  },
+  {
+   "id": "style.screensaver.default",
+   "parent_id": "style.screensaver",
+   "label": "Restore Default",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 95,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "style.screensaver.default",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.monitors",
+   "parent_id": "setup",
+   "label": "Monitors",
+   "kind": "action",
+   "icon": "󰍹",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 96,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.monitors",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.keybindings",
+   "parent_id": "setup",
+   "label": "Keybindings",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 97,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.keybindings",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.input",
+   "parent_id": "setup",
+   "label": "Input",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 98,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.input",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.network",
+   "parent_id": "setup",
+   "label": "Network",
+   "kind": "menu",
+   "icon": "󰛳",
+   "iconFont": "",
+   "aliases": [
+    "network"
+   ],
+   "visible": true,
+   "order": 99,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.network",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.network.dns",
+   "parent_id": "setup.network",
+   "label": "DNS",
+   "kind": "menu",
+   "icon": "󰇖",
+   "iconFont": "",
+   "aliases": [
+    "dns"
+   ],
+   "visible": true,
+   "order": 100,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.network.dns",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.network.dns.dhcp",
+   "parent_id": "setup.network.dns",
+   "label": "DHCP",
+   "kind": "action",
+   "icon": "󰩟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 101,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.network.dns.dhcp",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.network.dns.cloudflare",
+   "parent_id": "setup.network.dns",
+   "label": "Cloudflare",
+   "kind": "action",
+   "icon": "󰅟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 102,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.network.dns.cloudflare",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.network.dns.google",
+   "parent_id": "setup.network.dns",
+   "label": "Google",
+   "kind": "action",
+   "icon": "󰊭",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 103,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.network.dns.google",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.network.dns.custom",
+   "parent_id": "setup.network.dns",
+   "label": "Custom",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 104,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.network.dns.custom",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default",
+   "parent_id": "setup",
+   "label": "Defaults",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "default",
+    "defaults"
+   ],
+   "visible": true,
+   "order": 105,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.default",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.default.agent",
+   "parent_id": "setup.default",
+   "label": "Agent",
+   "kind": "menu",
+   "icon": "󰚩",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 106,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.default.agent",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.default.agent.agy",
+   "parent_id": "setup.default.agent",
+   "label": "Antigravity",
+   "kind": "action",
+   "icon": "󰫢",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 107,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.agy",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.claude",
+   "parent_id": "setup.default.agent",
+   "label": "Claude",
+   "kind": "action",
+   "icon": "󰛄",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 108,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.claude",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.codex",
+   "parent_id": "setup.default.agent",
+   "label": "Codex",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 109,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.codex",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.copilot",
+   "parent_id": "setup.default.agent",
+   "label": "Copilot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 110,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.copilot",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.crush",
+   "parent_id": "setup.default.agent",
+   "label": "Crush",
+   "kind": "action",
+   "icon": "󰋑",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 111,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.crush",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.cursor-agent",
+   "parent_id": "setup.default.agent",
+   "label": "Cursor CLI",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 112,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.cursor-agent",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.grok",
+   "parent_id": "setup.default.agent",
+   "label": "Grok",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 113,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.grok",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.hermes",
+   "parent_id": "setup.default.agent",
+   "label": "Hermes",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 114,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.hermes",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.muse",
+   "parent_id": "setup.default.agent",
+   "label": "Muse Code",
+   "kind": "action",
+   "icon": "󰛤",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 115,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.muse",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.omp",
+   "parent_id": "setup.default.agent",
+   "label": "omp",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 116,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.omp",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.openclaw",
+   "parent_id": "setup.default.agent",
+   "label": "OpenClaw",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 117,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.openclaw",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.opencode",
+   "parent_id": "setup.default.agent",
+   "label": "OpenCode",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 118,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.opencode",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.ori",
+   "parent_id": "setup.default.agent",
+   "label": "Ori",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 119,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.ori",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.agent.pi",
+   "parent_id": "setup.default.agent",
+   "label": "Pi",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 120,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.agent.pi",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser",
+   "parent_id": "setup.default",
+   "label": "Browser",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 121,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.default.browser",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.default.browser.chromium",
+   "parent_id": "setup.default.browser",
+   "label": "Chromium",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 122,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.chromium",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser.chrome",
+   "parent_id": "setup.default.browser",
+   "label": "Chrome",
+   "kind": "action",
+   "icon": "󰊯",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 123,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.chrome",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser.brave",
+   "parent_id": "setup.default.browser",
+   "label": "Brave",
+   "kind": "action",
+   "icon": "󰖟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 124,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.brave",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser.brave-origin",
+   "parent_id": "setup.default.browser",
+   "label": "Brave Origin",
+   "kind": "action",
+   "icon": "󰖟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 125,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.brave-origin",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser.edge",
+   "parent_id": "setup.default.browser",
+   "label": "Edge",
+   "kind": "action",
+   "icon": "󰇩",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 126,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.edge",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser.firefox",
+   "parent_id": "setup.default.browser",
+   "label": "Firefox",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 127,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.firefox",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.browser.zen",
+   "parent_id": "setup.default.browser",
+   "label": "Zen",
+   "kind": "action",
+   "icon": "󰖟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 128,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.browser.zen",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.terminal",
+   "parent_id": "setup.default",
+   "label": "Terminal",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 129,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.default.terminal",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.default.terminal.alacritty",
+   "parent_id": "setup.default.terminal",
+   "label": "Alacritty",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 130,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.terminal.alacritty",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.terminal.foot",
+   "parent_id": "setup.default.terminal",
+   "label": "Foot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 131,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.terminal.foot",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.terminal.ghostty",
+   "parent_id": "setup.default.terminal",
+   "label": "Ghostty",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 132,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.terminal.ghostty",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.terminal.kitty",
+   "parent_id": "setup.default.terminal",
+   "label": "Kitty",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 133,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.terminal.kitty",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor",
+   "parent_id": "setup.default",
+   "label": "Editor",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 134,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.default.editor",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.default.editor.neovim",
+   "parent_id": "setup.default.editor",
+   "label": "Neovim",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 135,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.neovim",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.vscode",
+   "parent_id": "setup.default.editor",
+   "label": "VSCode",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 136,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.vscode",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.cursor",
+   "parent_id": "setup.default.editor",
+   "label": "Cursor",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 137,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.cursor",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.zed",
+   "parent_id": "setup.default.editor",
+   "label": "Zed",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 138,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.zed",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.sublime",
+   "parent_id": "setup.default.editor",
+   "label": "Sublime Text",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 139,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.sublime",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.helix",
+   "parent_id": "setup.default.editor",
+   "label": "Helix",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 140,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.helix",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.vim",
+   "parent_id": "setup.default.editor",
+   "label": "Vim",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 141,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.vim",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.default.editor.emacs",
+   "parent_id": "setup.default.editor",
+   "label": "Emacs",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 142,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.default.editor.emacs",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.plugin",
+   "parent_id": "setup",
+   "label": "Plugins",
+   "kind": "menu",
+   "icon": "󰐱",
+   "iconFont": "",
+   "aliases": [
+    "plugin",
+    "plugins"
+   ],
+   "visible": true,
+   "order": 143,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.plugin",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.plugin.enable",
+   "parent_id": "setup.plugin",
+   "label": "Enable Plugin",
+   "kind": "action",
+   "icon": "󰄬",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 144,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.plugin.enable",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.plugin.disable",
+   "parent_id": "setup.plugin",
+   "label": "Disable Plugin",
+   "kind": "action",
+   "icon": "󰅖",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 145,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.plugin.disable",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.plugin.add",
+   "parent_id": "setup.plugin",
+   "label": "Add Plugin",
+   "kind": "action",
+   "icon": "󰖟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 146,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.plugin.add",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.plugin.clone",
+   "parent_id": "setup.plugin",
+   "label": "Clone Plugin",
+   "kind": "action",
+   "icon": "󰆏",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 147,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.plugin.clone",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.plugin.remove",
+   "parent_id": "setup.plugin",
+   "label": "Remove Plugin",
+   "kind": "action",
+   "icon": "󰭌",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 148,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.plugin.remove",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.security",
+   "parent_id": "setup",
+   "label": "Security",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 149,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.security",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.config",
+   "parent_id": "setup",
+   "label": "Config",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 150,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "setup.config",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "setup.security.fido2",
+   "parent_id": "setup.security",
+   "label": "Fido2",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 151,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.security.fido2",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "setup.security.sshd",
+   "parent_id": "setup.security",
+   "label": "SSHD",
+   "kind": "action",
+   "icon": "󰣀",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 152,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.security.sshd",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "setup.security.passwordless-sudo",
+   "parent_id": "setup.security",
+   "label": "Passwordless Sudo",
+   "kind": "action",
+   "icon": "󰟵",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 153,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.security.passwordless-sudo",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "setup.config.hyprland",
+   "parent_id": "setup.config",
+   "label": "Hyprland",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 154,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.config.hyprland",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.config.hyprsunset",
+   "parent_id": "setup.config",
+   "label": "Hyprsunset",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 155,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.config.hyprsunset",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.config.xcompose",
+   "parent_id": "setup.config",
+   "label": "XCompose",
+   "kind": "action",
+   "icon": "󰞅",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 156,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.config.xcompose",
+    "ready": true
+   }
+  },
+  {
+   "id": "setup.direct-boot",
+   "parent_id": "setup",
+   "label": "Direct Boot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 157,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "setup.direct-boot",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "install.package",
+   "parent_id": "install",
+   "label": "Package",
+   "kind": "action",
+   "icon": "󰣇",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 158,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.package",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.aur",
+   "parent_id": "install",
+   "label": "AUR",
+   "kind": "action",
+   "icon": "󰣇",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 159,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.aur",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai",
+   "parent_id": "install",
+   "label": "AI",
+   "kind": "menu",
+   "icon": "󱚤",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 160,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.ai",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.service",
+   "parent_id": "install",
+   "label": "Service",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 161,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.service",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.development",
+   "parent_id": "install",
+   "label": "Development",
+   "kind": "menu",
+   "icon": "󰵮",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 162,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.development",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.editor",
+   "parent_id": "install",
+   "label": "Editor",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 163,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.editor",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.style",
+   "parent_id": "install",
+   "label": "Style",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 164,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.style",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.style.theme",
+   "parent_id": "install.style",
+   "label": "Theme",
+   "kind": "action",
+   "icon": "󰸌",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 165,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.theme",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.background",
+   "parent_id": "install.style",
+   "label": "Background",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 166,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.background",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.font",
+   "parent_id": "install.style",
+   "label": "Font",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 167,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.style.font",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.style.font.cascadia",
+   "parent_id": "install.style.font",
+   "label": "Cascadia Mono",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 168,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.font.cascadia",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.font.meslo",
+   "parent_id": "install.style.font",
+   "label": "Meslo LG Mono",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 169,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.font.meslo",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.font.fira",
+   "parent_id": "install.style.font",
+   "label": "Fira Code",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 170,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.font.fira",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.font.victor",
+   "parent_id": "install.style.font",
+   "label": "Victor Code",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 171,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.font.victor",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.font.bitstream",
+   "parent_id": "install.style.font",
+   "label": "Bitstream Vera Mono",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 172,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.font.bitstream",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.style.font.iosevka",
+   "parent_id": "install.style.font",
+   "label": "Iosevka",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 173,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.style.font.iosevka",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming",
+   "parent_id": "install",
+   "label": "Gaming",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 174,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.gaming",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.browser",
+   "parent_id": "install",
+   "label": "Browser",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 175,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.browser",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.webapp",
+   "parent_id": "install",
+   "label": "Web App",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 176,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.webapp",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.terminal",
+   "parent_id": "install",
+   "label": "Terminal",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 177,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.terminal",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.tui",
+   "parent_id": "install",
+   "label": "TUI",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 178,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.tui",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.windows",
+   "parent_id": "install",
+   "label": "Windows",
+   "kind": "action",
+   "icon": "󰍲",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 179,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.windows",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.preinstalls",
+   "parent_id": "install",
+   "label": "Preinstalls",
+   "kind": "action",
+   "icon": "󰏓",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 180,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.preinstalls",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.browser.chrome",
+   "parent_id": "install.browser",
+   "label": "Chrome",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 181,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.browser.chrome",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.browser.edge",
+   "parent_id": "install.browser",
+   "label": "Edge",
+   "kind": "action",
+   "icon": "󰇩",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 182,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.browser.edge",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.browser.brave",
+   "parent_id": "install.browser",
+   "label": "Brave",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 183,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.browser.brave",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.browser.brave-origin",
+   "parent_id": "install.browser",
+   "label": "Brave Origin",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 184,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.browser.brave-origin",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.browser.firefox",
+   "parent_id": "install.browser",
+   "label": "Firefox",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 185,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.browser.firefox",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.browser.zen",
+   "parent_id": "install.browser",
+   "label": "Zen",
+   "kind": "action",
+   "icon": "󰖟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 186,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.browser.zen",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.1password",
+   "parent_id": "install.service",
+   "label": "1Password",
+   "kind": "action",
+   "icon": "󰢁",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 187,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.1password",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.dropbox",
+   "parent_id": "install.service",
+   "label": "Dropbox",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 188,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.dropbox",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.spotify",
+   "parent_id": "install.service",
+   "label": "Spotify",
+   "kind": "action",
+   "icon": "󰓇",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 189,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.spotify",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.signal",
+   "parent_id": "install.service",
+   "label": "Signal",
+   "kind": "action",
+   "icon": "󰭹",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 190,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.signal",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.tailscale",
+   "parent_id": "install.service",
+   "label": "Tailscale",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 191,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.tailscale",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.nordvpn",
+   "parent_id": "install.service",
+   "label": "NordVPN",
+   "kind": "action",
+   "icon": "󱇱",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 192,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.nordvpn",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.once",
+   "parent_id": "install.service",
+   "label": "ONCE",
+   "kind": "action",
+   "icon": "󰏖",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 193,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.once",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.service.bitwarden",
+   "parent_id": "install.service",
+   "label": "Bitwarden",
+   "kind": "action",
+   "icon": "󰟵",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 194,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.service.bitwarden",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.vscode",
+   "parent_id": "install.editor",
+   "label": "VSCode",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 195,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.vscode",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.cursor",
+   "parent_id": "install.editor",
+   "label": "Cursor",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 196,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.cursor",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.zed",
+   "parent_id": "install.editor",
+   "label": "Zed",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 197,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.zed",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.sublime",
+   "parent_id": "install.editor",
+   "label": "Sublime Text",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 198,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.sublime",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.helix",
+   "parent_id": "install.editor",
+   "label": "Helix",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 199,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.helix",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.vim",
+   "parent_id": "install.editor",
+   "label": "Vim",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 200,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.vim",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.editor.emacs",
+   "parent_id": "install.editor",
+   "label": "Emacs",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 201,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.editor.emacs",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.terminal.alacritty",
+   "parent_id": "install.terminal",
+   "label": "Alacritty",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 202,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.terminal.alacritty",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.terminal.foot",
+   "parent_id": "install.terminal",
+   "label": "Foot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 203,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.terminal.foot",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.terminal.ghostty",
+   "parent_id": "install.terminal",
+   "label": "Ghostty",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 204,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.terminal.ghostty",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.terminal.kitty",
+   "parent_id": "install.terminal",
+   "label": "Kitty",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 205,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.terminal.kitty",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.chatgpt",
+   "parent_id": "install.ai",
+   "label": "ChatGPT Desktop",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 206,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.chatgpt",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.claude",
+   "parent_id": "install.ai",
+   "label": "Claude Desktop",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 207,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.claude",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.dictation",
+   "parent_id": "install.ai",
+   "label": "Dictation",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 208,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.dictation",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.grok-bot",
+   "parent_id": "install.ai",
+   "label": "Grok Bot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 209,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.grok-bot",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.hermes",
+   "parent_id": "install.ai",
+   "label": "Hermes Desktop",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 210,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.hermes",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.lm-studio",
+   "parent_id": "install.ai",
+   "label": "LM Studio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 211,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.lm-studio",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.ollama",
+   "parent_id": "install.ai",
+   "label": "Ollama",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 212,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.ollama",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.openclaw",
+   "parent_id": "install.ai",
+   "label": "OpenClaw",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 213,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.openclaw",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.perplexity",
+   "parent_id": "install.ai",
+   "label": "Perplexity",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 214,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.perplexity",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.ai.t3-code",
+   "parent_id": "install.ai",
+   "label": "T3 Code",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 215,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.ai.t3-code",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.steam",
+   "parent_id": "install.gaming",
+   "label": "Steam",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 216,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.steam",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.retroarch",
+   "parent_id": "install.gaming",
+   "label": "RetroArch",
+   "kind": "action",
+   "icon": "󰯉",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 217,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.retroarch",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.minecraft",
+   "parent_id": "install.gaming",
+   "label": "Minecraft",
+   "kind": "action",
+   "icon": "󰍳",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 218,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.minecraft",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.geforce-now",
+   "parent_id": "install.gaming",
+   "label": "NVIDIA GeForce NOW",
+   "kind": "action",
+   "icon": "󰢹",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 219,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.geforce-now",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.xbox-cloud",
+   "parent_id": "install.gaming",
+   "label": "Xbox Cloud Gaming",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 220,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.xbox-cloud",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.xbox-controllers",
+   "parent_id": "install.gaming",
+   "label": "Xbox Controllers",
+   "kind": "action",
+   "icon": "󰂯",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 221,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.xbox-controllers",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.battlenet",
+   "parent_id": "install.gaming",
+   "label": "Battle.net",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 222,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.battlenet",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.lutris",
+   "parent_id": "install.gaming",
+   "label": "Lutris",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 223,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.lutris",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.heroic",
+   "parent_id": "install.gaming",
+   "label": "Heroic (Epic Games)",
+   "kind": "action",
+   "icon": "󱓟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 224,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.heroic",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.gaming.retro-launcher",
+   "parent_id": "install.gaming",
+   "label": "RetroArch Game Launcher",
+   "kind": "action",
+   "icon": "󰯉",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 225,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.gaming.retro-launcher",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.rails",
+   "parent_id": "install.development",
+   "label": "Ruby on Rails",
+   "kind": "action",
+   "icon": "󰫏",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 226,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.rails",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.docker-dbs",
+   "parent_id": "install.development",
+   "label": "Docker DB",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 227,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.docker-dbs",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.javascript",
+   "parent_id": "install.development",
+   "label": "JavaScript",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 228,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.development.javascript",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.development.go",
+   "parent_id": "install.development",
+   "label": "Go",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 229,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.go",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.php",
+   "parent_id": "install.development",
+   "label": "PHP",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 230,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.development.php",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.development.python",
+   "parent_id": "install.development",
+   "label": "Python",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 231,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.python",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.elixir",
+   "parent_id": "install.development",
+   "label": "Elixir",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 232,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "install.development.elixir",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "install.development.zig",
+   "parent_id": "install.development",
+   "label": "Zig",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 233,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.zig",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.rust",
+   "parent_id": "install.development",
+   "label": "Rust",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 234,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.rust",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.java",
+   "parent_id": "install.development",
+   "label": "Java",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 235,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.java",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.dotnet",
+   "parent_id": "install.development",
+   "label": ".NET",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 236,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.dotnet",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.ocaml",
+   "parent_id": "install.development",
+   "label": "OCaml",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 237,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.ocaml",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.clojure",
+   "parent_id": "install.development",
+   "label": "Clojure",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 238,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.clojure",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.scala",
+   "parent_id": "install.development",
+   "label": "Scala",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 239,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.scala",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.javascript.node",
+   "parent_id": "install.development.javascript",
+   "label": "Node.js",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 240,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.javascript.node",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.javascript.bun",
+   "parent_id": "install.development.javascript",
+   "label": "Bun",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 241,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.javascript.bun",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.javascript.deno",
+   "parent_id": "install.development.javascript",
+   "label": "Deno",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 242,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.javascript.deno",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.php.php",
+   "parent_id": "install.development.php",
+   "label": "PHP",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 243,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.php.php",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.php.laravel",
+   "parent_id": "install.development.php",
+   "label": "Laravel",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 244,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.php.laravel",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.php.symfony",
+   "parent_id": "install.development.php",
+   "label": "Symfony",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 245,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.php.symfony",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.elixir.elixir",
+   "parent_id": "install.development.elixir",
+   "label": "Elixir",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 246,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.elixir.elixir",
+    "ready": true
+   }
+  },
+  {
+   "id": "install.development.elixir.phoenix",
+   "parent_id": "install.development.elixir",
+   "label": "Phoenix",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 247,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "install.development.elixir.phoenix",
+    "ready": true
+   }
+  },
+  {
+   "id": "remove.package",
+   "parent_id": "remove",
+   "label": "Package",
+   "kind": "action",
+   "icon": "󰣇",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 248,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.package",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai",
+   "parent_id": "remove",
+   "label": "AI",
+   "kind": "menu",
+   "icon": "󱚤",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 249,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.ai",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.service",
+   "parent_id": "remove",
+   "label": "Services",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 250,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.service",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.development",
+   "parent_id": "remove",
+   "label": "Development",
+   "kind": "menu",
+   "icon": "󰵮",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 251,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.development",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.theme",
+   "parent_id": "remove",
+   "label": "Theme",
+   "kind": "action",
+   "icon": "󰸌",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 252,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.theme",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming",
+   "parent_id": "remove",
+   "label": "Gaming",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 253,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.gaming",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.browser",
+   "parent_id": "remove",
+   "label": "Browser",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 254,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.browser",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.webapp",
+   "parent_id": "remove",
+   "label": "Web App",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 255,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.webapp",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.tui",
+   "parent_id": "remove",
+   "label": "TUI",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 256,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.tui",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.windows",
+   "parent_id": "remove",
+   "label": "Windows",
+   "kind": "action",
+   "icon": "󰍲",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 257,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.windows",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.preinstalls",
+   "parent_id": "remove",
+   "label": "Preinstalls",
+   "kind": "action",
+   "icon": "󰏓",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 258,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.preinstalls",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.security",
+   "parent_id": "remove",
+   "label": "Security",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 259,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.security",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.security.fingerprint",
+   "parent_id": "remove.security",
+   "label": "Fingerprint",
+   "kind": "action",
+   "icon": "󰈷",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 260,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.security.fingerprint",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.security.fido2",
+   "parent_id": "remove.security",
+   "label": "Fido2",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 261,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.security.fido2",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.security.sshd",
+   "parent_id": "remove.security",
+   "label": "SSHD",
+   "kind": "action",
+   "icon": "󰣀",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 262,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.security.sshd",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.security.sudoless-docker",
+   "parent_id": "remove.security",
+   "label": "Sudoless Docker",
+   "kind": "action",
+   "icon": "󰡨",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 263,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.security.sudoless-docker",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.hermes",
+   "parent_id": "remove.ai",
+   "label": "Hermes Desktop",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 264,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.hermes",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.browser.chrome",
+   "parent_id": "remove.browser",
+   "label": "Chrome",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 265,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.browser.chrome",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.browser.edge",
+   "parent_id": "remove.browser",
+   "label": "Edge",
+   "kind": "action",
+   "icon": "󰇩",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 266,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.browser.edge",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.browser.brave",
+   "parent_id": "remove.browser",
+   "label": "Brave",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 267,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.browser.brave",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.browser.brave-origin",
+   "parent_id": "remove.browser",
+   "label": "Brave Origin",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 268,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.browser.brave-origin",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.browser.firefox",
+   "parent_id": "remove.browser",
+   "label": "Firefox",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 269,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.browser.firefox",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.browser.zen",
+   "parent_id": "remove.browser",
+   "label": "Zen",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 270,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.browser.zen",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.service.dropbox",
+   "parent_id": "remove.service",
+   "label": "Dropbox",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 271,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.service.dropbox",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.service.tailscale",
+   "parent_id": "remove.service",
+   "label": "Tailscale",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 272,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.service.tailscale",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.chatgpt",
+   "parent_id": "remove.ai",
+   "label": "ChatGPT Desktop",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 273,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.chatgpt",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.claude",
+   "parent_id": "remove.ai",
+   "label": "Claude Desktop",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 274,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.claude",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.dictation",
+   "parent_id": "remove.ai",
+   "label": "Dictation",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 275,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.dictation",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.grok-bot",
+   "parent_id": "remove.ai",
+   "label": "Grok Bot",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 276,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.grok-bot",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.lm-studio",
+   "parent_id": "remove.ai",
+   "label": "LM Studio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 277,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.lm-studio",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.ollama",
+   "parent_id": "remove.ai",
+   "label": "Ollama",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 278,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.ollama",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.openclaw",
+   "parent_id": "remove.ai",
+   "label": "OpenClaw",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 279,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.openclaw",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.perplexity",
+   "parent_id": "remove.ai",
+   "label": "Perplexity",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 280,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.perplexity",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.ai.t3-code",
+   "parent_id": "remove.ai",
+   "label": "T3 Code",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 281,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.ai.t3-code",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.steam",
+   "parent_id": "remove.gaming",
+   "label": "Steam",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 282,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.steam",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.retroarch",
+   "parent_id": "remove.gaming",
+   "label": "RetroArch",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 283,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.retroarch",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.minecraft",
+   "parent_id": "remove.gaming",
+   "label": "Minecraft",
+   "kind": "action",
+   "icon": "󰍳",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 284,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.minecraft",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.geforce-now",
+   "parent_id": "remove.gaming",
+   "label": "NVIDIA GeForce NOW",
+   "kind": "action",
+   "icon": "󰢹",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 285,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.geforce-now",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.xbox-cloud",
+   "parent_id": "remove.gaming",
+   "label": "Xbox Cloud Gaming",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 286,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.xbox-cloud",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.xbox-controllers",
+   "parent_id": "remove.gaming",
+   "label": "Xbox Controllers (󰂯)",
+   "kind": "action",
+   "icon": "󰖺",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 287,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.xbox-controllers",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.battlenet",
+   "parent_id": "remove.gaming",
+   "label": "Battle.net",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 288,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.battlenet",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.lutris",
+   "parent_id": "remove.gaming",
+   "label": "Lutris",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 289,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.lutris",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.gaming.heroic",
+   "parent_id": "remove.gaming",
+   "label": "Heroic (Epic Games)",
+   "kind": "action",
+   "icon": "󱓟",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 290,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.gaming.heroic",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.rails",
+   "parent_id": "remove.development",
+   "label": "Ruby on Rails",
+   "kind": "action",
+   "icon": "󰫏",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 291,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.rails",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.javascript",
+   "parent_id": "remove.development",
+   "label": "JavaScript",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 292,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.development.javascript",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.development.go",
+   "parent_id": "remove.development",
+   "label": "Go",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 293,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.go",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.php",
+   "parent_id": "remove.development",
+   "label": "PHP",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 294,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.development.php",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.development.python",
+   "parent_id": "remove.development",
+   "label": "Python",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 295,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.python",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.elixir",
+   "parent_id": "remove.development",
+   "label": "Elixir",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 296,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "remove.development.elixir",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "remove.development.zig",
+   "parent_id": "remove.development",
+   "label": "Zig",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 297,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.zig",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.rust",
+   "parent_id": "remove.development",
+   "label": "Rust",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 298,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.rust",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.java",
+   "parent_id": "remove.development",
+   "label": "Java",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 299,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.java",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.dotnet",
+   "parent_id": "remove.development",
+   "label": ".NET",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 300,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.dotnet",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.ocaml",
+   "parent_id": "remove.development",
+   "label": "OCaml",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 301,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.ocaml",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.clojure",
+   "parent_id": "remove.development",
+   "label": "Clojure",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 302,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.clojure",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.scala",
+   "parent_id": "remove.development",
+   "label": "Scala",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 303,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.scala",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.javascript.node",
+   "parent_id": "remove.development.javascript",
+   "label": "Node.js",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 304,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.javascript.node",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.javascript.bun",
+   "parent_id": "remove.development.javascript",
+   "label": "Bun",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 305,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.javascript.bun",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.javascript.deno",
+   "parent_id": "remove.development.javascript",
+   "label": "Deno",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 306,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.javascript.deno",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.php.php",
+   "parent_id": "remove.development.php",
+   "label": "PHP",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 307,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.php.php",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.php.laravel",
+   "parent_id": "remove.development.php",
+   "label": "Laravel",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 308,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.php.laravel",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.php.symfony",
+   "parent_id": "remove.development.php",
+   "label": "Symfony",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 309,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.php.symfony",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.elixir.elixir",
+   "parent_id": "remove.development.elixir",
+   "label": "Elixir",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 310,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.elixir.elixir",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "remove.development.elixir.phoenix",
+   "parent_id": "remove.development.elixir",
+   "label": "Phoenix",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 311,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "remove.development.elixir.phoenix",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.channel",
+   "parent_id": "update",
+   "label": "Channel",
+   "kind": "menu",
+   "icon": "󰔫",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 312,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "update.channel",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "update.config",
+   "parent_id": "update",
+   "label": "Config",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 313,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "update.config",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "update.process",
+   "parent_id": "update",
+   "label": "Process",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 314,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "update.process",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "update.hardware",
+   "parent_id": "update",
+   "label": "Hardware",
+   "kind": "menu",
+   "icon": "󰇅",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 315,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "update.hardware",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "update.firmware",
+   "parent_id": "update",
+   "label": "Firmware",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 316,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.firmware",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.password",
+   "parent_id": "update",
+   "label": "Password",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 317,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "update.password",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "update.timezone",
+   "parent_id": "update",
+   "label": "Timezone",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 318,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.timezone",
+    "ready": true
+   }
+  },
+  {
+   "id": "update.time",
+   "parent_id": "update",
+   "label": "Time",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 319,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.time",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.channel.stable",
+   "parent_id": "update.channel",
+   "label": "Stable",
+   "kind": "action",
+   "icon": "🟢",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 320,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.channel.stable",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.channel.rc",
+   "parent_id": "update.channel",
+   "label": "RC",
+   "kind": "action",
+   "icon": "🟡",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 321,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.channel.rc",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.channel.edge",
+   "parent_id": "update.channel",
+   "label": "Edge",
+   "kind": "action",
+   "icon": "🟠",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 322,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.channel.edge",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.channel.dev",
+   "parent_id": "update.channel",
+   "label": "Dev",
+   "kind": "action",
+   "icon": "🔴",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 323,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.channel.dev",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.process.hyprsunset",
+   "parent_id": "update.process",
+   "label": "Hyprsunset",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 324,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.process.hyprsunset",
+    "ready": true
+   }
+  },
+  {
+   "id": "update.process.shell",
+   "parent_id": "update.process",
+   "label": "Shell",
+   "kind": "action",
+   "icon": "󰍜",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 325,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.process.shell",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.config.hyprland",
+   "parent_id": "update.config",
+   "label": "Hyprland",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 326,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.config.hyprland",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.config.hyprsunset",
+   "parent_id": "update.config",
+   "label": "Hyprsunset",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 327,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.config.hyprsunset",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.config.plymouth",
+   "parent_id": "update.config",
+   "label": "Plymouth",
+   "kind": "action",
+   "icon": "󱣴",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 328,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.config.plymouth",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.config.tmux",
+   "parent_id": "update.config",
+   "label": "Tmux",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 329,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.config.tmux",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.config.shell",
+   "parent_id": "update.config",
+   "label": "Shell",
+   "kind": "action",
+   "icon": "󰍜",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 330,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.config.shell",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.hardware.audio",
+   "parent_id": "update.hardware",
+   "label": "Audio",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 331,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.hardware.audio",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.hardware.wifi",
+   "parent_id": "update.hardware",
+   "label": "Wi-Fi",
+   "kind": "action",
+   "icon": "󱚾",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 332,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.hardware.wifi",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.hardware.bluetooth",
+   "parent_id": "update.hardware",
+   "label": "Bluetooth",
+   "kind": "action",
+   "icon": "󰂯",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 333,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.hardware.bluetooth",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.hardware.trackpad",
+   "parent_id": "update.hardware",
+   "label": "Trackpad",
+   "kind": "action",
+   "icon": "󰟸",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 334,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.hardware.trackpad",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.password.drive",
+   "parent_id": "update.password",
+   "label": "Drive Encryption",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 335,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.password.drive",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "update.password.user",
+   "parent_id": "update.password",
+   "label": "User",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 336,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "update.password.user",
+    "ready": true,
+    "confirm": true
+   }
+  },
+  {
+   "id": "omodachi",
+   "parent_id": "root",
+   "label": "Omodachi",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 337,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "omodachi",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "omodachi.agent",
+   "parent_id": "omodachi",
+   "label": "Agent",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 338,
+   "route": {
+    "route": "native",
+    "native_view": "agent",
+    "supported": true,
+    "entry_id": "omodachi.agent",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.herdr",
+   "parent_id": "omodachi",
+   "label": "Herdr",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 339,
+   "route": {
+    "route": "native",
+    "native_view": "herdr",
+    "supported": true,
+    "entry_id": "omodachi.herdr",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace",
+   "parent_id": "omodachi",
+   "label": "Workspaces",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "workspace",
+    "ws"
+   ],
+   "visible": true,
+   "order": 340,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "omodachi.workspace",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "omodachi.workspace.select",
+   "parent_id": "omodachi.workspace",
+   "label": "Switch workspace",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 341,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "omodachi.workspace.select",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "omodachi.workspace.move",
+   "parent_id": "omodachi.workspace",
+   "label": "Move focused window",
+   "kind": "menu",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 342,
+   "route": {
+    "route": "host",
+    "supported": false,
+    "entry_id": "omodachi.workspace.move",
+    "ready": false,
+    "readiness_reason": "menu_row_not_invocable"
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.1",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 1",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "1",
+    "workspace 1",
+    "ws 1"
+   ],
+   "visible": true,
+   "order": 343,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.1",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.2",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 2",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "2",
+    "workspace 2",
+    "ws 2"
+   ],
+   "visible": true,
+   "order": 344,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.2",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.3",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 3",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "3",
+    "workspace 3",
+    "ws 3"
+   ],
+   "visible": true,
+   "order": 345,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.3",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.4",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 4",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "4",
+    "workspace 4",
+    "ws 4"
+   ],
+   "visible": true,
+   "order": 346,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.4",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.5",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 5",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "5",
+    "workspace 5",
+    "ws 5"
+   ],
+   "visible": true,
+   "order": 347,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.5",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.6",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 6",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "6",
+    "workspace 6",
+    "ws 6"
+   ],
+   "visible": true,
+   "order": 348,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.6",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.7",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 7",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "7",
+    "workspace 7",
+    "ws 7"
+   ],
+   "visible": true,
+   "order": 349,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.7",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.8",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 8",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "8",
+    "workspace 8",
+    "ws 8"
+   ],
+   "visible": true,
+   "order": 350,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.8",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.9",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 9",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "9",
+    "workspace 9",
+    "ws 9"
+   ],
+   "visible": true,
+   "order": 351,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.9",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.select.10",
+   "parent_id": "omodachi.workspace.select",
+   "label": "Workspace 10",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [
+    "10",
+    "workspace 10",
+    "ws 10"
+   ],
+   "visible": true,
+   "order": 352,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.select.10",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.1",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 1",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 353,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.1",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.2",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 2",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 354,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.2",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.3",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 3",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 355,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.3",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.4",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 4",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 356,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.4",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.5",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 5",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 357,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.5",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.6",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 6",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 358,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.6",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.7",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 7",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 359,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.7",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.8",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 8",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 360,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.8",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.9",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 9",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 361,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.9",
+    "ready": true
+   }
+  },
+  {
+   "id": "omodachi.workspace.move.10",
+   "parent_id": "omodachi.workspace.move",
+   "label": "Move focused window to Workspace 10",
+   "kind": "action",
+   "icon": "",
+   "iconFont": "",
+   "aliases": [],
+   "visible": true,
+   "order": 362,
+   "route": {
+    "route": "host",
+    "supported": true,
+    "entry_id": "omodachi.workspace.move.10",
+    "ready": true
+   }
+  }
+ ]
+}

@@ -60,6 +60,10 @@ enum ReasonText {
         case "remote_session_exists": Strings.reasonRemoteSessionExists
         case "stale_revision": Strings.reasonStaleRevision
         case "session_not_found": Strings.reasonSessionNotFound
+        // REMOTE-STOP-1 §3 / STORE-6 §B2: the person at the computer ended it
+        // (`omodachi-host remote stop`, or the panel's End Remote session).
+        // It is an ending, not a failure, and it says who ended it.
+        case "ended_on_computer": Strings.reasonEndedOnComputer
         case "session_not_ready": Strings.reasonSessionNotReady
         case "permission_denied": Strings.reasonRemotePermissionDenied
         case "media_pairing_required": Strings.reasonMediaPairingRequired
@@ -316,7 +320,7 @@ enum ReasonText {
         "display_command_failed": .remote, "resize_failed": .remote, "release_failed": .remote,
         "expired_awaiting_sunshine_cleanup": .remote,
         "sunshine_certificate_revocation_unavailable": .remote, "sunshine_unit_unreadable": .remote,
-        "disabled_output_left_for_operator": .remote,
+        "disabled_output_left_for_operator": .remote, "ended_on_computer": .remote,
         // the media-pairing bridge
         "media_pairing_unavailable": .media, "media_pairing_request_not_unique": .media,
         "media_pairing_request_not_pending": .media, "media_certificate_already_associated": .media,

@@ -118,6 +118,8 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     /// MENU-4 / A-68. The one row waiting for its second tap, and until when.
     @Published var armedConfirm: ConfirmArm?
     var armTask: Task<Void, Never>?
+    /// STORE-6 §B3: tokens held for a row the host armed (`holdConfirmation`).
+    var confirmTokens: [String: String] = [:]
     var latestDefaultAgent: DefaultAgentCapabilityDTO?
     var latestState: HostStateDTO?
     var onStateApplied: (() -> Void)?
@@ -409,7 +411,7 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
         notificationToastTask?.cancel(); notificationToastTask = nil
         searchTask?.cancel(); searchTask = nil; toastTask?.cancel(); toastTask = nil
         preparedAgentDescriptor = nil
-        pendingEntryIDs = []; rowFailures = [:]; armedConfirm = nil; armTask?.cancel(); armTask = nil
+        pendingEntryIDs = []; rowFailures = [:]; armedConfirm = nil; armTask?.cancel(); armTask = nil; confirmTokens = [:]
         optimisticWorkspaceTask?.cancel(); optimisticWorkspaceTask = nil; optimisticWorkspace = nil
         lastCursor = 0; instanceID = nil
         state.hostName = profile.mock ? "Omarchy · Demo" : profile.hostname // non-copy: the demo fixture host
@@ -457,6 +459,13 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     }
 
     func runShortcut(_ request: ShortcutExecutionRequest) async throws -> ShortcutExecutionResult {
+        // STORE-6 §A2: a keybinding in the demo answers the way a host that
+        // accepted it does, and says it was the demo computer that did.
+        if demoActive, profile.mock {
+            let label = (try? DemoHost.shortcuts().entries.first { $0.id == request.entryID }?.label) ?? nil
+            return ShortcutExecutionResult(status: .accepted,
+                                           message: label.map(Strings.demoRanNamed) ?? Strings.demoRanHere)
+        }
         guard companionConnected, let client, request.context.hostID == profile.companionURL else { throw ShortcutWireError.unavailableContext }
         let result = try await client.executeShortcut(request)
         await refreshCompanionState()
@@ -478,6 +487,21 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     /// private key — does not move.
     var sshProfile: HostProfile {
         sshTarget.map { SSHTargetResolver.profile(profile, for: $0) } ?? profile
+    }
+
+    /// STORE-6 §B1. The name the paired computer goes by, for the SSH header
+    /// and its progress row; `nil` without a pin (the demo, a hand-typed host).
+    var sshDisplayName: String? {
+        guard let name = hostPin?.hostName.trimmingCharacters(in: .whitespacesAndNewlines),
+              SessionDescriptor.isDisplayableName(name) else { return nil }
+        return name
+    }
+
+    /// A terminal descriptor for this host, carrying the paired name.
+    func sshDescriptor(title: String, argv: [String]) -> SessionDescriptor {
+        var descriptor = SurfaceRouteTargets.shell(host: sshProfile, title: title, argv: argv)
+        descriptor.hostDisplayName = sshDisplayName
+        return descriptor
     }
 
     func chatClient(for hostID: String) throws -> CompanionHostClient {
@@ -535,6 +559,23 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
         return decision.send
     }
 
+    /// STORE-6 §B3. A `confirm_token` the host handed back for a row this
+    /// client did not know was a `confirm` row: the row is armed exactly as
+    /// its own first tap would have armed it, and the tap that confirms it
+    /// carries the token. It lapses with the arm.
+    func holdConfirmation(_ confirmation: HostConfirmationRequired, for entryID: String, now: Date = Date()) {
+        confirmTokens[entryID] = confirmation.token
+        let armed = ConfirmArm(entryID: entryID, until: now.addingTimeInterval(ConfirmArm.window))
+        armTask?.cancel()
+        armedConfirm = armed
+        armTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(ConfirmArm.window * 1_000_000_000))
+            guard !Task.isCancelled, let self, self.armedConfirm == armed else { return }
+            self.armedConfirm = nil
+            self.confirmTokens[entryID] = nil
+        }
+    }
+
     func invoke(_ item: MenuItem) async {
         if item.id == WorkspaceLayoutRequest.entryID {
             notice = ReasonText.message("invalid_workspace_request", domain: .workspace); return
@@ -543,7 +584,9 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
             if let value = state.toggles[item.id] { state.toggles[item.id] = !value }
             if let range = item.id.range(of: "omodachi.workspace.select."),
                let number = Int(item.id[range.upperBound...]), (1...10).contains(number) { state.workspace = number }
-            reportToast(.init(stage: .applied, label: item.label, detail: "demo"))
+            // STORE-6 §A2: the demo's rows run, and say where they ran.
+            if demoActive { demoRan(item.label) }
+            else { reportToast(.init(stage: .applied, label: item.label, detail: "demo")) }
             return
         }
         _ = await prepareAction(item)
@@ -580,9 +623,34 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
                 notice = ReasonText.message("no_focused_window", domain: .workspace)
                 return nil
             }
-            let response = try await service.invoke(entryID: item.id, catalogRevision: revision, parameters: [:],
-                                                    targetToken: isWorkspaceMove ? focus?.targetToken : nil,
-                                                    stateRevision: latestState?.revision)
+            let targetToken = isWorkspaceMove ? focus?.targetToken : nil
+            let heldToken = confirmTokens.removeValue(forKey: item.id)
+            let response: CompanionActionResponse
+            do {
+                response = try await service.invoke(entryID: item.id, catalogRevision: revision, parameters: [:],
+                                                    targetToken: targetToken, stateRevision: latestState?.revision,
+                                                    confirmToken: heldToken)
+            } catch let confirmation as HostConfirmationRequired {
+                guard current == connectionGeneration else { return nil }
+                // RELEASE-9 (B4) / STORE-6 §B3. The host asks for the second,
+                // deliberate call a `confirm` row needs. When this row is one
+                // the catalog marked `confirm`, the person already gave that
+                // second tap (`ConfirmGate`) before anything was sent, so the
+                // call goes again at once with the token - once, never a loop.
+                // A row the catalog did not mark is armed here instead and the
+                // token held for the tap that confirms it.
+                guard currentItem.confirm, heldToken == nil else {
+                    PanelPerfTrace.mark(clock, "confirmation-required", detail: "held-for-next-tap")
+                    holdConfirmation(confirmation, for: item.id)
+                    pendingEntryIDs.remove(item.id)
+                    panelToast = nil
+                    return nil
+                }
+                PanelPerfTrace.mark(clock, "confirmation-required", detail: "resend-with-token")
+                response = try await service.invoke(entryID: item.id, catalogRevision: revision, parameters: [:],
+                                                    targetToken: targetToken, stateRevision: latestState?.revision,
+                                                    confirmToken: confirmation.token)
+            }
             guard current == connectionGeneration else { return nil }
             PanelPerfTrace.mark(clock, "host-answered", detail: "status=\(response.status.rawValue)")
             // PERF-5. The revision the host resolved this against, adopted

@@ -40,8 +40,6 @@
 	<string>用 Face ID 或 Touch ID 批准电脑上弹出的密码框。这台设备不保存、也看不到你的电脑密码。</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Moonlight 的手柄支持可能用到蓝牙；Omodachi 不会主动扫描或连接蓝牙设备。</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>按住说话时，把这台设备的麦克风送到已配对电脑的虚拟麦克风，由电脑自己转写。音频不在本机保存。</string>
 	<key>OmodachiBuildCommit</key>
 	<string>$(OMODACHI_BUILD_COMMIT)</string>
 	<key>UIAppFonts</key>

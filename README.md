@@ -71,7 +71,9 @@ monospaced font and a bundled symbols-only Nerd Font for icons. Prose, the app
 icon and the bundled Codex and Herdr marks never come from the host.
 
 **Voice is not in this build.** The push-to-talk uplink into the host's own
-Voxtype is still in `Omodachi/Voice/`, but no control in the app starts it.
+Voxtype is still in `Omodachi/Voice/`, but no control in the app starts it,
+and the build cannot ask for the microphone at all: the permission request is
+compiled out and `Info.plist` carries no microphone purpose string.
 
 ## Install
 
@@ -84,8 +86,12 @@ number its release tag carries. `CFBundleVersion` is not a version: it is the
 build minute stamped by `scripts/build.sh`.
 
 No Omarchy computer yet? The first screen's last row, **Explore the demo**,
-opens the app over made-up data. It connects to nothing, and a banner on top
-says so.
+opens the app on a made-up computer called `desktop`: its menu, keybindings,
+notifications, a Herdr session with three panes, and an Agent conversation
+that says it is the demo's. Rows and keybindings run and say they ran on the
+demo computer; a row that would power off or remove something asks for a
+second tap first; Remote says what it does and that it needs a paired
+computer. It connects to nothing, and a banner on top says so.
 
 What you need: a Mac with **Xcode 27** (the iOS 27 simulator runtime for the
 simulator targets), `xcodegen`, and `python3`. The Swift packages below are

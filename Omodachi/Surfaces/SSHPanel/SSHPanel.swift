@@ -31,7 +31,7 @@ struct SSHPanelView: View {
             } else {
                 // The one frame between entering and the runtime existing.
                 // D-15: it spins because something really is in flight.
-                ProgressRow(title: Strings.sshConnecting(home.sshProfile.hostname),
+                ProgressRow(title: Strings.sshConnecting(home.sshDisplayName ?? home.sshProfile.hostname),
                             identifier: "ssh-connecting")
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .background(OmodachiTheme.background)
@@ -45,8 +45,7 @@ struct SSHPanelView: View {
     }
 
     private func open() {
-        let runtime = sessions.create(SurfaceRouteTargets.shell(host: home.sshProfile,
-                                                                title: Strings.sshTerminal, argv: []))
+        let runtime = sessions.create(home.sshDescriptor(title: Strings.sshTerminal, argv: []))
         selected = runtime.id
     }
 }

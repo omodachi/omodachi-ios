@@ -1,0 +1,63 @@
+{
+ "notifications": [
+  {
+   "id": "demo-1",
+   "app": "Terminal",
+   "summary": "Command finished",
+   "body": "make test · 12 passed in 0.84 s",
+   "glyph": "",
+   "urgency": "normal",
+   "timestamp": 3,
+   "has_action": false,
+   "active": false
+  },
+  {
+   "id": "demo-2",
+   "app": "Screenshot",
+   "summary": "Screenshot saved",
+   "body": "Copied to the clipboard and saved to ~/Pictures",
+   "glyph": "",
+   "urgency": "normal",
+   "timestamp": 9,
+   "has_action": false,
+   "active": false
+  },
+  {
+   "id": "demo-3",
+   "app": "Reminder",
+   "summary": "Stand-up in 10 minutes",
+   "body": "Set from Trigger › Reminder",
+   "glyph": "",
+   "urgency": "normal",
+   "timestamp": 21,
+   "has_action": false,
+   "active": false
+  },
+  {
+   "id": "demo-4",
+   "app": "Theme",
+   "summary": "Theme changed",
+   "body": "Tokyo Night",
+   "glyph": "",
+   "urgency": "normal",
+   "timestamp": 34,
+   "has_action": false,
+   "active": false
+  },
+  {
+   "id": "demo-5",
+   "app": "Downloads",
+   "summary": "Download complete",
+   "body": "report-q3.pdf · 2.4 MB",
+   "glyph": "",
+   "urgency": "normal",
+   "timestamp": 52,
+   "has_action": false,
+   "active": false
+  }
+ ],
+ "cursor": "demo-1",
+ "limit": 100,
+ "history_limit": 500,
+ "contract_revision": "omodachi.v1"
+}

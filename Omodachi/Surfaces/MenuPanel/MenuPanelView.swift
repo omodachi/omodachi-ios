@@ -30,9 +30,13 @@ struct MenuPanelView: View {
     @State private var editingMenuPins = false
     @State private var editingKeyPins = false
     @State private var pins: [PanelPin] = []
-    private let store = PanelPinStore()
+    /// STORE-6 §A3: the demo's pins live in a suite of their own that entering
+    /// the demo seeds (`DemoHost.seedPins`), filed under an id no computer has.
+    private var store: PanelPinStore { home.demoActive ? DemoHost.pinStore : PanelPinStore() }
 
-    private var hostID: String { home.hostPin?.hostID ?? home.profile.companionURL }
+    private var hostID: String {
+        home.demoActive ? DemoHost.pinHostID : home.hostPin?.hostID ?? home.profile.companionURL
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -63,6 +67,7 @@ struct MenuPanelView: View {
         .accessibilityIdentifier("home-panel")
         .task { reloadPins() }
         .onChange(of: home.profile) { _, _ in reloadPins() }
+        .onChange(of: home.demoActive) { _, _ in reloadPins() }
         .onChange(of: home.menu) { _, _ in refreshLabels() }
     }
 
@@ -289,7 +294,7 @@ struct MenuPanelView: View {
                     home.reportToast(.init(stage: .failed, label: prepared.label, detail: Strings.menuNoTerminalTarget))
                     return
                 }
-                let descriptor = SurfaceRouteTargets.shell(host: home.sshProfile, title: prepared.label, argv: argv)
+                let descriptor = home.sshDescriptor(title: prepared.label, argv: argv)
                 guard descriptor.kind != .herdr else { router.show(.herdr); return }
                 _ = sessions.create(descriptor)
                 router.show(.ssh)

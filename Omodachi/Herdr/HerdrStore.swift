@@ -98,6 +98,15 @@ import UIKit
 
     // MARK: - Layout
 
+    /// STORE-6 §A3. The demo's session, grid and pane text, read once; `nil`
+    /// whenever the demo is not on, which is every path below but these.
+    private var demoData: DemoHost.Herdr? {
+        guard home.demoActive else { cachedDemo = nil; return nil }
+        if cachedDemo == nil { cachedDemo = DemoHost.herdr() }
+        return cachedDemo
+    }
+    private var cachedDemo: DemoHost.Herdr?
+
     var workspaces: [HerdrWorkspaceDTO] { layout?.workspaces ?? [] }
     var selectedPane: HerdrPaneDTO? { selected.flatMap { layout?.pane($0) } }
     var selectedWorkspaceID: String? { selected.flatMap { layout?.workspace(of: $0)?.id } }
@@ -158,6 +167,10 @@ import UIKit
     /// cannot be wrong, so the client re-reads it rather than patching.
     func refreshLayout() {
         guard appeared, loadTask == nil else { return }
+        if let demo = demoData {
+            apply(demo.layout)
+            return
+        }
         let current = generation
         loadingLayout = layout == nil
         loadTask = Task { [weak self] in
@@ -203,6 +216,12 @@ import UIKit
     /// is the only thing that knows a session appeared or stopped.
     func refreshSessions() {
         guard appeared, sessionTask == nil else { return }
+        if let demo = demoData {
+            sessions = demo.sessions.sessions
+            selectedSession = demo.sessions.selected
+            ownedSession = demo.sessions.owned
+            return
+        }
         let current = generation
         sessionTask = Task { [weak self] in
             defer { self?.sessionTask = nil }
@@ -228,7 +247,7 @@ import UIKit
     /// true of the new session, and a stale screen under a new name is worse
     /// than an empty one.
     func selectSession(_ name: String) {
-        guard name != selectedSession, !switchingSession else { return }
+        guard name != selectedSession, !switchingSession, demoData == nil else { return }
         releaseStream()
         layoutRetryTask?.cancel(); layoutRetryTask = nil
         layoutAttempt = 0
@@ -296,7 +315,7 @@ import UIKit
         wantsControl = false
         terminal.getTerminal().resetToInitialState()
         guard let pane else { connection = .idle; return }
-        if focusHost { perform(HerdrControlMapper.focus(pane: pane), confirmed: true) }
+        if focusHost, demoData == nil { perform(HerdrControlMapper.focus(pane: pane), confirmed: true) }
         openStream(mode: .observe)
     }
 
@@ -308,6 +327,15 @@ import UIKit
 
     private func openStream(mode: HerdrStreamMode) {
         guard let pane = selected else { return }
+        if let demo = demoData {
+            // The demo's pane is text the app carries, painted once, read-only.
+            streamMode = .observe
+            awaitingFullFrame = false
+            terminal.getTerminal().resetToInitialState()
+            terminal.feed(byteArray: Array((demo.screens[pane] ?? "").utf8)[...])
+            connection = .observing
+            return
+        }
         guard let client = try? home.chatClient(for: home.profile.companionURL) else {
             connection = .unavailable(Strings.hostErrorNotConnected)
             return
@@ -393,7 +421,7 @@ import UIKit
 
     /// §1.1: the stream is read-only until the user actually wants to type.
     private func wantsInput(_ active: Bool) {
-        guard selected != nil else { return }
+        guard selected != nil, demoData == nil else { return }
         if active, streamMode == .observe {
             wantsControl = true
             openStream(mode: .control)
@@ -412,6 +440,16 @@ import UIKit
     }
 
     func perform(_ request: HerdrControlRequest, confirmed: Bool) {
+        // STORE-6 §A3: moving between the demo's panes works; the controls
+        // that would change a real session say what they do on one.
+        if demoData != nil {
+            switch request {
+            case .select(let pane): select(pane)
+            case .unsupported(let reason): notice = reason
+            case .workspace, .pane: notice = Strings.demoHerdrControls
+            }
+            return
+        }
         switch request {
         case .unsupported(let reason):
             notice = reason

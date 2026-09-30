@@ -193,12 +193,7 @@ struct HostGlyphView: View {
     var body: some View {
         switch HostGlyph.resolve(glyph, iconFont: iconFont) {
         case .text(let family):
-            Text(glyph)
-                .font(family.map { Font.custom($0, size: size) } ?? .system(size: size))
-                // A face whose advance is wider than the column must not push
-                // the label; the box is the column.
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+            HostGlyphText(text: glyph, family: family, size: size)
         case .symbol:
             switch fallbackSymbol {
             case .symbol(let name):
@@ -227,6 +222,117 @@ struct HostGlyphView: View {
             }
         }
     }
+}
+
+/// STORE-6 §B6. One code point in one face, drawn whole.
+///
+/// A Nerd Font's *non-Mono* variant — the one Omarchy's own terminal font is,
+/// `JetBrainsMono Nerd Font` — gives an icon the advance of one monospace cell
+/// and ink up to twice as wide, spilling past the cell on the right. `Text`
+/// lays a glyph out by its advance, so on a paired computer every bar and menu
+/// icon drawn in the host's face had a box half its width: the right-hand part
+/// of each was cut off, and what was left sat off-centre. The bundled
+/// symbols-only face is the Mono variant, whose ink fits the cell, which is why
+/// the demo never showed it.
+///
+/// So a glyph whose ink leaves its advance is not drawn as text: its outline is
+/// taken from the face, centred on its own ink in a `size` × `size` box, scaled
+/// down only if the ink is bigger than the box, and filled as a template image
+/// so it takes the surrounding foreground. A glyph whose ink fits its advance —
+/// every one in the bundled face — is drawn as `Text`, exactly as before.
+struct HostGlyphText: View {
+    let text: String
+    /// `nil` is the platform font (emoji, a literal `✓`).
+    let family: String?
+    let size: CGFloat
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        if let family, let image = GlyphInk.image(text, family: family, size: size, scale: displayScale) {
+            Image(uiImage: image)
+                .renderingMode(.template)
+                .frame(width: size, height: size)
+        } else {
+            Text(text)
+                .font(family.map { Font.custom($0, size: size) } ?? .system(size: size))
+                // A face whose advance is wider than the column must not push
+                // the label; the box is the column.
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        }
+    }
+}
+
+/// The measurement and the drawing behind `HostGlyphText`, apart from any view
+/// so the rule is tested on its own (`GlyphInkTests`).
+enum GlyphInk {
+    struct Outline {
+        /// The glyph's outline at `size`, y up, origin on the baseline at the
+        /// pen position — CoreText's own coordinates.
+        let path: CGPath
+        let ink: CGRect
+        let advance: CGFloat
+        /// The ink leaves the cell `Text` would give it.
+        var overflows: Bool { ink.minX < -0.5 || ink.maxX > advance + 0.5 }
+    }
+
+    nonisolated static func outline(_ text: String, family: String, size: CGFloat) -> Outline? {
+        guard text.unicodeScalars.count == 1, size > 0 else { return nil }
+        let font = CTFontCreateWithName(family as CFString, size, nil)
+        var units = Array(text.utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: units.count)
+        guard CTFontGetGlyphsForCharacters(font, &units, &glyphs, units.count) || glyphs[0] != 0,
+              glyphs[0] != 0, let path = CTFontCreatePathForGlyph(font, glyphs[0], nil) else { return nil }
+        var advance = CGSize.zero
+        CTFontGetAdvancesForGlyphs(font, .horizontal, &glyphs, &advance, 1)
+        let ink = path.boundingBoxOfPath
+        guard !ink.isNull, ink.width > 0, ink.height > 0 else { return nil }
+        return Outline(path: path, ink: ink, advance: advance.width)
+    }
+
+    /// Where the outline goes in the `size` box: centred on its ink, at its own
+    /// size unless that is bigger than the box.
+    nonisolated static func placement(of ink: CGRect, in size: CGFloat) -> (scale: CGFloat, ink: CGRect) {
+        let scale = min(1, size / max(ink.width, ink.height))
+        let width = ink.width * scale, height = ink.height * scale
+        return (scale, CGRect(x: (size - width) / 2, y: (size - height) / 2, width: width, height: height))
+    }
+
+    /// `nil` when the glyph fits its cell (draw it as text) or has no outline.
+    @MainActor static func image(_ text: String, family: String, size: CGFloat, scale: CGFloat) -> UIImage? {
+        let key = "\(family)|\(text)|\(size)|\(scale)" as NSString
+        if let cached = cache.object(forKey: key) { return cached.image }
+        let image = render(text, family: family, size: size, scale: scale)
+        cache.setObject(Box(image), forKey: key)
+        return image
+    }
+
+    @MainActor static func render(_ text: String, family: String, size: CGFloat, scale: CGFloat,
+                                  always: Bool = false) -> UIImage? {
+        guard let outline = outline(text, family: family, size: size), always || outline.overflows else { return nil }
+        let placed = placement(of: outline.ink, in: size)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = max(1, scale)
+        return UIGraphicsImageRenderer(size: CGSize(width: size, height: size), format: format).image { context in
+            let cg = context.cgContext
+            // UIKit is y down; the outline is y up.
+            cg.translateBy(x: 0, y: size)
+            cg.scaleBy(x: 1, y: -1)
+            cg.translateBy(x: placed.ink.minX, y: size - placed.ink.maxY)
+            cg.scaleBy(x: placed.scale, y: placed.scale)
+            cg.translateBy(x: -outline.ink.minX, y: -outline.ink.minY)
+            cg.addPath(outline.path)
+            cg.setFillColor(UIColor.black.cgColor)
+            cg.fillPath()
+        }
+    }
+
+    private final class Box { let image: UIImage?; init(_ image: UIImage?) { self.image = image } }
+    @MainActor private static let cache: NSCache<NSString, Box> = {
+        let cache = NSCache<NSString, Box>()
+        cache.countLimit = 512
+        return cache
+    }()
 }
 
 /// One host icon, or the generic application glyph until it is here.

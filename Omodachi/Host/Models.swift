@@ -89,6 +89,12 @@ struct SessionDescriptor: Identifiable, Codable, Equatable, Sendable {
     var host: HostProfile
     var argv: [String]
     var createdAt = Date()
+    /// STORE-6 §B1. The name the computer paired under (`HostPin.hostName`).
+    /// `host.hostname` is where the session dials — since SPEC-I that is the
+    /// first address in the pairing claim — and a header that reads
+    /// `omodachi@192.168.1.20` names a network, not a machine. Optional so a
+    /// descriptor stored before it still decodes; it falls back to the address.
+    var hostDisplayName: String? = nil
     var reattachable: Bool { kind == .agent || kind == .herdr }
     var reuseIdentity: SessionReuseIdentity {
         .init(kind: kind, connection: host.sshConnectionIdentity, namedSession: host.herdrSession, argv: argv)
@@ -98,6 +104,18 @@ struct SessionDescriptor: Identifiable, Codable, Equatable, Sendable {
     /// Without an account (RELEASE-3b: nothing was paired) it is the host
     /// alone rather than a bare `@host`.
     var endpointLabel: String { host.username.isEmpty ? host.hostname : "\(host.username)@\(host.hostname)" }
+    /// STORE-6 §B1: what the SSH header says — `user@` the paired name, or
+    /// `endpointLabel` when there is no usable name.
+    var headerLabel: String {
+        guard let name = hostDisplayName.map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) }),
+              SessionDescriptor.isDisplayableName(name) else { return endpointLabel }
+        return host.username.isEmpty ? name : "\(host.username)@\(name)"
+    }
+    /// A label, never an identity: bounded, printable, one line.
+    static func isDisplayableName(_ value: String) -> Bool {
+        (1...253).contains(value.utf8.count)
+            && !value.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) || $0 == "@" }
+    }
 
     /// I18N-1: a descriptor is persisted and restored, so a title stored in it
     /// outlives the language it was written in — a session opened in Chinese

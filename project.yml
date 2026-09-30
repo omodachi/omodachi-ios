@@ -26,14 +26,10 @@ targets:
     sources:
       - path: Omodachi
         excludes: ["**/*.md"]
-      # STORE-1 §1. The demo reads three of the canonical host fixtures; they
-      # are synthetic, and DemoModeTests checks they name nobody.
-      - path: CoreFixtures/state.json
-        buildPhase: resources
-      - path: CoreFixtures/notifications.json
-        buildPhase: resources
-      - path: CoreFixtures/shortcuts.json
-        buildPhase: resources
+      # STORE-6 §A. The demo reads its own data, `Omodachi/Resources/Demo/`
+      # (bundled with the sources above), not the canonical host fixtures:
+      # those are contract examples, and a reviewer walking through them saw
+      # rows that could not run. DemoModeTests checks the demo data.
       # STORE-2 §4. Settings ⑥'s licence page reads both from the bundle rather
       # than carrying a copy of either: the GPL text is the repository's own
       # LICENSE, and the component list is parsed out of THIRD-PARTY.md.

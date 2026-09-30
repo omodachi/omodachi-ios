@@ -121,6 +121,13 @@ NSNotificationName const OMAudioStateDidChange = @"OMAudioStateDidChange";
     // SDL downlink is not in AVAudioEngine's voice-processing reference path.
     // Until physical AEC evidence exists, never allow built-in-speaker duplex.
     if (![self headphoneOutput]) { _status = @"headphones-required"; [self changed]; return; }
+#if !OMODACHI_MICROPHONE_PURPOSE
+    // STORE-6 §B4. No build ships the microphone purpose string and nothing
+    // in the app calls this; without the string iOS would terminate the app
+    // at the prompt, so the request is compiled out rather than left armed.
+    _status = @"microphone-not-in-this-build"; [self changed];
+    return;
+#endif
     uint64_t request = ++_authorization, generation = _generation;
     _permissionGrantedAwaitingActive = NO;
     _status = @"permission-pending"; [self changed];

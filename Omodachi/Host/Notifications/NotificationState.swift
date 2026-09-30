@@ -33,6 +33,14 @@ extension HomeStore {
     /// newest active notification, so the button is only drawn there; a refusal
     /// is reported rather than retried against another row.
     func invokeNotification(_ row: HostNotification) async {
+        if demoActive, profile.mock {
+            // STORE-6 §A2: the demo's notifications carry no action of their
+            // own; if one ever does, it is the demo computer that answers.
+            guard notifications.canInvoke(row) else { return }
+            notifications.markInactive(id: row.id)
+            demoRan(row.summary.isEmpty ? row.app : row.summary)
+            return
+        }
         guard notifications.canInvoke(row), let client = client as? CompanionHostClient else { return }
         let current = connectionGeneration
         do {
@@ -50,6 +58,7 @@ extension HomeStore {
     }
 
     func dismissNotification(_ row: HostNotification) async {
+        if demoActive, profile.mock, notifications.canDismiss(row) { notifications.markInactive(id: row.id); return }
         guard notifications.canDismiss(row), let client = client as? CompanionHostClient else { return }
         let current = connectionGeneration
         do {
@@ -100,6 +109,8 @@ extension HomeStore {
     /// host's own state says, which is the same thing arriving twice rather
     /// than two sources disagreeing. Nothing is assumed on the way.
     func setDoNotDisturb(_ enabled: Bool) async {
+        // STORE-6 §A2: the demo computer's switch is this device's own.
+        if demoActive, profile.mock { notifications.dnd = enabled; return }
         guard let client = client as? CompanionHostClient else { return }
         let current = connectionGeneration
         do {

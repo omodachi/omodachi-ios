@@ -37,6 +37,8 @@ struct PanelToast: Equatable, Sendable, Identifiable {
         case .message: "info.circle"
         }
     }
+    /// The one line the row shows: the label, and the detail after it.
+    var text: String { detail.map { "\(label) · \($0)" } ?? label }
     /// The word on the trailing edge. A plain message has none: there is no
     /// verdict to print, and "message" is not one.
     var tail: String {
@@ -57,7 +59,7 @@ struct PanelToastView: View {
             Image(systemName: toast.symbol)
                 .font(.system(size: OmodachiTheme.fontSize("caption")))
                 .foregroundStyle(OmodachiTheme.current.color(toast.role))
-            Text(toast.detail.map { "\(toast.label) · \($0)" } ?? toast.label)
+            Text(toast.text)
                 .lineLimit(1).truncationMode(.tail)
             Spacer(minLength: OmodachiTheme.space("sm"))
             if !toast.tail.isEmpty {
@@ -76,7 +78,9 @@ struct PanelToastView: View {
         // the same shell edge distance `Style.qml 359–375` uses.
         .padding(.horizontal, 5)
         .accessibilityIdentifier("panel-toast")
-        .accessibilityLabel(toast.tail.isEmpty ? toast.label : Strings.pair(toast.label, toast.tail))
+        // STORE-6: VoiceOver reads what the row shows, detail included — in
+        // the demo that detail is where the row ran.
+        .accessibilityLabel(toast.tail.isEmpty ? toast.text : Strings.pair(toast.text, toast.tail))
     }
 }
 

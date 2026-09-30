@@ -23,7 +23,16 @@ import Foundation
         return store
     }
 
+    /// STORE-6 §A3: the demo's conversation, which says it is one.
+    private var demoChat: AgentChatStore?
+
     func chat() -> AgentChatStore {
+        if home.demoActive {
+            if let demoChat { return demoChat }
+            let store = AgentChatStore(transport: AgentChatDemoTransport())
+            demoChat = store
+            return store
+        }
         let hostID = home.profile.companionURL
         if let existing = chats[hostID] { return existing }
         let store = AgentChatStore(transport: AgentChatBridge(home: home, hostID: hostID))
@@ -52,7 +61,21 @@ import Foundation
     /// A-66 (UX-2 §4), handed out the same way and for the same reason.
     var hostActionRan: (() -> Void)?
 
+    /// STORE-6 §A3: the demo's keybindings, its own store with the list already
+    /// in it, so the demo's pinned keybindings resolve on the first frame
+    /// rather than drawing as rows the host no longer has.
+    private var demoShortcuts: ShortcutPanelStore?
+
     func shortcut() -> ShortcutPanelStore {
+        if home.demoActive {
+            if let demoShortcuts { return demoShortcuts }
+            let store = ShortcutPanelStore(context: ShortcutContext(hostID: home.profile.companionURL, surface: .controller),
+                                           transport: ShortcutBridge(home: home))
+            store.model.snapshot = try? DemoHost.shortcuts()
+            store.performLocally = { [weak self] capability in self?.performLocalShortcut?(capability) ?? false }
+            demoShortcuts = store
+            return store
+        }
         let hostID = home.profile.companionURL
         if let existing = shortcuts[hostID] { return existing }
         let store = ShortcutPanelStore(context: ShortcutContext(hostID: hostID, surface: .controller),

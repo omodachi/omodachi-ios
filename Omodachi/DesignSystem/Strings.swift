@@ -455,9 +455,23 @@ enum Strings {
     static let demoEnterDetail = String(localized: "demo.enterDetail", defaultValue: "没有 Omarchy 电脑也能先看看。演示不连接任何设备。")
     static let demoBanner = String(localized: "demo.banner", defaultValue: "演示 · 不是真的电脑")
     static let demoExit = String(localized: "demo.exit", defaultValue: "退出演示")
-    static let demoRemoteNeedsHost = String(localized: "demo.remoteNeedsHost", defaultValue: "远程画面需要一台真的 Omarchy 电脑。")
-    static let demoRemoteDetail = String(localized: "demo.remoteDetail", defaultValue: "上面是 Omodachi 自己画的示意，不是任何电脑的画面。")
+    // STORE-6 §A4: what Remote does, and what it needs — the two modes by the
+    // names their cards carry.
+    static let demoRemoteNeedsHost = String(localized: "demo.remoteNeedsHost", defaultValue: "远程需要一台配对好的电脑。")
+    static let demoRemoteDetail = String(localized: "demo.remoteDetail", defaultValue: "「接管」把电脑的整个桌面搬到这台设备上，电脑自己的屏幕熄灭；「多一块屏幕」让这台设备成为电脑的又一块屏幕。上面是 Omodachi 自己画的示意，不是任何电脑的画面。")
     static let demoRemoteSketch = String(localized: "demo.remoteSketch", defaultValue: "桌面示意图")
+    /// STORE-6 §A2: what a row or a keybinding says after it ran in the demo.
+    static let demoRanHere = String(localized: "demo.ranHere", defaultValue: "已在演示电脑上运行")
+    static func demoRanNamed(_ a: String) -> String {
+        String(localized: "demo.ranNamed", defaultValue: "\(a) 已在演示电脑上运行。")
+    }
+    /// STORE-6 §A3: Herdr's controls in the demo, whose panes are drawn.
+    static let demoHerdrControls = String(localized: "demo.herdrControls", defaultValue: "演示里的窗格是画出来的。配对电脑后，这些按钮会在电脑上分屏、放大和关闭窗格。")
+    /// STORE-6 §A3: the Agent panel's demo conversation, and its answer to
+    /// anything typed into it.
+    static let demoAgentAsk = String(localized: "demo.agentAsk", defaultValue: "这个面板能做什么？")
+    static let demoAgentAnswer = String(localized: "demo.agentAnswer", defaultValue: "这段对话是演示，写在 app 里，让你看看 Agent 面板。配对电脑后，你在这里和那台电脑上的编程代理对话：它在电脑上干活，要运行命令或改文件之前，会先在这里问你。")
+    static let demoAgentReply = String(localized: "demo.agentReply", defaultValue: "这是演示，你的消息没有发到任何地方。配对电脑后，它会交给那台电脑上的编程代理，代理的回答和它请你批准的操作都会出现在这个面板里。")
     static let hostsManualNote = String(localized: "hosts.manualNote", defaultValue: "手动添加不需要局域网发现权限。")
     static let pairingRequest = String(localized: "pairing.request", defaultValue: "请求配对")
     static let pairingRequesting = String(localized: "pairing.requesting", defaultValue: "正在请求连接")
@@ -637,6 +651,7 @@ enum Strings {
     static let reasonRemoteSessionExists = String(localized: "reason.remote.sessionExists", defaultValue: "主机上已经有一个 Remote 会话。请先在原设备上结束它。")
     static let reasonStaleRevision = String(localized: "reason.staleRevision", defaultValue: "主机上的会话已经变了，请重试。")
     static let reasonSessionNotFound = String(localized: "reason.sessionNotFound", defaultValue: "这个会话已经结束。")
+    static let reasonEndedOnComputer = String(localized: "reason.endedOnComputer", defaultValue: "这次 Remote 会话已在电脑上结束。")
     static let reasonSessionNotReady = String(localized: "reason.sessionNotReady", defaultValue: "主机正在切换会话，稍后重试。")
     static let reasonRemotePermissionDenied = String(localized: "reason.remote.permissionDenied", defaultValue: "这个 Remote 会话属于另一台设备。")
     static let reasonMediaPairingRequired = String(localized: "reason.mediaPairingRequired", defaultValue: "Sunshine 还没批准这台设备的串流证书。")
@@ -993,7 +1008,7 @@ enum Strings {
     static let sshHostKeyRejected = String(localized: "ssh.hostKeyRejected", defaultValue: "主机密钥被拒绝。")
     static let sshOptionsInvalid = String(localized: "ssh.optionsInvalid", defaultValue: "SSH 连接参数无效。")
     static let sshNoPairedTarget = String(localized: "ssh.noPairedTarget", defaultValue: "配对没有给出 SSH 目标。在电脑上忘记这台设备后重新配对。")
-    static let sshImportKeyFirst = String(localized: "ssh.importKeyFirst", defaultValue: "先在设置里导入或生成一把 SSH 密钥，再连接。")
+    static let sshImportKeyFirst = String(localized: "ssh.importKeyFirst", defaultValue: "这台设备还没有这台电脑的 SSH 密钥。在设置里忘记这台电脑、再配对一次，配对时会生成新的密钥。")
     static let sshConnectionEnded = String(localized: "ssh.connectionEnded", defaultValue: "SSH 连接结束或被拒。检查主机、账户和已固定的密钥。")
     static let sshKeyNotAuthorized = String(localized: "ssh.keyNotAuthorized", defaultValue: "配对没能把这台设备的公钥写进主机。在电脑上忘记这台设备后重新配对。")
     static let sshHostKeyChanged = String(localized: "ssh.hostKeyChanged", defaultValue: "主机密钥变了，连接已拒绝。核实这台主机后再重设它的固定值。")

@@ -34,7 +34,18 @@ private struct TerminalContent: View {
     var panelCollapsed: Bool
     var onSelectSession: (UUID) -> Void
     @EnvironmentObject private var sessions: SessionStore
+    @EnvironmentObject private var home: HomeStore
     @State private var closing = false
+
+    /// STORE-6 §B1: the paired name, also for a session restored from before
+    /// descriptors carried it — as long as it is this host's session.
+    private var headerLabel: String {
+        var descriptor = runtime.descriptor
+        if descriptor.hostDisplayName == nil, descriptor.host.id == home.profile.id {
+            descriptor.hostDisplayName = home.sshDisplayName
+        }
+        return descriptor.headerLabel
+    }
 
     private var siblings: [TerminalRuntime] {
         sessions.runtimes.filter { $0.descriptor.host == runtime.descriptor.host }
@@ -105,7 +116,7 @@ private struct TerminalContent: View {
     /// two facts a terminal has that nothing else can tell you.
     private var titleRow: some View {
         HStack {
-            Text(runtime.descriptor.host.mock ? Strings.sshDemoLabel : runtime.descriptor.endpointLabel)
+            Text(runtime.descriptor.host.mock ? Strings.sshDemoLabel : headerLabel)
                 .font(OmodachiTheme.font("body-small", weight: .semibold))
                 .foregroundStyle(OmodachiTheme.accent).lineLimit(1)
                 .accessibilityIdentifier("terminal-endpoint")

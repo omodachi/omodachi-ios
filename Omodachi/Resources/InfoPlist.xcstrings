@@ -70,23 +70,6 @@
         }
       }
     },
-    "NSMicrophoneUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sends this device's microphone to the paired computer's virtual microphone while you hold to talk. The computer transcribes it; nothing is stored here."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "按住说话时，把这台设备的麦克风送到已配对电脑的虚拟麦克风，由电脑自己转写。音频不在本机保存。"
-          }
-        }
-      }
-    },
     "NSBluetoothAlwaysUsageDescription": {
       "extractionState": "manual",
       "localizations": {

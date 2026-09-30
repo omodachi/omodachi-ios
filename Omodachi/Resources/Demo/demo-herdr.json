@@ -1,0 +1,107 @@
+{
+ "layout": {
+  "session": "omodachi",
+  "protocol": 20,
+  "version": "0.8.2",
+  "focused": {
+   "workspace_id": "w1",
+   "tab_id": "w1:t1",
+   "pane_id": "w1:p1"
+  },
+  "workspaces": [
+   {
+    "id": "w1",
+    "label": "uptime",
+    "number": 1,
+    "focused": true,
+    "active_tab_id": "w1:t1",
+    "agent_status": "unknown",
+    "tabs": [
+     {
+      "id": "w1:t1",
+      "label": "1",
+      "number": 1,
+      "focused": true,
+      "zoomed": false,
+      "agent_status": "unknown",
+      "panes": [
+       {
+        "id": "w1:p1",
+        "tab_id": "w1:t1",
+        "workspace_id": "w1",
+        "title": "demo@desktop:~/code/uptime",
+        "cwd": "~/code/uptime",
+        "focused": true,
+        "zoomed": false,
+        "agent_status": "unknown",
+        "agent": null,
+        "size": {
+         "cols": 96,
+         "rows": 36
+        },
+        "revision": 1
+       },
+       {
+        "id": "w1:p2",
+        "tab_id": "w1:t1",
+        "workspace_id": "w1",
+        "title": "demo@desktop:~/code/uptime",
+        "cwd": "~/code/uptime",
+        "focused": false,
+        "zoomed": false,
+        "agent_status": "unknown",
+        "agent": null,
+        "size": {
+         "cols": 96,
+         "rows": 36
+        },
+        "revision": 1
+       },
+       {
+        "id": "w1:p3",
+        "tab_id": "w1:t1",
+        "workspace_id": "w1",
+        "title": "demo@desktop:~/code/uptime",
+        "cwd": "~/code/uptime",
+        "focused": false,
+        "zoomed": false,
+        "agent_status": "unknown",
+        "agent": null,
+        "size": {
+         "cols": 96,
+         "rows": 36
+        },
+        "revision": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "revision": 1
+ },
+ "sessions": {
+  "selected": "omodachi",
+  "owned": "omodachi",
+  "sessions": [
+   {
+    "name": "omodachi",
+    "running": true,
+    "owned": true,
+    "herdr_default": false,
+    "readable": true,
+    "workspaces": 1,
+    "tabs": 1,
+    "panes": 3,
+    "agents": 0,
+    "protocol": 20,
+    "version": "0.8.2"
+   }
+  ]
+ },
+ "screens": {
+  "w1:p1": "\u001b[90m  1\u001b[0m  \u001b[33m\"\"\"A tiny uptime checker: prints the HTTP status of each URL it is given.\"\"\"\u001b[0m\r\n\u001b[90m  2\u001b[0m  \u001b[35mimport\u001b[0m sys\r\n\u001b[90m  3\u001b[0m  \u001b[35mimport\u001b[0m time\r\n\u001b[90m  4\u001b[0m  \u001b[35mimport\u001b[0m urllib.request\r\n\u001b[90m  5\u001b[0m  \r\n\u001b[90m  6\u001b[0m  \r\n\u001b[90m  7\u001b[0m  \u001b[35mdef\u001b[0m check(url: str, timeout: float = 5.0) -> tuple[int, float]:\r\n\u001b[90m  8\u001b[0m      started = time.monotonic()\r\n\u001b[90m  9\u001b[0m      \u001b[35mwith\u001b[0m urllib.request.urlopen(url, timeout=timeout) \u001b[35mas\u001b[0m response:\r\n\u001b[90m 10\u001b[0m          \u001b[35mreturn\u001b[0m response.status, time.monotonic() - started\r\n\u001b[90m 11\u001b[0m  \r\n\u001b[90m 12\u001b[0m  \r\n\u001b[90m 13\u001b[0m  \u001b[35mdef\u001b[0m main(urls: list[str]) -> int:\r\n\u001b[90m 14\u001b[0m      failures = 0\r\n\u001b[90m 15\u001b[0m      \u001b[35mfor\u001b[0m url \u001b[35min\u001b[0m urls:\r\n\u001b[90m 16\u001b[0m          \u001b[35mtry\u001b[0m:\r\n\u001b[90m 17\u001b[0m              status, seconds = check(url)\r\n\u001b[90m 18\u001b[0m              print(\u001b[32mf\"{status}  {seconds * 1000:6.1f} ms  {url}\"\u001b[0m)\r\n\u001b[90m 19\u001b[0m          \u001b[35mexcept\u001b[0m OSError \u001b[35mas\u001b[0m error:\r\n\u001b[90m 20\u001b[0m              failures += 1\r\n\u001b[90m 21\u001b[0m              print(\u001b[32mf\"ERR  {error}  {url}\"\u001b[0m)\r\n\u001b[90m 22\u001b[0m      \u001b[35mreturn\u001b[0m 1 \u001b[35mif\u001b[0m failures \u001b[35melse\u001b[0m 0\r\n\u001b[90m 23\u001b[0m  \r\n\u001b[90m 24\u001b[0m  \r\n\u001b[90m 25\u001b[0m  \u001b[35mif\u001b[0m __name__ == \u001b[32m\"__main__\"\u001b[0m:\r\n\u001b[90m 26\u001b[0m      sys.exit(main(sys.argv[1:] or [\u001b[32m\"http://localhost:8000/\"\u001b[0m]))\r\n\u001b[94m~\u001b[0m\r\n\u001b[94m~\u001b[0m\r\n\u001b[94m~\u001b[0m\r\n\u001b[94m~\u001b[0m\r\n\u001b[94m~\u001b[0m\r\n\u001b[94m~\u001b[0m\r\n\u001b[30;44m NORMAL \u001b[0m \u001b[97mmain.py\u001b[0m                        \u001b[90mpython  utf-8  1:1\u001b[0m",
+  "w1:p2": "\u001b[36m~/code/uptime\u001b[0m \u001b[35m❯\u001b[0m python3 -m http.server 8000 --bind 127.0.0.1\r\nServing HTTP on 127.0.0.1 port 8000 (http://127.0.0.1:8000/) ...\r\n127.0.0.1 - - \"GET / HTTP/1.1\" 200 -\r\n127.0.0.1 - - \"GET /health HTTP/1.1\" 404 -\r\n127.0.0.1 - - \"GET / HTTP/1.1\" 200 -",
+  "w1:p3": "\u001b[36m~/code/uptime\u001b[0m \u001b[35m❯\u001b[0m python3 main.py http://localhost:8000/ http://localhost:8000/health\r\n200     2.1 ms  http://localhost:8000/\r\nERR  HTTP Error 404: File not found  http://localhost:8000/health\r\n\r\n\u001b[36m~/code/uptime\u001b[0m \u001b[35m❯\u001b[0m ls -la\r\ntotal 16\r\ndrwxr-xr-x 3 demo demo 4096 .\r\ndrwxr-xr-x 5 demo demo 4096 ..\r\n-rw-r--r-- 1 demo demo  214 README.md\r\n-rw-r--r-- 1 demo demo  861 main.py\r\ndrwxr-xr-x 2 demo demo 4096 tests\r\n\r\n\u001b[36m~/code/uptime\u001b[0m \u001b[35m❯\u001b[0m "
+ }
+}

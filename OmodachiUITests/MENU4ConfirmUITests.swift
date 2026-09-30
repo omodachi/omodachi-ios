@@ -49,13 +49,19 @@ final class MENU4ConfirmUITests: XCTestCase {
         lock.tap()
         let armed = app.descendants(matching: .any)["menu-confirm-system.lock"].firstMatch
         XCTAssertTrue(armed.waitForExistence(timeout: 2), "the first tap arms the row")
-        XCTAssertEqual(armed.label, "再点一次执行")
-        XCTAssertFalse(toast.exists, "the first tap sends nothing")
-        capture("menu4-armed")
+        // STORE-6: the second tap has to land inside the two-second window,
+        // so nothing slow happens between the taps. A screenshot there made
+        // this test fail whenever the simulator was busy: the window lapsed
+        // and the second tap only armed the row again.
         lock.tap()
         XCTAssertTrue(toast.waitForExistence(timeout: 3), "the second tap sends it")
         XCTAssertTrue(toast.label.contains("Lock"), toast.label)
         XCTAssertFalse(armed.exists)
+        capture("menu4-sent")
+        // The armed row's words, checked on a first tap of its own.
+        lock.tap()
+        XCTAssertTrue(armed.waitForExistence(timeout: 2))
+        XCTAssertEqual(armed.label, "再点一次执行")
     }
 
     func testTheQuestionGoesAwayOnItsOwnAfterTwoSeconds() {

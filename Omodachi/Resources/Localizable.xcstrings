@@ -2092,6 +2092,57 @@
         }
       }
     },
+    "demo.agentAnswer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This conversation is part of the demo, written into the app so you can see the Agent panel. On a paired computer you talk here with the coding agent running there: it works on that computer, and before it runs a command or changes a file, it asks you here first."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这段对话是演示，写在 app 里，让你看看 Agent 面板。配对电脑后，你在这里和那台电脑上的编程代理对话：它在电脑上干活，要运行命令或改文件之前，会先在这里问你。"
+          }
+        }
+      }
+    },
+    "demo.agentAsk": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What can I do from this panel?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个面板能做什么？"
+          }
+        }
+      }
+    },
+    "demo.agentReply": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the demo, so your message went nowhere. On a paired computer it goes to the coding agent running there, and the agent's answers, and anything it asks you to approve, appear in this panel."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是演示，你的消息没有发到任何地方。配对电脑后，它会交给那台电脑上的编程代理，代理的回答和它请你批准的操作都会出现在这个面板里。"
+          }
+        }
+      }
+    },
     "demo.banner": {
       "extractionState": "manual",
       "localizations": {
@@ -2160,19 +2211,70 @@
         }
       }
     },
+    "demo.herdrControls": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The demo's panes are drawn. With a paired computer, these buttons split, zoom and close panes on it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "演示里的窗格是画出来的。配对电脑后，这些按钮会在电脑上分屏、放大和关闭窗格。"
+          }
+        }
+      }
+    },
+    "demo.ranHere": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ran on the demo computer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在演示电脑上运行"
+          }
+        }
+      }
+    },
+    "demo.ranNamed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ran on the demo computer."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已在演示电脑上运行。"
+          }
+        }
+      }
+    },
     "demo.remoteDetail": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Above is a sketch Omodachi draws itself, not a picture of any computer."
+            "value": "Take over moves the computer's whole desktop onto this device and turns the computer's own screen off. Extra screen makes this device one more screen for the computer. The drawing above is a sketch Omodachi makes itself, not a picture of any computer."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "上面是 Omodachi 自己画的示意，不是任何电脑的画面。"
+            "value": "「接管」把电脑的整个桌面搬到这台设备上，电脑自己的屏幕熄灭；「多一块屏幕」让这台设备成为电脑的又一块屏幕。上面是 Omodachi 自己画的示意，不是任何电脑的画面。"
           }
         }
       }
@@ -2183,13 +2285,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The remote screen needs a real Omarchy computer."
+            "value": "Remote needs a paired computer."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "远程画面需要一台真的 Omarchy 电脑。"
+            "value": "远程需要一台配对好的电脑。"
           }
         }
       }
@@ -7617,6 +7719,23 @@
         }
       }
     },
+    "reason.endedOnComputer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Remote session was ended on the computer."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这次 Remote 会话已在电脑上结束。"
+          }
+        }
+      }
+    },
     "reason.executableMissing": {
       "extractionState": "manual",
       "localizations": {
@@ -13029,13 +13148,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Import or generate an SSH key in Settings, then connect."
+            "value": "This device has no SSH key for this computer. Forget the computer in Settings and pair it again; pairing makes a new key."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "先在设置里导入或生成一把 SSH 密钥，再连接。"
+            "value": "这台设备还没有这台电脑的 SSH 密钥。在设置里忘记这台电脑、再配对一次，配对时会生成新的密钥。"
           }
         }
       }

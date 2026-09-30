@@ -48,11 +48,12 @@ final class ReasonTextTests: XCTestCase {
         }
     }
 
-    /// The app's own name and its three system prompts — the sentences iOS
-    /// shows, which live in `InfoPlist.xcstrings` rather than in `Strings`.
+    /// The app's own name and its system prompts — the sentences iOS shows,
+    /// which live in `InfoPlist.xcstrings` rather than in `Strings`. STORE-6
+    /// §B4 took the microphone's out: no build can ask for it.
     func testTheSystemPromptsAreInBothLanguages() throws {
         for key in ["CFBundleDisplayName", "NSLocalNetworkUsageDescription",
-                    "NSFaceIDUsageDescription", "NSMicrophoneUsageDescription"] {
+                    "NSFaceIDUsageDescription", "NSBluetoothAlwaysUsageDescription"] {
             for language in ["zh-Hans", "en"] {
                 let table = try Self.table(language, resource: "InfoPlist")
                 let value = try XCTUnwrap(table[key], "\(key) is not localized for \(language)")

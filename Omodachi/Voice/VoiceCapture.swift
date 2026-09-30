@@ -55,12 +55,12 @@ final class VoiceCapture: NSObject, @unchecked Sendable {
 
     /// Asks for permission without opening a device. A denial is an answer, not
     /// an error to retry behind the user's back.
-    static func requestPermission() async -> Bool {
-        if AVAudioApplication.shared.recordPermission == .granted { return true }
-        return await withCheckedContinuation { continuation in
-            AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
-        }
-    }
+    ///
+    /// STORE-6 §B4: this build has no voice input (nothing calls
+    /// `SurfaceStores.voice()`), carries no microphone purpose string, and so
+    /// must not be able to ask for the microphone at all. The answer is no
+    /// until a build that ships voice puts the request, and the string, back.
+    static func requestPermission() async -> Bool { false }
 
     func start() -> Stop? {
         lock.lock()

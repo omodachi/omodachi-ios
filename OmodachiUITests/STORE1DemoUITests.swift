@@ -45,6 +45,54 @@ final class STORE1DemoUITests: XCTestCase {
     }
 }
 
+/// STORE-6 §A. What App Review walks through: the demo computer is `desktop`,
+/// its rows run and say where, a confirm row asks twice, and every panel has
+/// something in it.
+@MainActor
+final class STORE6DemoUITests: XCTestCase {
+    override func setUp() async throws {
+        try await super.setUp()
+        continueAfterFailure = false
+        executionTimeAllowance = 180
+    }
+
+    func testEveryDemoPanelHasSomethingAndARowRunsOnTheDemoComputer() {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launchArguments = ["--ui-testing", "--unpaired", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        defer { app.terminate() }
+        let any = app.descendants(matching: .any)
+        XCTAssertTrue(any["demo-enter"].waitForExistence(timeout: 30))
+        any["demo-enter"].tap()
+        XCTAssertTrue(any["home-panel"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["desktop"].firstMatch.waitForExistence(timeout: 5), "the demo computer is `desktop`")
+        XCTAssertFalse(app.staticTexts["Unavailable"].exists, "no row in the demo is unavailable")
+
+        any["menu-system"].firstMatch.tap()
+        XCTAssertFalse(app.staticTexts["Unavailable"].exists)
+        let lock = any["menu-system.lock"].firstMatch
+        XCTAssertTrue(lock.waitForExistence(timeout: 5))
+        lock.tap()
+        XCTAssertTrue(any["menu-confirm-system.lock"].firstMatch.waitForExistence(timeout: 2), "the first tap arms it")
+        lock.tap()
+        let toast = any["panel-toast"].firstMatch
+        XCTAssertTrue(toast.waitForExistence(timeout: 3))
+        XCTAssertTrue(toast.label.contains("ran on the demo computer"), toast.label)
+
+        app.buttons["open-herdr"].tap()
+        XCTAssertTrue(any["herdr-pane-w1:p2"].firstMatch.waitForExistence(timeout: 10), "Herdr shows the demo's panes")
+        app.buttons["open-agent"].tap()
+        XCTAssertTrue(any["agent-identity"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "part of the demo"))
+            .firstMatch.waitForExistence(timeout: 10), "the Agent conversation says it is the demo's")
+        app.buttons["open-notifications"].tap()
+        XCTAssertTrue(any["notification-demo-5"].firstMatch.waitForExistence(timeout: 10), "five notifications")
+        app.buttons["open-remote"].tap()
+        XCTAssertTrue(any["demo-remote-needs-host"].waitForExistence(timeout: 5))
+    }
+}
+
 /// STORE-1 §4.5. The App Store screenshots, from the demo and nothing else.
 /// Compiled only with `OMODACHI_STORE1_SCREENSHOTS` and run through
 /// `scripts/build.sh acceptance OMODACHI_STORE1_SCREENSHOTS STORE1ScreenshotTests`
@@ -54,12 +102,15 @@ final class STORE1DemoUITests: XCTestCase {
 final class STORE1ScreenshotTests: XCTestCase {
     func testStoreScreenshotsFromTheDemo() throws {
         #if OMODACHI_STORE1_SCREENSHOTS
+        // STORE-6 §C2: every panel of the demo, as evidence for the report.
         continueAfterFailure = true
-        executionTimeAllowance = 600
+        executionTimeAllowance = 900
         let pad = UIDevice.current.userInterfaceIdiom == .pad
         XCUIDevice.shared.orientation = pad ? .landscapeLeft : .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--unpaired", "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        let language = ProcessInfo.processInfo.environment["OMODACHI_SHOT_LANGUAGE"] ?? "en"
+        app.launchArguments = ["--ui-testing", "--unpaired", "-AppleLanguages", "(\(language))",
+                               "-AppleLocale", language == "en" ? "en_US" : "zh_CN"]
         app.launch()
         defer { app.terminate() }
         let any = app.descendants(matching: .any)
@@ -68,34 +119,57 @@ final class STORE1ScreenshotTests: XCTestCase {
         XCTAssertTrue(any["demo-banner"].waitForExistence(timeout: 10))
         XCTAssertTrue(any["home-panel"].waitForExistence(timeout: 10))
         settle()
-        capture("01-panel-menu")
+        capture("01-panel")
+
+        any["menu-style"].firstMatch.tap()
+        settle()
+        capture("02-panel-style-open")
+        any["menu-style"].firstMatch.tap()
+
+        let lock = any["menu-system.lock"].firstMatch
+        lock.tap()
+        settle(0.3)
+        capture("03-confirm-armed")
+        lock.tap()
+        settle(0.4)
+        capture("04-ran-on-the-demo-computer")
 
         if app.buttons["panel-segment-keybindings"].exists {
             app.buttons["panel-segment-keybindings"].tap()
-            XCTAssertTrue(app.textFields["shortcut-search"].waitForExistence(timeout: 10))
             settle()
-            capture("02-panel-keybindings")
-            app.buttons["panel-segment-menu"].tap()
         }
+        let terminal = any["shortcut-demo.shortcut.002"].firstMatch
+        if terminal.exists { terminal.tap() }
+        settle()
+        capture("05-keybindings")
+        if app.buttons["panel-segment-menu"].exists { app.buttons["panel-segment-menu"].tap() }
 
         app.buttons["open-notifications"].tap()
         XCTAssertTrue(any["notifications-panel"].waitForExistence(timeout: 10))
         settle()
-        capture("03-notifications")
+        capture("06-notifications")
+
+        app.buttons["open-herdr"].tap()
+        settle(2.5)
+        capture("07-herdr")
+
+        app.buttons["open-agent"].tap()
+        settle(2.5)
+        capture("08-agent")
 
         app.buttons["open-ssh"].tap()
         settle(2.5)
-        capture("04-ssh-demo-shell")
+        capture("09-ssh-demo-shell")
 
         app.buttons["open-remote"].tap()
         XCTAssertTrue(any["demo-remote-needs-host"].waitForExistence(timeout: 10))
         settle()
-        capture("05-remote-needs-a-computer")
+        capture("10-remote-needs-a-computer")
 
         app.buttons["open-setup"].tap()
         XCTAssertTrue(any["settings-screen"].waitForExistence(timeout: 10))
         settle()
-        capture("06-settings")
+        capture("11-settings")
         #else
         throw XCTSkip("STORE-1 screenshots are disabled; build with OMODACHI_STORE1_SCREENSHOTS")
         #endif

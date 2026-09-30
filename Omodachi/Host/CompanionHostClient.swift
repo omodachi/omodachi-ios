@@ -62,12 +62,35 @@ public enum CompanionHostError: Error, Equatable, LocalizedError, Sendable {
     }
 }
 
+/// RELEASE-9 (B4) / STORE-6 §B3. The host refused a `confirm` row's first
+/// call with `409 confirmation_required` and handed back the one-use token
+/// (`error.detail.confirm_token`: 43 URL-safe characters, 30 s, bound to this
+/// device and that row) that makes the next call run it. It is not a refusal:
+/// the caller that already has the person's second tap sends the row again
+/// with it (`HomeStore.prepareAction`).
+public struct HostConfirmationRequired: Error, Equatable, Sendable {
+    public let token: String
+    public let expiresIn: Int?
+
+    /// Only core's own token shape is kept; anything else is no token at all,
+    /// and the 409 stays the ordinary refusal it would otherwise be.
+    static func validToken(_ value: String) -> Bool {
+        value.utf8.count == 43 && value.utf8.allSatisfy {
+            (65...90).contains($0) || (97...122).contains($0) || (48...57).contains($0) || $0 == 45 || $0 == 95
+        }
+    }
+}
+
 public protocol CompanionServing: Sendable {
     func connect() async throws
     func disconnect() async
     func fetchState() async throws -> HostStateDTO
     func fetchSnapshot() async throws -> CompanionSnapshot
     func invoke(entryID: String, catalogRevision: String, parameters: [String: CompanionParameter], targetToken: String?, stateRevision: Int?) async throws -> CompanionActionResponse
+    /// STORE-6 §B3: the same call carrying the `confirm_token` a `409
+    /// confirmation_required` handed back.
+    func invoke(entryID: String, catalogRevision: String, parameters: [String: CompanionParameter], targetToken: String?,
+                stateRevision: Int?, confirmToken: String?) async throws -> CompanionActionResponse
     func submitDefaultAgentTask(_ text: String, requestID: String) async throws -> AgentTaskResponse
     func invokeWorkspaceLayout(_ request: WorkspaceLayoutRequest) async throws -> CompanionActionResponse
     func selectWorkspace(_ id: Int) async throws
@@ -488,9 +511,18 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
 
     public func invoke(entryID: String, catalogRevision: String, parameters: [String: CompanionParameter] = [:],
                        targetToken: String? = nil, stateRevision: Int? = nil) async throws -> CompanionActionResponse {
+        try await invoke(entryID: entryID, catalogRevision: catalogRevision, parameters: parameters,
+                         targetToken: targetToken, stateRevision: stateRevision, confirmToken: nil)
+    }
+
+    /// `confirm_token` is sent only when there is one, and only in core's own
+    /// shape: `fields()` refuses a malformed one as `invalid_request`.
+    public func invoke(entryID: String, catalogRevision: String, parameters: [String: CompanionParameter],
+                       targetToken: String?, stateRevision: Int?, confirmToken: String?) async throws -> CompanionActionResponse {
         guard entryID != WorkspaceLayoutRequest.entryID else { throw WorkspaceLayoutRequestError(code: "invalid_workspace_request") }
         guard Self.isSafeIdentifier(entryID), !catalogRevision.isEmpty, catalogRevision.utf8.count <= 256,
-              parameters.count <= 32, targetToken.map({ $0.utf8.count <= 1024 }) ?? true else {
+              parameters.count <= 32, targetToken.map({ $0.utf8.count <= 1024 }) ?? true,
+              confirmToken.map(HostConfirmationRequired.validToken) ?? true else {
             throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest)
         }
         struct Body: Encodable {
@@ -499,10 +531,12 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
             let params: [String: CompanionParameter]
             let target_token: String?
             let state_revision: Int?
+            let confirm_token: String?
         }
         return try await request(path: "v1/actions/\(entryID):invoke", method: "POST",
             body: Body(request_id: UUID().uuidString, catalog_revision: catalogRevision,
-                       params: parameters, target_token: targetToken, state_revision: stateRevision))
+                       params: parameters, target_token: targetToken, state_revision: stateRevision,
+                       confirm_token: confirmToken))
     }
 
     /// Submits text as one JSON data value. The text is never interpolated into
@@ -1097,6 +1131,9 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
                 if path.hasPrefix("v1/agent/default/chat") || path == "v1/agent/default:ensure" {
                     throw AgentChatHostError(code: AgentChatHostError.safeCode(code))
                 }
+                if http.statusCode == 409, code == "confirmation_required", let confirmation = Self.confirmation(data) {
+                    throw confirmation
+                }
                 throw Self.mapHTTPError(status: http.statusCode, code: code)
             }
             do { return try JSONDecoder().decode(T.self, from: data) }
@@ -1107,6 +1144,7 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         catch let error as RemoteRequestError { throw error }
         catch let error as MediaPairingError { throw error }
         catch let error as HerdrRequestError { throw error }
+        catch let error as HostConfirmationRequired { throw error }
         catch let error as CompanionHostError { throw error }
         catch is CancellationError { throw CancellationError() }
         catch {
@@ -1115,6 +1153,25 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
             }
             throw CompanionHostError.transport(message: Strings.hostErrorUnreachable)
         }
+    }
+
+    /// `409 confirmation_required`'s `error.detail`: the token, and how long it
+    /// lasts. Nothing else in the body is read.
+    static func confirmation(_ data: Data) -> HostConfirmationRequired? {
+        struct Body: Decodable {
+            struct Error: Decodable {
+                struct Detail: Decodable {
+                    let confirmToken: String?
+                    let expiresIn: Int?
+                    enum CodingKeys: String, CodingKey { case confirmToken = "confirm_token", expiresIn = "expires_in" }
+                }
+                let detail: Detail?
+            }
+            let error: Error?
+        }
+        guard let detail = (try? JSONDecoder().decode(Body.self, from: data))?.error?.detail,
+              let token = detail.confirmToken, HostConfirmationRequired.validToken(token) else { return nil }
+        return HostConfirmationRequired(token: token, expiresIn: detail.expiresIn)
     }
 
     /// Error bodies can echo the user's own text. Decode only the bounded code
@@ -1211,3 +1268,14 @@ public enum CompanionParameter: Encodable, Equatable, Sendable {
 
 struct EmptyBody: Encodable, Sendable {}
 struct EmptyResponse: Decodable, Sendable {}
+
+extension CompanionServing {
+    /// A transport with no token field still sends the second call, which core
+    /// accepts from a client that predates the token (`service.py`
+    /// `_require_confirmation`): the row runs, the token is simply not used.
+    func invoke(entryID: String, catalogRevision: String, parameters: [String: CompanionParameter], targetToken: String?,
+                stateRevision: Int?, confirmToken: String?) async throws -> CompanionActionResponse {
+        try await invoke(entryID: entryID, catalogRevision: catalogRevision, parameters: parameters,
+                         targetToken: targetToken, stateRevision: stateRevision)
+    }
+}
