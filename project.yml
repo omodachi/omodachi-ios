@@ -75,7 +75,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.omodachi
         # STORE-1 §3. CFBundleShortVersionString, the same number the plugin
         # and the tag carry. CFBundleVersion stays the build stamp below.
-        MARKETING_VERSION: 0.1.0
+        MARKETING_VERSION: 0.2.0
         SWIFT_VERSION: 6.0
         # STORE-2 §1. Resources/AppIcon.xcassets, rendered from the brand's v6
         # symbol by scripts/render_app_icon.py. Brand.xcassets stays the two
