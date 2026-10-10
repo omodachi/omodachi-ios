@@ -22,6 +22,8 @@ struct SettingsPanelView: View {
     @ObservedObject var remote: RemoteSessionController
 
     @EnvironmentObject private var home: HomeStore
+    /// NOTIFY-2: whether this device's own alerts are on.
+    @ObservedObject private var attention = AttentionNotifier.shared
     @State private var remotePreferences = RemotePreferences.load()
     @State private var openHost: PairedHostRecord?
     @State private var relativeTouchpad = NativePointerPreference.relativeTouchpad()
@@ -40,6 +42,9 @@ struct SettingsPanelView: View {
             PanelArea(Strings.panelSettings, identifier: "settings-screen") {
                 hosts
                 FlowRule()
+                tour
+                FlowRule()
+                odomo
                 remote(narrow: narrow)
                 FlowRule()
                 stream(narrow: narrow)
@@ -63,6 +68,9 @@ struct SettingsPanelView: View {
         }
         .task { await readSSHKey() }
         .task { await remote.refreshHostPreferences() }
+        // TAIL-3b E02: "Use Tailscale for <host>…" from ① opens this host here.
+        .onAppear { openPendingMove() }
+        .onChange(of: home.pendingMoveAccount) { _, _ in openPendingMove() }
     }
 
     // MARK: - Hosts
@@ -76,7 +84,9 @@ struct SettingsPanelView: View {
             if let candidate = record.candidate {
                 HostRow(candidate: candidate,
                         trailing: record.account == home.profile.companionURL && home.companionConnected
-                            ? Strings.settingsConnected : nil) {
+                            ? Strings.settingsConnected : nil,
+                        // TAIL-3b L01/L02: each host's one road, on its own line.
+                        road: Self.road(of: record)) {
                     openHost = openHost?.id == record.id ? nil : record
                 }
                 if openHost?.id == record.id {
@@ -88,11 +98,41 @@ struct SettingsPanelView: View {
                 }
             }
         }
-        Row(title: Strings.settingsFindHosts, icon: Icon.search, identifier: "settings-find-hosts") {
+        SettingAction(title: Strings.settingsFindHosts, leading: .icon(Icon.search),
+                      identifier: "settings-find-hosts") {
             router.show(.menu)
         }
         if let message {
             InlineError(message: message, identifier: "settings-message")
+        }
+    }
+
+    // MARK: - TUTORIAL-1: the tour, again
+
+    /// The tour and the per-panel tips come back together (one registry,
+    /// `OnceHints`), and the tour starts at once, here.
+    @ViewBuilder private var tour: some View {
+        GroupLabel(text: Strings.settingsTourGroup)
+        SettingAction(title: Strings.settingsTourReplay, detail: Strings.settingsTourReplayDetail,
+                      leading: .icon(Icon.tip), identifier: "settings-tour-replay",
+                      value: Strings.settingsTourReplayDetail) {
+            home.tour.replay(available: TourStep.available { entry in
+                PanelID(rawValue: entry).map(registry.isEnabled) ?? true
+            })
+        }
+    }
+
+    /// TAIL-3b. A record's road, read from its pin (or, for a pin from before
+    /// TAIL-3b, from the account it is stored under).
+    static func road(of record: PairedHostRecord, pins: HostPinStore = HostPinStore()) -> HostRoad? {
+        let account = HostAccount.canonical(record.account)
+        return pins.load(account: account)?.road(account: account) ?? HostRoads.road(forAccount: account)
+    }
+
+    private func openPendingMove() {
+        guard let account = home.pendingMoveAccount else { return }
+        if let record = directory.records.first(where: { HostAccount.canonical($0.account) == account }) {
+            openHost = record
         }
     }
 
@@ -113,27 +153,117 @@ struct SettingsPanelView: View {
         message = Strings.settingsSwitchedTo(next.hostName)
     }
 
+    // MARK: - LITE-1d: notifications on a locked phone
+
+    /// Odomo at the top level of ⑥, not only inside the host's detail: the
+    /// row says whether a device of this computer already gets its
+    /// notifications, and opens it in the Safari view over the app. Without
+    /// Tailscale on the computer it says why there is none, and offers the
+    /// move to Tailscale for a computer on this Wi-Fi. Nothing until the
+    /// host's roads have been read.
+    ///
+    /// ODOMO-CARD: once a link from Odomo said it is on this device, the row
+    /// says so instead (and does not open the Safari view, where Odomo only
+    /// shows its install page). Under it, the switch that shows or hides the
+    /// Notifications card for this computer.
+    @ViewBuilder private var odomo: some View {
+        let state = home.odomoState
+        let here = home.odomoOnThisDevice()
+        if state != .unknown || attention.permission != .unknown {
+            GroupLabel(text: Strings.panelNotifications)
+            // NOTIFY-2: this device's own alerts first, then the locked phone.
+            AlertsCard(attention: attention, compact: true)
+            switch state {
+            case .on, .off:
+                if here {
+                    let pushOn: Bool = { if case .on = state { return true } else { return false } }()
+                    odomoNote(Strings.odomoLockedRow(DeviceWord.current, Strings.odomoName),
+                              Strings.odomoStateHere(Strings.odomoName, DeviceWord.current) + " "
+                                + (pushOn ? Strings.odomoStateOn : Strings.odomoStateHereDetail))
+                        .accessibilityValue(Strings.odomoStateHere(Strings.odomoName, DeviceWord.current))
+                } else {
+                    odomoRow(state)
+                }
+            case .unknown:
+                EmptyView()
+            case .noAddress:
+                odomoNote(Strings.odomoLockedRow(DeviceWord.current, Strings.odomoName), Strings.odomoNone(Strings.odomoName, Strings.odomoName))
+                if home.hostRoad?.kind.isTailscale == true {
+                    note(Strings.odomoNoneTailscale(Strings.odomoName))
+                } else {
+                    SettingAction(title: Strings.moveRow, detail: Strings.moveRowDetail(home.state.hostName),
+                                  leading: .host(glyph: "\u{f0e8}", fallbackSymbol: "network"),
+                                  identifier: "settings-odomo-move") {
+                        home.pendingMoveAccount = HostAccount.canonical(home.profile.companionURL)
+                    }
+                }
+            }
+            if state != .unknown {
+                // ODOMO-CARD: per computer, on by default, off after "Hide".
+                SquareToggleRow(title: Strings.odomoCardShow, identifier: "settings-odomo-card",
+                                detail: here ? Strings.odomoCardShowHere(Strings.odomoName, DeviceWord.current) : nil,
+                                isOn: Binding(get: { OdomoOffer.switchIsOn(dismissed: home.odomoOfferDismissed(), here: here) },
+                                              set: { $0 ? home.showOdomoOffer() : home.dismissOdomoOffer() }))
+                    .padding(.horizontal, OmodachiTheme.rowPaddingX)
+            }
+            FlowRule()
+        }
+    }
+
+    /// LITE-1d: the row that opens Odomo in the Safari view, with its state.
+    @ViewBuilder private func odomoRow(_ state: OdomoOffer.State) -> some View {
+        switch state {
+        case .on(_, let url?):
+            SettingAction(title: Strings.odomoLockedRow(DeviceWord.current, Strings.odomoName),
+                          detail: Strings.odomoStateOn, leading: .host(glyph: "\u{f0f3}", fallbackSymbol: "bell"),
+                          identifier: "settings-odomo", value: Strings.odomoStateOn) { openOdomo(url) }
+        case .on:
+            odomoNote(Strings.odomoLockedRow(DeviceWord.current, Strings.odomoName), Strings.odomoStateOn)
+        case .off(let url, let counted):
+            SettingAction(title: Strings.odomoLockedRow(DeviceWord.current, Strings.odomoName),
+                          detail: counted ? Strings.odomoStateOff + " " + Strings.odomoRowDetail(Strings.odomoName)
+                                          : Strings.odomoRowDetail(Strings.odomoName),
+                          leading: .host(glyph: "\u{f0f3}", fallbackSymbol: "bell"), identifier: "settings-odomo",
+                          value: counted ? Strings.odomoStateOff : "") { openOdomo(url) }
+        case .unknown, .noAddress:
+            EmptyView()
+        }
+    }
+
+    /// The same row as the one that opens Odomo, with nothing to open: the
+    /// glyph keeps the title where the button's title would be.
+    private func odomoNote(_ title: String, _ detail: String) -> some View {
+        SettingLine(title: title, detail: detail, leading: .host(glyph: "\u{f0f3}", fallbackSymbol: "bell"))
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("settings-odomo")
+    }
+
+    private func openOdomo(_ url: URL) {
+        let opened = InAppBrowser.open(url) { Task { await home.refreshOdomo() } }
+        if !opened { openURL(url) }
+    }
+
     // MARK: - Remote
 
     @ViewBuilder private func remote(narrow: Bool) -> some View {
         GroupLabel(text: Strings.settingsRemote)
-        settingRow(Strings.settingsMode, narrow: narrow) {
+        settingRow(Strings.settingsMode, narrow: narrow, identifier: "settings-remote-mode") {
             SegmentedRow(options: RemoteMode.allCases.map { ($0.title, $0) },
                          selection: binding(\.mode))
                 .accessibilityIdentifier("settings-remote-mode")
         }
-        settingRow(Strings.settingsBackend, narrow: narrow) {
+        settingRow(Strings.settingsBackend, narrow: narrow, identifier: "settings-remote-backend") {
             SegmentedRow(options: RemoteBackendChoice.allCases.map { ($0.title, $0) },
                          selection: binding(\.backend))
                 .accessibilityIdentifier("settings-remote-backend")
         }
-        settingRow(Strings.settingsPlacement, narrow: narrow) {
+        settingRow(Strings.settingsPlacement, narrow: narrow, identifier: "settings-remote-placement") {
             SegmentedRow(options: [(Strings.settingsPlacementLeft, RemotePlacement.left), (Strings.settingsPlacementRight, .right),
                                    (Strings.settingsPlacementAbove, .above), (Strings.settingsPlacementBelow, .below)],
                          selection: binding(\.placement))
                 .accessibilityIdentifier("settings-remote-placement")
         }
-        settingRow(Strings.settingsTouchMode, narrow: narrow) {
+        settingRow(Strings.settingsTouchMode, narrow: narrow, identifier: "settings-remote-touch-mode") {
             SegmentedRow(options: [(Strings.settingsTouchDirect, false), (Strings.settingsTouchTouchpad, true)],
                          selection: Binding(get: { relativeTouchpad },
                                             set: { relativeTouchpad = $0
@@ -162,7 +292,8 @@ struct SettingsPanelView: View {
     @ViewBuilder private func stream(narrow: Bool) -> some View {
         GroupLabel(text: Strings.settingsStream)
         note(Strings.settingsStreamDetail)
-        settingRow(Strings.settingsStreamPreset, detail: streamDetail, narrow: narrow) {
+        settingRow(Strings.settingsStreamPreset, detail: streamDetail, narrow: narrow,
+                   identifier: "settings-stream-preset", arrangement: .under) {
             VStack(alignment: .leading, spacing: OmodachiTheme.space("md")) {
                 SegmentedRow(options: [RemoteStreamPreset.performance, .balanced, .quality].map { ($0.title, $0) },
                              selection: streamBinding(\.preset))
@@ -173,15 +304,16 @@ struct SettingsPanelView: View {
             }
         }
         if remote.streamChoice.preset == .custom {
-            settingRow(Strings.settingsStreamFrameRate, narrow: narrow) {
+            settingRow(Strings.settingsStreamFrameRate, narrow: narrow, identifier: "settings-stream-custom-fps") {
                 SegmentedRow(options: customFrameRates.map { ("\($0) fps", $0) }, // non-copy: a measurement
                              selection: streamBinding(\.customFPS))
                     .accessibilityIdentifier("settings-stream-custom-fps")
             }
-            settingRow(Strings.settingsStreamBitrate, narrow: narrow) {
+            settingRow(Strings.settingsStreamBitrate, narrow: narrow, identifier: "settings-stream-custom-bitrate") {
                 StepSlider(value: streamBinding(\.customBitrateKbps), range: customBitrateRange, step: 1_000,
                            format: { "\($0 / 1_000) Mbps" }, // non-copy: a measurement
                            label: Strings.settingsStreamBitrate, identifier: "settings-stream-custom-bitrate")
+                    .frame(minWidth: 240, idealWidth: 280)
             }
         }
     }
@@ -241,21 +373,8 @@ struct SettingsPanelView: View {
         GroupLabel(text: Strings.settingsBarEntries)
         note(Strings.settingsBarEntriesNote)
         ForEach(registry.entries) { entry in
-            HStack(spacing: OmodachiTheme.space("lg")) {
-                Glyph(entry.icon)
-                    .foregroundStyle(OmodachiTheme.text)
-                    .frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.title)
-                        .font(OmodachiTheme.font("subtitle"))
-                        .foregroundStyle(OmodachiTheme.text)
-                    if !entry.canDisable {
-                        Text(Strings.settingsBarEntryLocked)
-                            .font(OmodachiTheme.bodyFont("body-small"))
-                            .foregroundStyle(OmodachiTheme.tertiaryText)
-                    }
-                }
-                Spacer(minLength: OmodachiTheme.space("lg"))
+            SettingLine(title: entry.title, detail: entry.canDisable ? nil : Strings.settingsBarEntryLocked,
+                        leading: .icon(entry.icon)) {
                 SquareToggle(isOn: Binding(get: { entry.enabled },
                                            set: { registry.setEnabled(entry.id, $0) }),
                              label: Strings.settingsBarEntryLabel(entry.title),
@@ -263,8 +382,6 @@ struct SettingsPanelView: View {
                     .opacity(entry.canDisable ? 1 : 0.45)
                     .disabled(!entry.canDisable)
             }
-            .padding(.horizontal, OmodachiTheme.rowPaddingX)
-            .frame(minHeight: RowHeight.line)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("settings-entry-\(entry.id.rawValue)")
         }
@@ -298,7 +415,8 @@ struct SettingsPanelView: View {
     @ViewBuilder private func clipboard(narrow: Bool) -> some View {
         GroupLabel(text: Strings.settingsClipboard)
         settingRow(Strings.settingsClipboardDirection,
-                   detail: Strings.settingsClipboardDetail, narrow: narrow) {
+                   detail: Strings.settingsClipboardDetail, narrow: narrow,
+                   identifier: "settings-clipboard-sync") {
             SegmentedRow(options: [(Strings.settingsClipboardOff, ClipboardSyncChoice.off),
                                    (Strings.settingsClipboardOneWay, .hostToDevice),
                                    (Strings.settingsClipboardBoth, .both)],
@@ -343,17 +461,29 @@ struct SettingsPanelView: View {
 
     @ViewBuilder private func device(narrow: Bool) -> some View {
         GroupLabel(text: Strings.settingsDevice)
-        settingRow(Strings.settingsBadge, narrow: narrow) {
+        settingRow(Strings.settingsBadge, narrow: narrow, identifier: "settings-badge-style") {
             SegmentedRow(options: BarBadgeStyle.allCases.map { ($0.title, $0) },
                          selection: Binding(get: { preferences.badgeStyle },
                                             set: { preferences.badgeStyle = $0; preferences.save() }))
                 .accessibilityIdentifier("settings-badge-style")
         }
-        settingRow(Strings.settingsBarEdge, detail: Strings.settingsBarEdgeDetail, narrow: narrow) {
-            SegmentedRow(options: [(Strings.settingsPlacementLeft, HostBarPosition.left), (Strings.settingsPlacementRight, .right)],
-                         selection: Binding(get: { preferences.barEdges.portrait },
-                                            set: { preferences.barEdges.choose($0); preferences.save() }))
-                .accessibilityIdentifier("settings-bar-edge")
+        // TUTORIAL-1 (WEB-14's finding): one preference per orientation, the
+        // same one the bar's own hold menu writes, and the Shell's placement
+        // follows it (`ShellView`'s `onChange(of: preferences.barEdges)`).
+        settingRow(Strings.settingsBarEdge, detail: Strings.settingsBarEdgeDetail, narrow: narrow,
+                   identifier: "settings-bar-edge", arrangement: .under) {
+            VStack(alignment: .leading, spacing: OmodachiTheme.space("md")) {
+                caption(Strings.settingsBarEdgePortrait)
+                SegmentedRow(options: [(Strings.settingsPlacementLeft, HostBarPosition.left), (Strings.settingsPlacementRight, .right)],
+                             selection: Binding(get: { preferences.barEdges.portrait },
+                                                set: { preferences.barEdges.choose($0); preferences.save() }))
+                    .accessibilityIdentifier("settings-bar-edge")
+                caption(Strings.settingsBarEdgeLandscape)
+                SegmentedRow(options: [(Strings.settingsBarEdgeTop, HostBarPosition.top), (Strings.settingsBarEdgeBottom, .bottom)],
+                             selection: Binding(get: { preferences.barEdges.landscape },
+                                                set: { preferences.barEdges.choose($0); preferences.save() }))
+                    .accessibilityIdentifier("settings-bar-edge-landscape")
+            }
         }
     }
 
@@ -376,7 +506,6 @@ struct SettingsPanelView: View {
                             isOn: Binding(get: { home.approvals.deviceEnabled },
                                           set: { home.approvals.setDeviceEnabled($0) }))
                 .padding(.horizontal, OmodachiTheme.rowPaddingX)
-                .padding(.vertical, OmodachiTheme.space("xl"))
                 .disabled(home.approvals.busy)
             if home.approvals.deviceEnabled && !home.approvals.hostEnabled {
                 note(Strings.settingsApprovalHostOff)
@@ -424,7 +553,7 @@ struct SettingsPanelView: View {
         note(Strings.settingsDiagnosticsDetail)
         if let identity = home.approvals.hostKnownDeviceID {
             ValueLine(name: Strings.settingsApproval, value: identity,
-                      identifier: "settings-diagnostics-identity")
+                      identifier: "settings-diagnostics-identity", long: true)
         }
         sshKeyPair
         StreamDiagnosticsLine(monitor: remote.streamMonitor)
@@ -440,6 +569,20 @@ struct SettingsPanelView: View {
                         copiedTitle: Strings.settingsDiagnosticsCopied,
                         emptyTitle: Strings.settingsDiagnosticsEmpty,
                         identifier: "settings-diagnostics-approval")
+        DiagnosticBlock(title: Strings.settingsDiagnosticsRemote,
+                        text: RemoteSessionTrace.transcript.transcript,
+                        copyTitle: Strings.settingsDiagnosticsCopy,
+                        copiedTitle: Strings.settingsDiagnosticsCopied,
+                        emptyTitle: Strings.settingsDiagnosticsEmpty,
+                        identifier: "settings-diagnostics-remote")
+        // POLISH-R item 6. Kept across launches: a stall the user ended by
+        // closing the app is exactly the one worth reading afterwards.
+        DiagnosticBlock(title: Strings.settingsDiagnosticsStalls,
+                        text: RemoteStallLog.shared.transcript,
+                        copyTitle: Strings.settingsDiagnosticsCopy,
+                        copiedTitle: Strings.settingsDiagnosticsCopied,
+                        emptyTitle: Strings.settingsDiagnosticsEmpty,
+                        identifier: "settings-diagnostics-stalls")
     }
 
     /// UX-4 §2. The two halves of one key, printed together.
@@ -452,11 +595,11 @@ struct SettingsPanelView: View {
     @ViewBuilder private var sshKeyPair: some View {
         if let sshKey {
             ValueLine(name: Strings.settingsDiagnosticsKeyLocal, value: sshKey.localFingerprint,
-                      identifier: "settings-diagnostics-key-local")
+                      identifier: "settings-diagnostics-key-local", long: true)
             ValueLine(name: Strings.settingsDiagnosticsKeyHost,
                       value: sshKey.hostFingerprints.last ?? Strings.settingsDiagnosticsKeyNone,
                       identifier: "settings-diagnostics-key-host",
-                      wrong: !sshKey.matches)
+                      long: true, wrong: !sshKey.matches)
             if !sshKey.matches { note(Strings.settingsDiagnosticsKeyMismatch) }
         } else if sshKeyUnread {
             note(Strings.settingsDiagnosticsKeyUnread)
@@ -466,6 +609,7 @@ struct SettingsPanelView: View {
     /// The host is asked once per appearance of this page; it is one
     /// authenticated GET that starts nothing and changes nothing.
     private func readSSHKey() async {
+        if let fixture = SettingsFixture.sshKey { sshKey = fixture; return }
         let account = home.profile.companionURL
         guard !account.isEmpty, !home.profile.mock else { return }
         let keyAccount = home.profile.keyAccount
@@ -488,20 +632,20 @@ struct SettingsPanelView: View {
         ValueLine(name: Strings.settingsVersion, value: BuildStamp.versionLine, identifier: "settings-version")
         ValueLine(name: Strings.settingsBuild, value: BuildStamp.summary, identifier: "setup.buildStamp")
         ValueLine(name: Strings.settingsContract, value: "omodachi.v1", identifier: "settings-contract")
-        Row(title: Strings.settingsLicence, detail: Strings.settingsLicenceDetail,
-            icon: licenceOpen ? Icon.chevronUp : Icon.chevronDown, selected: licenceOpen,
-            identifier: "settings-licence") {
+        SettingAction(title: Strings.settingsLicence, detail: Strings.settingsLicenceDetail,
+                      trailing: licenceOpen ? Icon.chevronUp : Icon.chevronDown, selected: licenceOpen,
+                      identifier: "settings-licence", value: Strings.settingsLicenceDetail) {
             licenceOpen.toggle()
         }
         if licenceOpen {
             LicencePage()
         }
-        Row(title: Strings.settingsSourceCode, detail: LicenceNotice.sourceURL.absoluteString,
-            icon: Icon.chevronRight, identifier: "settings-source-code") {
+        SettingAction(title: Strings.settingsSourceCode, detail: LicenceNotice.sourceURL.absoluteString,
+                      identifier: "settings-source-code", value: LicenceNotice.sourceURL.absoluteString) {
             openURL(LicenceNotice.sourceURL)
         }
-        Row(title: Strings.settingsPrivacy, detail: LicenceNotice.privacyURL.absoluteString,
-            icon: Icon.chevronRight, identifier: "settings-privacy") {
+        SettingAction(title: Strings.settingsPrivacy, detail: LicenceNotice.privacyURL.absoluteString,
+                      identifier: "settings-privacy", value: LicenceNotice.privacyURL.absoluteString) {
             openURL(LicenceNotice.privacyURL)
         }
     }
@@ -515,27 +659,22 @@ struct SettingsPanelView: View {
         })
     }
 
-    /// A-56 rev 4b: on a narrow column the label goes above the control and the
-    /// control is left-aligned under it. Nothing else changes.
+    /// A-56 rev 4b and SETTINGS-LAYOUT-1: a choice sits beside its label when
+    /// it fits there at its own width, and goes under it, left-aligned, when it
+    /// does not — which on a phone held upright is nearly always. The column
+    /// decides (`ViewThatFits`), not the device. `narrow` only lets the control
+    /// under its label use the whole width.
+    ///
+    /// A setting made of more than one control (two rows of presets, a choice
+    /// per orientation) passes `.under`: a block of controls beside a title
+    /// is a second column, which A-56 does not have.
     @ViewBuilder private func settingRow<Control: View>(_ title: String, detail: String? = nil,
-                                                        narrow: Bool,
+                                                        narrow: Bool, identifier: String,
+                                                        arrangement: SettingArrangement = .fitting,
                                                         @ViewBuilder control: () -> Control) -> some View {
-        VStack(alignment: .leading, spacing: OmodachiTheme.space("md")) {
-            Text(title)
-                .font(OmodachiTheme.font("subtitle"))
-                .foregroundStyle(OmodachiTheme.text)
-            if let detail {
-                Text(detail)
-                    .font(OmodachiTheme.bodyFont("body-small"))
-                    .foregroundStyle(OmodachiTheme.tertiaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            control()
-                .frame(maxWidth: narrow ? .infinity : 420, alignment: .leading)
-        }
-        .padding(.horizontal, OmodachiTheme.rowPaddingX)
-        .padding(.vertical, OmodachiTheme.space("xl"))
-        .frame(maxWidth: .infinity, alignment: .leading)
+        let control = control()
+        SettingLine(title: title, detail: detail, arrangement: arrangement, identifier: identifier,
+                    narrow: narrow) { control }
     }
 
     private func note(_ text: String) -> some View {
@@ -547,6 +686,13 @@ struct SettingsPanelView: View {
             .padding(.horizontal, OmodachiTheme.rowPaddingX)
             .padding(.vertical, OmodachiTheme.space("xl"))
     }
+
+    /// The small name over one of a setting's two controls.
+    private func caption(_ text: String) -> some View {
+        Text(text)
+            .font(OmodachiTheme.font("body-small"))
+            .foregroundStyle(OmodachiTheme.secondaryText)
+    }
 }
 
 /// STREAM-1 §3. The running stream's last second, in one line. It observes the
@@ -555,19 +701,16 @@ private struct StreamDiagnosticsLine: View {
     @ObservedObject var monitor: RemoteStreamMonitor
 
     var body: some View {
-        VStack(alignment: .leading, spacing: OmodachiTheme.space("sm")) {
-            Text(Strings.settingsDiagnosticsStream)
-                .font(OmodachiTheme.font("subtitle"))
-                .foregroundStyle(OmodachiTheme.text)
+        // SETTINGS-LAYOUT-1: a long value, so under its title.
+        SettingLine(title: Strings.settingsDiagnosticsStream, arrangement: .under,
+                    identifier: "settings-diagnostics-stream", narrow: true) {
             Text(verbatim: monitor.line ?? Strings.settingsDiagnosticsStreamIdle)
-                .font(OmodachiTheme.bodyFont("body-small"))
-                .foregroundStyle(OmodachiTheme.tertiaryText)
+                .font(SettingMetrics.valueFont)
+                .foregroundStyle(OmodachiTheme.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
                 .accessibilityIdentifier("settings-diagnostics-stream")
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, OmodachiTheme.rowPaddingX)
-        .padding(.vertical, OmodachiTheme.space("xl"))
     }
 }
 
@@ -582,9 +725,47 @@ struct HostDetailView: View {
     var onDone: (Bool) -> Void
 
     @State private var message: String?
+    /// TAIL-3b L03: the move opens in place, under the road sentence (A-55: no sheet).
+    @State private var move: TailscaleMoveModel?
+    @Environment(\.openURL) private var openURL
+
+    private var road: HostRoad? { SettingsPanelView.road(of: record) }
+    private var isCurrent: Bool {
+        HostAccount.canonical(home.profile.companionURL) == HostAccount.canonical(record.account)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // TAIL-3b L01 / L02: how this host is reached, in one sentence.
+            if let road {
+                GroupLabel(text: Strings.hostRoad)
+                note(HostRoadWords.sentence(road))
+                    .accessibilityIdentifier("host-road-sentence")
+                // L04: the move stays open after it lands, to say so.
+                if let move { moveSection(move) }
+                else if !road.kind.isTailscale {
+                    SettingAction(title: Strings.moveRow, detail: Strings.moveRowDetail(record.hostName),
+                                  leading: .host(glyph: "\u{f0e8}", fallbackSymbol: "network"),
+                                  identifier: "host-move-tailscale") { startMove() }
+                }
+                FlowRule()
+            }
+            // TAIL-3b I2 / LITE-1c: push to this phone comes from Odomo, which
+            // the host serves over Tailscale. It opens in the Safari view over
+            // the app, whose Share sheet adds it to the Home Screen as a web
+            // app; Safari itself only if there is nothing to present over.
+            if isCurrent {
+                if let odomo = home.odomoURL {
+                    SettingAction(title: Strings.odomoRow(DeviceWord.current, Strings.odomoName),
+                                  detail: Strings.odomoRowDetail(Strings.odomoName),
+                                  leading: .host(glyph: "\u{f0f3}", fallbackSymbol: "bell"), identifier: "host-odomo") {
+                        if !InAppBrowser.open(odomo, onClose: { Task { await home.refreshOdomo() } }) { openURL(odomo) }
+                    }
+                } else if home.companionConnected {
+                    note(Strings.odomoNone(Strings.odomoName, Strings.odomoName)).accessibilityIdentifier("host-odomo-none")
+                }
+                FlowRule()
+            }
             if let observed = home.certificateChange?.observed, let pinned = home.certificateChange?.pinned {
                 GroupLabel(text: Strings.settingsPinnedAt)
                 FingerprintText(fingerprint: pinned, color: OmodachiTheme.tertiaryText)
@@ -598,7 +779,7 @@ struct HostDetailView: View {
                 FlowRule()
             }
             GroupLabel(text: Strings.settingsRevoke)
-            note(Strings.settingsRevokeOnHost(RemoteSessionController.pairedDeviceID() ?? "<device>")) // non-copy: a placeholder id
+            note(Strings.settingsRevokeOnHost)
             InlineConfirm(title: Strings.settingsForget, confirmTitle: Strings.settingsForgetConfirm,
                           kind: .danger, identifier: "settings-forget-host") { forget() }
                 .padding(.horizontal, OmodachiTheme.rowPaddingX)
@@ -607,6 +788,25 @@ struct HostDetailView: View {
         .padding(.bottom, OmodachiTheme.space("xxl"))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("host-detail")
+        .onAppear {
+            // E02's button lands here with the move already open.
+            if home.pendingMoveAccount == HostAccount.canonical(record.account) {
+                home.pendingMoveAccount = nil
+                if move == nil, road?.kind.isTailscale == false { startMove() }
+            }
+        }
+    }
+
+    // MARK: - TAIL-3b L03 / L03b / L04
+
+    private func startMove() {
+        move = TailscaleMoveModel(account: record.account, hostName: record.hostName)
+    }
+
+    @ViewBuilder private func moveSection(_ model: TailscaleMoveModel) -> some View {
+        TailscaleMoveView(model: model, onDone: {
+            if isCurrent { Task { await home.connectCompanion() } }
+        }, onCancel: { move = nil })
     }
 
     private func forget() {

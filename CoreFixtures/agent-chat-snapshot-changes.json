@@ -1,0 +1,150 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a10e79-b6a4-7f91-a656-650e48ba1ba1"
+  },
+  "rows": [
+    {
+      "kind": "message",
+      "id": "01a10e79-b795-76c1-823b-4142f257723f",
+      "turnID": "01a10e79-b768-7812-a049-49ad0f12aad9",
+      "role": "user",
+      "text": "please edit"
+    },
+    {
+      "kind": "message",
+      "id": "m-e1",
+      "turnID": "01a10e79-b768-7812-a049-49ad0f12aad9",
+      "role": "assistant",
+      "text": "Changing the port and writing a plan."
+    },
+    {
+      "kind": "tool",
+      "id": "call-p1-1",
+      "turnID": "01a10e79-b768-7812-a049-49ad0f12aad9",
+      "name": "File changes",
+      "status": "succeeded",
+      "detail": "[{\"path\": \"/home/user/ac1test/app.py\", \"kind\": {\"type\": \"update\", \"move_path\": null}, \"diff\": \"@@ -4,4 +4,5 @@\\n def main():\\n-    port = 8080\\n-    print(\\\"hello\\\")\\n+    port = int(os.environ.get(\\\"PORT\\\", \\\"9090\\\"))\\n+    print(\\\"hello on\\\", port)\\n+    serve(port)\\n \\n\"}, {\"path\": \"/home/user/ac1test/notes.txt\", \"kind\": {\"type\": \"update\", \"move_path\": \"/home/user/ac1test/docs/notes.txt\"}, \"diff\": \"@@ -1 +1 @@\\n-draft\\n+final\\n\\n\\nMoved to: /home/user/ac1test/docs/notes.txt\"}, {\"path\": \"/home/user/ac1test/notes/plan.md\", \"kind\": {\"type\": \"add\"}, \"diff\": \"# Plan\\n\\n1. Read the config.\\n2. Change the port.\\n3. Run the tests.\\n\"}, {\"path\": \"/home/user/ac1test/old.txt\", \"kind\": {\"type\": \"delete\"}, \"diff\": \"remove me\\nsecond line\\n\"}]",
+      "paths": [
+        "/home/user/ac1test/app.py",
+        "/home/user/ac1test/notes.txt",
+        "/home/user/ac1test/notes/plan.md",
+        "/home/user/ac1test/old.txt"
+      ],
+      "changes": [
+        {
+          "path": "/home/user/ac1test/app.py",
+          "kind": "update",
+          "added": 3,
+          "removed": 2,
+          "diff": "@@ -4,4 +4,5 @@\n def main():\n-    port = 8080\n-    print(\"hello\")\n+    port = int(os.environ.get(\"PORT\", \"9090\"))\n+    print(\"hello on\", port)\n+    serve(port)\n "
+        },
+        {
+          "path": "/home/user/ac1test/notes.txt",
+          "kind": "update",
+          "added": 1,
+          "removed": 1,
+          "diff": "@@ -1 +1 @@\n-draft\n+final",
+          "move_path": "/home/user/ac1test/docs/notes.txt"
+        },
+        {
+          "path": "/home/user/ac1test/notes/plan.md",
+          "kind": "add",
+          "added": 5,
+          "removed": 0,
+          "diff": "+# Plan\n+\n+1. Read the config.\n+2. Change the port.\n+3. Run the tests."
+        },
+        {
+          "path": "/home/user/ac1test/old.txt",
+          "kind": "delete",
+          "added": 0,
+          "removed": 2,
+          "diff": "-remove me\n-second line"
+        }
+      ]
+    },
+    {
+      "kind": "tool",
+      "id": "call-p2-2",
+      "turnID": "01a10e79-b768-7812-a049-49ad0f12aad9",
+      "name": "File changes",
+      "status": "running",
+      "detail": "[{\"path\": \"/home/user/ac1-outside/settings.txt\", \"kind\": {\"type\": \"update\", \"move_path\": null}, \"diff\": \"@@ -1,2 +1,3 @@\\n-mode = slow\\n+mode = fast\\n+retries = 3\\n name = demo\\n\"}]",
+      "paths": [
+        "/home/user/ac1-outside/settings.txt"
+      ],
+      "changes": [
+        {
+          "path": "/home/user/ac1-outside/settings.txt",
+          "kind": "update",
+          "added": 2,
+          "removed": 1,
+          "diff": "@@ -1,2 +1,3 @@\n-mode = slow\n+mode = fast\n+retries = 3\n name = demo"
+        }
+      ]
+    }
+  ],
+  "activeTurn": "01a10e79-b768-7812-a049-49ad0f12aad9",
+  "sequence": 12,
+  "acceptedRequestIDs": [],
+  "pendingApprovals": [
+    {
+      "request_id": "0",
+      "kind": "fileChange",
+      "summary": "Apply file changes",
+      "details": {
+        "item_id": "call-p2-2",
+        "turn_id": "01a10e79-b768-7812-a049-49ad0f12aad9",
+        "files": [
+          "/home/user/ac1-outside/settings.txt"
+        ],
+        "added": 2,
+        "removed": 1
+      },
+      "decisions": [
+        "accept",
+        "acceptForSession",
+        "decline",
+        "cancel"
+      ],
+      "fingerprint": "ab271c54cd55ecbf"
+    }
+  ],
+  "status": {
+    "type": "active",
+    "activeFlags": [
+      "waitingOnApproval"
+    ],
+    "waiting": "approval"
+  },
+  "usage": {
+    "tokens": {
+      "last": {
+        "inputTokens": 10,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 5,
+        "reasoningOutputTokens": 0,
+        "totalTokens": 15
+      },
+      "total": {
+        "inputTokens": 10,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 5,
+        "reasoningOutputTokens": 0,
+        "totalTokens": 15
+      },
+      "modelContextWindow": 258400
+    },
+    "rate_limits": null,
+    "model": null,
+    "effort": null,
+    "mode": null
+  },
+  "earlier": false,
+  "queue": null,
+  "checklist": null
+}

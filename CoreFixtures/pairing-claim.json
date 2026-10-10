@@ -5,6 +5,25 @@
   "device_name": "Fixture iPad",
   "status": "claimed",
   "expires_at": 1789430700,
+  "ssh_public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4f",
+  "ssh_fingerprint": "SHA256:ZkAslGjFiUHdGf/WUL8rQvkib4PTvQatUV0OUQSncCA",
+  "grants": {
+    "companion": true,
+    "media": true,
+    "ssh": true
+  },
+  "remote_addr": null,
+  "via": {
+    "kind": "tailnet",
+    "peer_name": "fixture-ipad",
+    "login": "fixture@example.com"
+  },
+  "already_paired": false,
+  "client": {
+    "kind": "native",
+    "label": null
+  },
+  "client_label": null,
   "credential": "fixture-redacted-device-credential",
   "issued_at": 1789430400,
   "credential_expires_at": 1792022400,
@@ -14,7 +33,56 @@
   "endpoints": [
     {
       "host": "192.168.1.10",
-      "port": 8099
+      "port": 8099,
+      "kind": "lan"
+    },
+    {
+      "host": "omarchy-fixture.local",
+      "port": 8099,
+      "kind": "mdns"
+    },
+    {
+      "host": "omarchy-fixture.tail0000.ts.net",
+      "port": 8099,
+      "kind": "tailnet"
+    },
+    {
+      "host": "100.64.0.35",
+      "port": 8099,
+      "kind": "tailnet"
+    },
+    {
+      "host": "fd7a:115c:a1e0::35",
+      "port": 8099,
+      "kind": "tailnet"
     }
-  ]
+  ],
+  "ssh": {
+    "user": "fixture-user",
+    "host": "192.168.1.10",
+    "port": 22,
+    "hosts": [
+      {
+        "host": "192.168.1.10",
+        "kind": "lan"
+      },
+      {
+        "host": "omarchy-fixture.local",
+        "kind": "mdns"
+      },
+      {
+        "host": "omarchy-fixture.tail0000.ts.net",
+        "kind": "tailnet"
+      },
+      {
+        "host": "100.64.0.35",
+        "kind": "tailnet"
+      },
+      {
+        "host": "fd7a:115c:a1e0::35",
+        "kind": "tailnet"
+      }
+    ],
+    "tailscale_ssh": false
+  }
 }

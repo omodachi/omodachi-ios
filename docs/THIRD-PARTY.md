@@ -131,6 +131,56 @@ adding a row, and the app's list follows.
 | FFmpeg | `Vendor/Moonlight/libs/FFmpeg/` | LGPL-2.1-or-later | `Vendor/Moonlight/libs/FFmpeg/COPYING.LGPLv2.1` and `LICENSE.md` (upstream, `3f890fbfd9`) |
 | LibVNCClient | `Vendor/LibVNCClient.xcframework/` | **GPL-2.0-or-later** | `Vendor/LibVNCClient.xcframework/LICENSE`; source and build in `BUILD.md` there |
 | Symbols Nerd Font Mono | `Omodachi/Resources/Fonts/` | MIT | reproduced above |
+| ColliePWA (ported logic, HERDR-9 and AGENT-COLLIE-1) | `Omodachi/Herdr/HerdrChoices.swift`; `Omodachi/Agent/AgentChatSteps.swift`, `Omodachi/Surfaces/AgentPanel/AgentStepViews.swift`, `AgentApprovalCard.swift`; test captures in `OmodachiTests/HerdrChoices/` | MIT | reproduced below, under "Ported code" |
+
+### Ported code: ColliePWA
+
+Logic was ported to Swift from ColliePWA (AltanS/collie,
+<https://github.com/AltanS/collie>, commit `25468b0`). No Collie name,
+mark or artwork is shipped.
+
+HERDR-9's choices strip reads a pane's dialog (codex's approvals and
+question cards, Claude Code's permission prompts and menus, a pointed
+list) with rules ported from `web/src/lib/harness/codex/approval.ts`,
+`codex/ask.ts`, `claude/prompt-select.ts`, `claude/markers.ts` and
+`harness/menu-hints.ts`. The port is `Omodachi/Herdr/HerdrChoices.swift`,
+which names them in its header. `OmodachiTests/HerdrChoices/collie--*.txt`
+are pane captures from ColliePWA's `web/src/fixtures/panes/`, unchanged,
+used as test fixtures only (not in the app bundle).
+
+AGENT-COLLIE-1 ported the Agent panel's run folding (`groupRuns`, the live
+tail of six, the held-open latch), the step line, find-in-conversation and
+stepping between your own messages, the change card and the question card's
+layout from `web/src/components/chat-cards.tsx`,
+`web/src/lib/transcript-search.ts` and
+`web/src/components/prompt-select-block.tsx`, rewritten in Swift over this
+app's own rows.
+
+Licence:
+
+```
+MIT License
+
+Copyright (c) 2026 Altan Sarisin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ### Corresponding source of the prebuilt binaries
 

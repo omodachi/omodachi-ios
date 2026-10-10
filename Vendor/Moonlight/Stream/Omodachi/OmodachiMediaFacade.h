@@ -38,6 +38,12 @@ typedef struct {
     /// Cumulative since this facade's renderer was created.
     uint64_t enqueuedFrames;
     int videoFormat;
+    /// POLISH-R item 6. How long ago (seconds, `CACurrentMediaTime`) the
+    /// window above was closed. `Connection` closes a window only when a frame
+    /// arrives, so while no frame arrives the same last good window is handed
+    /// out again and again; this is how a reader tells a stalled stream from a
+    /// healthy one.
+    double windowAgeSeconds;
 } OmodachiStreamStats;
 typedef void (^OmodachiMediaCompletion)(NSError * _Nullable error);
 

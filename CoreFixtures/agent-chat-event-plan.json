@@ -1,0 +1,20 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a111c7-37fd-7c51-b91e-e01c6068075d"
+  },
+  "sequence": 1,
+  "event": {
+    "type": "message",
+    "value": {
+      "kind": "message",
+      "id": "01a111c7-3ca1-7352-91f4-d9a9fd25c744-plan",
+      "turnID": "01a111c7-3ca1-7352-91f4-d9a9fd25c744",
+      "role": "assistant",
+      "text": "# Read the port from the environment\n\n1. Add a `PORT` setting with 9090 as the default.\n2. Use it in `main()` instead of 8080.\n3. Run the tests on SQLite.\n",
+      "plan": true
+    }
+  }
+}

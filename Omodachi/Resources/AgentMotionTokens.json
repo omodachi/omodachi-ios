@@ -1,0 +1,395 @@
+{
+  "$schema_note": "Omodachi agent motion tokens, round 5. Read by study.html (embedded copy, checked by export.mjs), iOS AgentFace (SwiftUI Canvas) and Odomo (SVG/JS). Units: 'u' = v6 design units (96 canvas, 4 u grid); angles in degrees; times in ms.",
+  "version": "5.1.0",
+  "canvas": {
+    "size_u": 96,
+    "padding_u": 4,
+    "grid_u": 4,
+    "fine_grid_u": 2,
+    "fine_grid_min_px": 96
+  },
+  "head": {
+    "outline": "M0 20H4V12H8V8H12V4H20V0H68V4H76V8H80V12H84V20H88V68H84V76H80V80H76V84H68V88H20V84H12V80H8V76H4V68H0Z",
+    "sphere_radius_u": 44,
+    "center_u": [
+      44,
+      44
+    ],
+    "note": "The whole o is the head: a sphere whose outline never changes. Squircle corners beyond r 44 are always band."
+  },
+  "face": {
+    "shape": "superellipse",
+    "radius_u": 20,
+    "exponent": 3,
+    "note": "Projected onto the head sphere. At rest it reproduces the v6 counter cell for cell."
+  },
+  "eyes": {
+    "center_x_u": 8,
+    "center_y_u": -2,
+    "width_u": 8,
+    "height_u": 12,
+    "min_cells": 2,
+    "keep_out": {
+      "face_margin": "8-neighbour",
+      "eye_gap_cells": 1,
+      "order": [
+        "as-projected",
+        "shed-outer-column-or-row",
+        "shift-along-dominant-axis"
+      ]
+    },
+    "glyphs": {
+      "happy": {
+        "cells": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "offset": "half a cell outboard, top of eye box"
+      },
+      "cross": {
+        "cells": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "narrow_left": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "narrow_right": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "narrow_below_sx": 0.9
+      },
+      "closed": {
+        "rows": 1,
+        "at": "bottom of eye box"
+      }
+    }
+  },
+  "turn": {
+    "full_deg": 38,
+    "diagonal_scale": 0.75,
+    "peek_scale": 1.25,
+    "min_band_cells": 1,
+    "order": "roll, then pitch, then yaw (+yaw looks right, +pitch looks down)"
+  },
+  "motion": {
+    "fps": 12,
+    "spring": {
+      "type": "critically-damped",
+      "omega": 16,
+      "note": "closed form x(t)=target+delta*(1+w*t)*exp(-w*t); stateless"
+    },
+    "blink": {
+      "duration_ms": 250,
+      "close_fraction": 0.42,
+      "min_open": 0.1
+    },
+    "hop": {
+      "height_u": 4,
+      "duration_ms": 150,
+      "loop_min_px": 64,
+      "working_period_ms": 1200,
+      "waiting_period_ms": 2400
+    },
+    "low_fps_after_ms": 600000,
+    "low_fps": 6,
+    "max_animating_instances": 3,
+    "harmonic_note": "every looping timing divides 2400 ms (thinking, waiting, B waiting) or 1200 ms (working scan, B working) or 600 ms (C2 sides), so any mix of surfaces loops seamlessly every 2.4 s"
+  },
+  "states": {
+    "idle": {
+      "pose": [
+        0,
+        0
+      ],
+      "loop_ms": 9600,
+      "glance": [
+        [
+          6000,
+          -0.6
+        ],
+        [
+          6600,
+          0.6
+        ],
+        [
+          7200,
+          0
+        ]
+      ],
+      "blink_every_ms": 4800
+    },
+    "thinking": {
+      "loop_ms": 2400,
+      "yaw": [
+        [
+          0,
+          -0.75
+        ],
+        [
+          900,
+          0
+        ],
+        [
+          1200,
+          0.75
+        ],
+        [
+          2100,
+          0
+        ]
+      ],
+      "pitch": [
+        [
+          0,
+          -0.5
+        ],
+        [
+          900,
+          -0.6
+        ],
+        [
+          1200,
+          -0.5
+        ],
+        [
+          2100,
+          -0.6
+        ]
+      ],
+      "blink_at_ms": 900,
+      "static_pose": [
+        -0.75,
+        -0.5
+      ]
+    },
+    "working": {
+      "loop_ms": 1200,
+      "yaw": [
+        [
+          0,
+          -0.6
+        ],
+        [
+          400,
+          0
+        ],
+        [
+          800,
+          0.6
+        ]
+      ],
+      "pitch": 0.8,
+      "blink_every_ms": 3600,
+      "static_pose": [
+        0,
+        0.8
+      ],
+      "ring_while_tool": "sides"
+    },
+    "waiting": {
+      "loop_ms": 2400,
+      "pose": [
+        0,
+        -0.75
+      ],
+      "double_blink_gap_ms": 420,
+      "eye_color": "accent",
+      "badge": true,
+      "b_oneshot": "double-hop"
+    },
+    "done": {
+      "loop_ms": 3000,
+      "eyes": "happy",
+      "nod": [
+        [
+          0,
+          0.8
+        ],
+        [
+          250,
+          0
+        ]
+      ],
+      "b_oneshot": "hop"
+    },
+    "error": {
+      "loop_ms": 3000,
+      "eyes": "cross",
+      "eye_color": "red",
+      "shake": {
+        "yaw": 0.5,
+        "frames": 6,
+        "smooth": false
+      }
+    },
+    "stopped": {
+      "pose": [
+        0,
+        0
+      ],
+      "eyes": "closed",
+      "eye_color": "foreground",
+      "opacity": 1.0,
+      "static": true,
+      "note": "the user interrupted the turn: calm, not an error. offline's closed-eye bars, upright, full opacity, never red, no hop, no shake, no animation on any surface"
+    },
+    "offline": {
+      "pose": [
+        0,
+        1.0
+      ],
+      "eyes": "closed",
+      "opacity": 0.45
+    }
+  },
+  "priority": [
+    "offline",
+    "error",
+    "waiting",
+    "done",
+    "stopped",
+    "working",
+    "thinking",
+    "idle"
+  ],
+  "shade": {
+    "threshold_dot": -0.15,
+    "mix_with_bg": 0.26,
+    "min_px": 32,
+    "cleanup_min_neighbours": 2,
+    "surfaces_on": [
+      "agent-header",
+      "agent-large"
+    ],
+    "note": "One flat step on the band cells facing away from the face. Never in the terminal, at <32 px, or for side-by-side Herdr tiles."
+  },
+  "ring": {
+    "inner_u": 24,
+    "outer_u": 28,
+    "gap_cells_to_face": 1,
+    "color": "background",
+    "track_mix_with_bg": 0.45,
+    "min_px": 24,
+    "variants": {
+      "orbit": {
+        "meaning": "superseded by sides: a single orbiting arc reads as a mouth when it passes under the face",
+        "span_deg": 90,
+        "step_deg": 22.5,
+        "step_ms": 100
+      },
+      "progress": {
+        "meaning": "a tool reports progress 0..1",
+        "segments": 8,
+        "gap_deg": 10,
+        "track": true
+      },
+      "pulse": {
+        "meaning": "not adopted (reads as an alarm, competes with waiting)",
+        "steps_u": [
+          [
+            24,
+            28
+          ],
+          [
+            28,
+            32
+          ]
+        ],
+        "step_ms": 250,
+        "period_ms": 1200
+      },
+      "sides": {
+        "meaning": "a tool / command is running, duration unknown (replaces the single-arc orbit)",
+        "arcs": 2,
+        "span_deg": 40,
+        "centres_deg": [
+          90,
+          270
+        ],
+        "sweep_deg": 30,
+        "step_deg": 12,
+        "step_ms": 100,
+        "static_offset_deg": 0,
+        "note": "two arcs on the left and right of the face sweep clockwise within ±30° of the horizontal and wrap; an arc is never centred over or under the face, so no frame reads as a mouth, smile, hat or brows; 6 positions x 100 ms = 600 ms per sweep, harmonic with the 1200 ms scan and the 2400 ms loops"
+      }
+    },
+    "recommended": "sides",
+    "color_note": "drawn as a groove in the background colour: same contrast as the face hole in every theme (accent on the fg band is too weak where accent ≈ fg, e.g. tokyo-night dE 0.09, kanagawa 0)",
+    "rejected": {
+      "orbit": "one 90° arc: reads as a mouth / hat when it passes under / over the face",
+      "orbit2": "two opposite 45° arcs: one under (mouth) and one over (hat) at the same time",
+      "dashed": "8 rotating dashes: the dash under the face reads as a small mouth",
+      "skip": "single arc hidden in top/bottom sectors: 25% of frames show no ring, still hat frames"
+    },
+    "mouth_check": {
+      "zone_deg": 45,
+      "min_span_deg": 15,
+      "note": "a connected arc whose angular centre (face coords) is within ±zone of 180° = mouth, of 0° = hat; checked on every frame"
+    }
+  },
+  "colors": {
+    "head": "foreground",
+    "face": "background",
+    "eyes": "foreground",
+    "waiting_eyes": {
+      "use": "accent",
+      "fallback_if_accent_close_to_foreground": "yellow",
+      "min_contrast_vs_background": 3.0,
+      "close_threshold_oklab_de": 0.05,
+      "note": "accent everywhere; only when accent is perceptually the same as foreground (OKLab dE < 0.05, e.g. kanagawa) use yellow, and only if yellow reaches 3:1 on the background"
+    }
+  },
+  "reduce_motion": "static pose per state; ring shown frozen; no blink, hop, nod or shake",
+  "low_power": "same as reduce_motion"
+}

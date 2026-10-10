@@ -85,7 +85,8 @@ usage: scripts/build.sh <command>
   generate      Regenerate Omodachi.xcodeproj from project.yml (xcodegen).
   build-sim     Debug build for the iPhone simulator.
   lint          The four-layer view lint (ARCH-1 §1) and the string-catalog
-                check (I18N-1 §2), plus the lint's own self-test.
+                check (I18N-1 §2), plus the lint's own self-test, and the
+                CoreFixtures pin (POLISH-U, scripts/sync_core_fixtures.py).
   test          lint, then the unit + UI suites on the iPhone and the iPad simulator.
   acceptance    One spec's operator suite against the real host, on the two
                 simulators that spec named. Takes the condition and the class:
@@ -112,6 +113,7 @@ environment:
   OMODACHI_IPHONE_DEVICE_TYPE  simctl device type for the created phone simulator
   OMODACHI_IPAD_DEVICE_TYPE    simctl device type for the created tablet simulator
   OMODACHI_SIM_RUNTIME         simctl runtime for the created simulators
+  OMODACHI_CORE_TREE           omodachi-core checkout the CoreFixtures are compared with
 
 Without OMODACHI_*_DESTINATION this script creates its own simulators, uses
 them by udid and deletes them on exit. It never selects a simulator by name,
@@ -155,6 +157,18 @@ lint_views() {
   # reads exactly like a broken feature (GEST-1 §6b).
   echo "==> check_ui_identifiers"
   python3 "$ROOT/scripts/check_ui_identifiers.py"
+  # MOTION-1. The agent face reads its numbers from one file, the brand's
+  # tokens.json at a pinned commit; the bundled copy must be that file.
+  echo "==> check_motion_tokens"
+  python3 "$ROOT/scripts/check_motion_tokens.py"
+  # POLISH-U. The tests decode the host's wire shapes from CoreFixtures/, which
+  # are core's contracts/fixtures at one commit (scripts/core-fixtures.lock):
+  # a hand edit, an unlisted file or a copy from another core fails here, and
+  # with an omodachi-core checkout at hand ($OMODACHI_CORE_TREE or a sibling)
+  # every file is compared byte for byte with core at that commit. Resync with
+  # scripts/sync_core_fixtures.py --write [--commit <core sha>].
+  echo "==> sync_core_fixtures --check"
+  python3 "$ROOT/scripts/sync_core_fixtures.py" --check
 }
 
 run_tests() {

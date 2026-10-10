@@ -17,8 +17,8 @@
       "height": 894.0
     },
     "stream_pixels": {
-      "width": 2392,
-      "height": 1672
+      "width": 2560,
+      "height": 1788
     },
     "fps": 60,
     "bitrate_kbps": 20000,
@@ -44,9 +44,13 @@
     "transport": "wss",
     "path": "/v1/remote/sessions/rs_00000000000000000000000000000000/vnc",
     "output_id": "OMODACHI-0123456789abcdef",
+    "initial_framebuffer_pixels": {
+      "width": 2560,
+      "height": 1788
+    },
     "framebuffer_pixels": {
-      "width": 1280,
-      "height": 894
+      "width": 2560,
+      "height": 1788
     }
   },
   "created_at": 1789516800.0,
@@ -56,5 +60,9 @@
   "lock_local_input": false,
   "journal_path": "/home/user/.local/state/omodachi/remote/OMODACHI-0123456789abcdef.json",
   "reason": "created",
+  "quality": {
+    "preset": "host",
+    "adaptive": false
+  },
   "contract_revision": "omodachi.v1"
 }

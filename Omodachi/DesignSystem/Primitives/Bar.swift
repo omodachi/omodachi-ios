@@ -101,8 +101,18 @@ struct BarSlot<Content: View>: View {
     let action: () -> Void
     @ViewBuilder let content: () -> Content
 
+    @Environment(\.barEdge) private var edge
+    @Environment(\.barSegment) private var segment
+    /// LITE-1c: the slot's name, shown beside it after a touch-and-hold.
+    @State private var naming = false
+    @State private var gate = BarHoldGate()
+    @State private var linger: Task<Void, Never>?
+    @State private var settle: Task<Void, Never>?
+
     var body: some View {
-        Tap(selected: state == .selected, enabled: state != .unavailable, action: action) {
+        Tap(selected: state == .selected, enabled: state != .unavailable, action: {
+            if gate.release() { action() }
+        }) {
             content()
                 .foregroundStyle(state == .selected ? OmodachiTheme.selectedText : OmodachiTheme.barText)
                 .frame(width: vertical ? NativeBarMetrics.hit : extent,
@@ -111,9 +121,55 @@ struct BarSlot<Content: View>: View {
                 .overlay(alignment: .bottomTrailing) { dotView }
                 .contentShape(Rectangle())
         }
+        // LITE-1c: the bar is icons only (the Omarchy look), so its names are
+        // one gesture away — a pointer's hover on iPad, a touch-and-hold
+        // everywhere. A hold shows the name and does not act on release.
+        .help(label)
+        // The lift of a touch, so a hold never outlives its touch: the gate
+        // opens again shortly after every lift, whether or not the button ran
+        // on it. (A touch-down is not seen reliably — on iPad a drag's first
+        // change arrives only after the hold — so the lift is what counts.)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onEnded { _ in
+                    settle?.cancel()
+                    settle = Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(BarHoldGate.settle))
+                        guard !Task.isCancelled else { return }
+                        gate.settle()
+                    }
+                })
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: BarNameBubble.hold)
+                .onEnded { _ in
+                    gate.hold()
+                    showName()
+                })
+        .overlay(alignment: BarNameBubble.anchor(edge: edge, segment: segment).slot) {
+            if naming {
+                // A point on the slot's inner edge, with the bubble hung off
+                // it outward, so the bubble's own size never moves the slot.
+                Color.clear.frame(width: 0, height: 0)
+                    .overlay(alignment: BarNameBubble.anchor(edge: edge, segment: segment).bubble) {
+                        BarNameBubble(text: label, edge: edge)
+                    }
+                    .transition(.opacity)
+            }
+        }
+        .zIndex(naming ? 1 : 0)
         .accessibilityLabel(label)
         .accessibilityValue(value ?? "")
         .accessibilityIdentifier(identifier ?? "bar-slot")
+    }
+
+    private func showName() {
+        naming = true
+        linger?.cancel()
+        linger = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(BarNameBubble.linger))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.15)) { naming = false }
+        }
     }
 
     /// D-17: over the glyph, top trailing, and it never changes the slot's box.
@@ -162,6 +218,95 @@ extension BarSlot where Content == Glyph {
     }
 }
 
+/// LITE-1c. Whether a release is a tap or the end of a hold. The button's
+/// own action reads it on the lift; it also opens by itself `settle` seconds
+/// after every lift, so a hold whose lift never reached the button (the
+/// finger slid off) cannot swallow a later tap or a VoiceOver activation.
+struct BarHoldGate: Equatable, Sendable {
+    /// Long enough for the button's action, which runs on the lift, to read
+    /// the gate first.
+    static let settle: Double = 0.3
+
+    private(set) var held = false
+
+    mutating func hold() { held = true }
+    mutating func settle() { held = false }
+    /// `true` when the release should run the slot's action.
+    mutating func release() -> Bool {
+        defer { held = false }
+        return !held
+    }
+}
+
+/// Which of the bar's three segments a slot is in, so its name bubble opens
+/// toward the screen rather than off its edge.
+enum BarSegment: Sendable { case leading, centre, trailing }
+
+extension EnvironmentValues {
+    @Entry var barEdge: HostBarPosition = .top
+    @Entry var barSegment: BarSegment = .centre
+}
+
+/// LITE-1c. The slot's name in a small box beside it, on the content side of
+/// the bar: the theme's menu background and popup border, no radius, the
+/// host type. It never takes a touch and VoiceOver already has the label.
+struct BarNameBubble: View {
+    /// How long a touch is held before the name shows.
+    static let hold: Double = 0.45
+    /// How long the name stays.
+    static let linger: Double = 1.5
+    static let gap: CGFloat = 4
+
+    let text: String
+    let edge: HostBarPosition
+
+    var body: some View {
+        Text(text)
+            .font(OmodachiTheme.font("body-small"))
+            .foregroundStyle(OmodachiTheme.text)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, OmodachiTheme.space("sm"))
+            .padding(.vertical, OmodachiTheme.space("xs"))
+            // A popup's colours (`[popups] border`), on the menu background
+            // laid over the bar's, so whatever is under it never shows through.
+            .background(OmodachiTheme.background)
+            .background(OmodachiTheme.barBackground)
+            .overlay(Rectangle().strokeBorder(OmodachiTheme.popupBorder,
+                                              lineWidth: OmodachiTheme.controlBorderWidth))
+            .padding(edge == .top ? .top : edge == .bottom ? .bottom : edge == .left ? .leading : .trailing, Self.gap)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .accessibilityIdentifier("bar-name")
+    }
+
+    /// Where the bubble hangs off its slot: `slot` is the point on the
+    /// slot's inner edge (the content side of the bar), `bubble` is the
+    /// bubble's own point placed on it. Along a top or bottom bar the two end
+    /// segments line the bubble up with the slot's outer side, so a name near
+    /// a screen edge is never cut off; along a side bar it is centred.
+    static func anchor(edge: HostBarPosition, segment: BarSegment) -> (slot: Alignment, bubble: Alignment) {
+        switch edge {
+        case .top, .bottom:
+            let along: HorizontalAlignment = switch segment {
+            case .leading: .leading
+            case .centre: .center
+            case .trailing: .trailing
+            }
+            return edge == .top
+                ? (Alignment(horizontal: along, vertical: .bottom), Alignment(horizontal: along, vertical: .top))
+                : (Alignment(horizontal: along, vertical: .top), Alignment(horizontal: along, vertical: .bottom))
+        case .left, .right:
+            // Along a side bar the box is shorter than the slot, so it is
+            // centred on it whatever the segment.
+            let along: VerticalAlignment = .center
+            return edge == .left
+                ? (Alignment(horizontal: .trailing, vertical: along), Alignment(horizontal: .leading, vertical: along))
+                : (Alignment(horizontal: .leading, vertical: along), Alignment(horizontal: .trailing, vertical: along))
+        }
+    }
+}
+
 /// A-37. The connection to the host, as the 6px dot under the logo. It is the
 /// whole of "are we connected" — N-33 deleted the four sentences that used to
 /// say it in words, and this is where their information went.
@@ -189,6 +334,10 @@ struct BarConnectionDot: View {
 struct BarSurface<Leading: View, Centre: View, Trailing: View>: View {
     let edge: HostBarPosition
     var contentInsets = EdgeInsets()
+    /// The bar's own menu (which edge it sits on). LITE-1c: it hangs off the
+    /// bar's background, so a touch-and-hold on the bar's empty stretch opens
+    /// it while one on a slot names the slot instead.
+    var menu: AnyView?
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let centre: () -> Centre
     @ViewBuilder let trailing: () -> Trailing
@@ -215,17 +364,24 @@ struct BarSurface<Leading: View, Centre: View, Trailing: View>: View {
                 }
             }
         }
-        .background(OmodachiTheme.barBackground)
+        .background {
+            if let menu {
+                OmodachiTheme.barBackground.contextMenu { menu }
+            } else {
+                OmodachiTheme.barBackground
+            }
+        }
+        .environment(\.barEdge, edge)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("panel-topbar")
     }
 
     @ViewBuilder private var segments: some View {
-        leading()
+        leading().environment(\.barSegment, .leading)
         Spacer(minLength: 0)
-        centre()
+        centre().environment(\.barSegment, .centre)
         Spacer(minLength: 0)
-        trailing()
+        trailing().environment(\.barSegment, .trailing)
     }
 
     private var rule: some View {

@@ -22,8 +22,10 @@ import XCTest
 
         await fixture.gate.check(directory: fixture.directory, home: fixture.home)
 
-        XCTAssertEqual(GateStub.paths, ["/v1/state"], "one authenticated read, and nothing else")
-        XCTAssertEqual(GateStub.authorizations, ["Bearer pair5-token"])
+        // REMOTE-PAIR-1: a refusal that names no reason is asked about once
+        // more before anything is deleted; two reads, and nothing else.
+        XCTAssertEqual(GateStub.paths, ["/v1/state", "/v1/state"], "two authenticated reads, and nothing else")
+        XCTAssertEqual(GateStub.authorizations, ["Bearer pair5-token", "Bearer pair5-token"])
         XCTAssertNil(try fixture.credentials.loadToken(account: fixture.account), "the credential is rubbish")
         XCTAssertNil(fixture.pins.load(account: fixture.account))
         XCTAssertTrue(fixture.directory.records.isEmpty)
@@ -256,7 +258,8 @@ import XCTest
         gate = HostCredentialGate(pins: pins, credentials: credentials, hostKeys: hostKeys,
                                   forcedVerdict: nil,
                                   makeProbe: { CredentialProbe(endpoint: $0, pinnedFingerprint: $1,
-                                                               session: GateStub.session()) })
+                                                               session: GateStub.session()) },
+                                  confirmationDelay: .zero)
     }
 
     /// What a completed pairing leaves behind: a credential, a pin and a row.

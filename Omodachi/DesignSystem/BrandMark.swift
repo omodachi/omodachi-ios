@@ -66,3 +66,27 @@ struct BrandGlyph: View {
             .accessibilityHidden(true)
     }
 }
+
+/// HERDR-7: what marks a Herdr pane that runs an agent. Leo: "herdr 没必要为了
+/// agent 加 agent 动画啦" — the animated face belongs to the Agent panel and
+/// the bar entry; a pane only needs to say *that* an agent runs there and what
+/// it is doing. So this is the bar's idle Agent slot, still: the same
+/// `BrandGlyph` chain (the host's agent code point, then the vendor's own mark
+/// where the App ships one — codex only — then the study's agent glyph), never
+/// a mark the App does not already carry. It takes the colour of the row's
+/// status words (`AgentStatus.role`: working accent, blocked red, done green,
+/// idle muted), so a row has one colour system, and it is hidden from
+/// VoiceOver: the row's label says the agent and its state in words.
+struct HerdrAgentMarker: View {
+    let mark: BrandMark?
+    let role: ThemeColorRole
+    /// The box the marker sits in; the old face's 24, so rows keep their size.
+    static let size: CGFloat = 24
+
+    var body: some View {
+        BrandGlyph(mark: mark, fallback: Icon.agent, step: "icon-large")
+            .foregroundStyle(OmodachiTheme.current.color(role))
+            .frame(width: Self.size, height: Self.size)
+            .accessibilityHidden(true)
+    }
+}

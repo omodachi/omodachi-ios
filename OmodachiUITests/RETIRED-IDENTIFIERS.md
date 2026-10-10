@@ -35,6 +35,8 @@ listed does not make its use correct.
 | `open-shell` | the bar names ④ `open-ssh` | `open-ssh` |
 | `settings-close` | Settings became a panel area with no close button of its own | the bar entry it came from |
 | `voice-button` | dictation is drawn inside the composer, not as a named button | — |
+| `herdr-panel` | AGENT-UI-2 (Leo) — Herdr's bar lost its Panel toggle, which duplicated the bar's logo; `AGENTUI2UITests` asserts it stays gone | the bar's `open-panel` |
+| `agent-yours-previous`, `agent-yours-next` | AGENT-UI-3 (Leo) — the Agent panel's ↑ / ↓ between your own messages; scrolling does it and they covered the conversation. `AGENTCOLLIE1UITests` asserts they stay gone | a swipe, then `agent-jump-newest` |
 | `search-workspace-3`, `terminal-home`, `terminal-panel-toggle` | `NavigationUITests` predates the SSH panel's current controls (`terminal-*` in `SSHPanelView`) | `terminal-reattach`, `terminal-keyboard`, `terminal-options` |
 
 Repointing these belongs to the specs that own those suites (MERGE-1, UX-1,

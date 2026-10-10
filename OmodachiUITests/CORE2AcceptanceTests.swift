@@ -49,7 +49,7 @@ import XCTest
 
     /// Manual add → one request → the operator approves → the Panel.
     private func pairByAddress(_ app: XCUIApplication, shot: String) {
-        let add = app.descendants(matching: .any)["connect-add-manual"]
+        let add = OnboardingNavigation.manualAdd(app)
         XCTAssertTrue(add.waitForExistence(timeout: 30), "the list offers a manual add")
         add.tap()
         let field = app.textFields["connect-manual-field"]

@@ -116,6 +116,9 @@ enum HostDiscoveryState: Equatable, Sendable {
 
     func start() {
         guard browser == nil else { return }
+        // TAIL-3b: one line each time the browser — and so the Local Network
+        // question — starts, so a run can show it started only on the Wi-Fi road.
+        ManualHostTrace.note("bonjour-browse start")
         startedAt = Date()
         settled = false
         settleTask?.cancel()

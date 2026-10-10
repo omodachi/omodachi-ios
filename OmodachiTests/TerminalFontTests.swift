@@ -116,6 +116,32 @@ final class TerminalFontTests: XCTestCase {
                        PlatformFallback.family(for: PlatformFallback.emojiSample, base: menlo))
     }
 
+    /// REL2-POLISH-2. With no host face yet (a demo, a host without
+    /// `/v1/fonts`, the seconds before the download lands) the terminal used
+    /// SF Mono, the system face, and CoreText ignores a cascade on a system
+    /// face: `eza --icons` drew `.LastResort`'s question-mark box for every
+    /// icon. The stand-in is a named face, so the bundled symbols face answers
+    /// eza's folder and file icons, in all four faces, and a letter stays put.
+    func testWithNoHostFaceEzasIconsReachTheBundledSymbols() throws {
+        let system = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+        let systemWithChain = cascading(system, [HostFontSet.bundledSymbols])
+        XCTAssertEqual(coveringFamily("\u{F07B}", in: systemWithChain), PlatformFallback.lastResort,
+                       "the cause: a system face keeps its own chain and never asks ours")
+
+        let faces = TerminalFont.faces(size: 14, fonts: .unavailable)
+        XCTAssertEqual(faces.normal.familyName, TerminalFont.standIn)
+        for face in [faces.normal, faces.bold, faces.italic, faces.boldItalic] {
+            // nf-custom-folder, nf-seti-python, nf-fa-folder, nf-dev-python.
+            for icon in ["\u{E5FF}", "\u{E606}", "\u{F07B}", "\u{E73C}"] {
+                XCTAssertEqual(coveringFamily(icon, in: face), HostFontSet.bundledSymbols,
+                               "\(face.fontName) U+\(String(icon.unicodeScalars.first!.value, radix: 16, uppercase: true))")
+            }
+            XCTAssertEqual(coveringFamily("A", in: face), TerminalFont.standIn)
+        }
+        XCTAssertEqual(coveringFamily(PlatformFallback.cjkSample, in: faces.normal),
+                       PlatformFallback.family(for: PlatformFallback.cjkSample, base: faces.normal))
+    }
+
     // MARK: - What the client takes from the host's chain
 
     private func listing(_ json: String) throws -> HostFontListDTO {

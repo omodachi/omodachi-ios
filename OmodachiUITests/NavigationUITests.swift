@@ -107,9 +107,10 @@ final class NavigationUITests: XCTestCase {
         XCTAssertFalse(terminal.exists)
         XCTAssertTrue(sessionIDs().isEmpty)
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "herdr-control-bar").firstMatch.exists)
-        let newTab = app.buttons["herdr-action-newTab"]
-        XCTAssertTrue(newTab.exists)
-        XCTAssertFalse(newTab.isEnabled, "the bridge has no tab route, so the control says so")
+        // HERDR-3: the routes live in one labelled More menu, and the bar
+        // carries Type and the keys row instead of icon-only controls.
+        XCTAssertTrue(app.buttons["herdr-more"].exists)
+        XCTAssertTrue(app.buttons["herdr-type"].exists)
         capture("arch1-herdr")
     }
 

@@ -9,7 +9,9 @@ struct WindowInteractionInsetsReader: UIViewRepresentable {
     /// ones (REMOTE-SAFE-1) — both change only when the window does.
     let windowChanged: (CGSize, DisplayCorners) -> Void
     func makeUIView(context: Context) -> Reader {
-        let view = Reader(); view.changed = changed; view.windowChanged = windowChanged; return view
+        let view = Reader(); view.changed = changed; view.windowChanged = windowChanged
+        view.isUserInteractionEnabled = false
+        return view
     }
     func updateUIView(_ uiView: Reader, context: Context) {
         uiView.changed = changed; uiView.windowChanged = windowChanged; uiView.publish()
@@ -62,6 +64,72 @@ struct WindowInteractionInsetsReader: UIViewRepresentable {
                                                nativePixels: screen.nativeBounds.size)
             let frame = window.convert(window.bounds, to: screen.coordinateSpace)
             return DisplayCorners.window(frame: frame, screen: screen.bounds, radius: radius)
+        }
+    }
+}
+
+/// HERDR-5. How much of the window the software keyboard actually covers, from
+/// UIKit's own keyboard notifications, for the panels stage.
+///
+/// The panels used to take SwiftUI's keyboard safe area, and that area does
+/// not always come back to zero. Measured on the iOS 27 simulator: with a
+/// hardware keyboard connected, focusing a field shows only the small floating
+/// input-assistant bar and UIKit reports a zero-height keyboard, yet the whole
+/// panel stage (the left rail too) kept 89 points of empty space above the
+/// bottom; after an iPad's "Hide keyboard" it kept 101. The keyboard
+/// notifications are the ground truth here: a keyboard that is hidden, floating
+/// or zero high covers nothing, and a docked one covers from its top edge down.
+/// `willHide` always means zero — on iOS 27 its end frame repeats the shown
+/// keyboard's.
+struct KeyboardOverlapReader: UIViewRepresentable {
+    let changed: (CGFloat, Double) -> Void
+    func makeUIView(context: Context) -> Reader { let view = Reader(); view.changed = changed; return view }
+    func updateUIView(_ uiView: Reader, context: Context) { uiView.changed = changed }
+
+    final class Reader: UIView {
+        var changed: ((CGFloat, Double) -> Void)?
+        private var visible = false
+        private var last: CGFloat = 0
+        private var observers: [NSObjectProtocol] = []
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            observers.forEach(NotificationCenter.default.removeObserver)
+            observers = []
+            guard window != nil else { return }
+            for name in [UIResponder.keyboardWillShowNotification, UIResponder.keyboardWillHideNotification,
+                         UIResponder.keyboardWillChangeFrameNotification] {
+                observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) {
+                    [weak self] note in
+                    let name = note.name
+                    let end = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+                    let duration = (note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double) ?? 0.25
+                    MainActor.assumeIsolated { self?.handle(name, end: end, duration: duration) }
+                })
+            }
+        }
+
+        private func handle(_ name: Notification.Name, end: CGRect?, duration: Double) {
+            if name == UIResponder.keyboardWillHideNotification { visible = false }
+            else if name == UIResponder.keyboardWillShowNotification { visible = true }
+            var value: CGFloat = 0
+            if visible, let end, let window {
+                value = Self.overlap(keyboard: window.convert(end, from: window.screen.coordinateSpace),
+                                     window: window.bounds)
+            }
+            guard value != last else { return }
+            last = value
+            changed?(value, duration)
+        }
+
+        /// A docked keyboard's cover of the window: from its top edge to the
+        /// window's bottom. Zero for one with no height, one that does not
+        /// reach the bottom edge (floating, undocked or split on an iPad), and
+        /// one outside the window.
+        nonisolated static func overlap(keyboard: CGRect, window: CGRect) -> CGFloat {
+            guard keyboard.height > 0, keyboard.intersects(window),
+                  keyboard.maxY >= window.maxY - 1 else { return 0 }
+            return max(0, window.maxY - keyboard.minY)
         }
     }
 }

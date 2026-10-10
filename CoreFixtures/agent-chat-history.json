@@ -1,0 +1,35 @@
+{
+  "agent_id": "default",
+  "rows": [
+    {
+      "kind": "message",
+      "id": "01a11332-5a9d-78a2-b7f5-94eb5f0d7934",
+      "turnID": "01a11332-5a77-7273-a173-94a9ac50b7b5",
+      "role": "user",
+      "text": "hello 5"
+    },
+    {
+      "kind": "message",
+      "id": "m-d34",
+      "turnID": "01a11332-5a77-7273-a173-94a9ac50b7b5",
+      "role": "assistant",
+      "text": "Got it: hello 5"
+    },
+    {
+      "kind": "message",
+      "id": "01a11332-5ad0-7fc0-8dd4-88ed8266449f",
+      "turnID": "01a11332-5aaa-7951-bcc1-e2418f68aeab",
+      "role": "user",
+      "text": "hello 6"
+    },
+    {
+      "kind": "message",
+      "id": "m-d35",
+      "turnID": "01a11332-5aaa-7951-bcc1-e2418f68aeab",
+      "role": "assistant",
+      "text": "Got it: hello 6"
+    }
+  ],
+  "earlier": true,
+  "contract_revision": "omodachi.v1"
+}

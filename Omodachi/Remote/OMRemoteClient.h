@@ -34,6 +34,14 @@ typedef void (^OMRemoteEventHandler)(NSString *json);
 /// keyboard quick action reports the keyboard that is actually on screen
 /// rather than the last one it was asked for.
 @property(nonatomic, copy, nullable) void (^keyboardHandler)(BOOL visible);
+/// REMOTE-INPUT-2. When set, the three-finger tap asks the session what the
+/// keyboard is — the compose bar, or the per-key keyboard on the picture — and
+/// this view raises nothing itself.
+@property(nonatomic, copy, nullable) void (^keyboardTapHandler)(void);
+/// REMOTE-INPUT-2. The compose field has the keyboard: the picture must not
+/// take first responder back when its input gate reopens, or the field would
+/// lose every character after the next frame latch.
+@property(nonatomic) BOOL composeOwnsKeyboard;
 /// GEST-1 / A-64. The arbiter of what three fingers on the picture mean. Set
 /// by the backend driver; without one the picture has the pointer gestures and
 /// the keyboard tap it always had.
@@ -52,11 +60,20 @@ typedef void (^OMRemoteEventHandler)(NSString *json);
 @property(nonatomic, copy) NSString *appTitle;
 /// 0 keeps Moonlight's default ports.
 @property(nonatomic) int httpsPort;
+/// TAIL-2 P2-2. The address to dial for this road (core's `connection.host`,
+/// or the companion connection's host before a session names one). nil dials
+/// the host name the client was created with. Never part of the certificate
+/// account.
+@property(nonatomic, copy, nullable) NSString *dialHost;
 @property(nonatomic, readonly) uint64_t generation;
 @property(nonatomic, readonly) uint64_t leaseSerial;
 @property(nonatomic, readonly) uint64_t geometryEpoch;
 @property(nonatomic, weak, nullable) id<OMRemoteInputReceiver> inputReceiver;
 - (instancetype)initWithHost:(NSString *)host;
+/// REMOTE-FIX-2 §4. The few words Settings ⑥ and the Remote message use for
+/// one Moonlight request that did not come back OK: the transport's own error
+/// code (`NSURLError…`), or the fork's HTTP status. nil for 200.
++ (nullable NSString *)sunshineFailureReasonForStatusCode:(NSInteger)code host:(nullable NSString *)host NS_SWIFT_NAME(sunshineFailureReason(statusCode:host:));
 /// Lowercase SHA-256 of this app's existing client public certificate in DER.
 /// Reads the same public certificate used by the existing media client. Does
 /// not generate/replace identity or read a private key/host certificate.
@@ -76,6 +93,12 @@ typedef void (^OMRemoteEventHandler)(NSString *json);
 /// a second (STREAM-1).
 - (void)startWidth:(int)width height:(int)height fps:(int)fps bitrate:(int)bitrate codec:(NSString *)codec generation:(uint64_t)generation NS_SWIFT_NAME(start(width:height:fps:bitrate:codec:generation:));
 - (void)stopWithCompletion:(void (^)(BOOL stopped))completion;
+/// POLISH-R item 4. Ask the fork to end the running desktop app (Moonlight's
+/// "quit", GameStream `/cancel`), after this client's own stream has stopped
+/// and before core releases the session. Only when the fork says the app that
+/// is running is this client's desktop entry; anything else is left alone.
+/// `outcome` is a short trace word: `cancelled`, `failed`, `skipped:<why>`.
+- (void)quitDesktopWithCompletion:(void (^)(NSString *outcome))completion NS_SWIFT_NAME(quitDesktop(completion:));
 /// INPUT-2: the standing want. It is remembered and re-applied whenever any of
 /// the six conditions moves, so a want expressed before the last one arrived is
 /// honoured when it does. `generation` only discards a want for another session.
@@ -104,12 +127,23 @@ typedef void (^OMRemoteEventHandler)(NSString *json);
 - (nullable UIImage *)copyDisplayedFrame NS_SWIFT_NAME(copyDisplayedFrame());
 /// Close the local input latch until a new visible-frame geometry is observed.
 - (void)invalidateViewportGeometry;
+/// REMOTE-INPUT-1, operator-only: feed text through the soft keyboard's own
+/// `insertText:`, the exact path a tap on the iOS keyboard takes.
+- (void)typeTextForOperator:(NSString *)text;
 - (void)showKeyboard;
 /// A-43. The soft keyboard is a toggle, not a one-way door: the same three
 /// finger tap and the same overlay button put it away again. Answers whether
 /// the keyboard is up afterwards, so the controller can publish it.
 - (BOOL)toggleKeyboard;
 - (void)hideKeyboard;
+/// REMOTE-INPUT-2. The picture takes first responder again (no soft keyboard
+/// unless one was asked for), so a hardware keyboard goes straight to the host
+/// once the compose field has let go.
+- (void)reclaimFirstResponder;
+/// REMOTE-INPUT-2. One key down or up, with the current identity, for a key
+/// the compose field passes through (an empty field's Backspace, Return,
+/// arrows; a hardware key held for repeat). Gated like every other key.
+- (void)sendKeyUsage:(unsigned short)usage down:(BOOL)down NS_SWIFT_NAME(sendKey(usage:down:));
 - (void)latchModifierMask:(unsigned char)mask;
 - (void)sendShortcutUsage:(unsigned short)usage;
 - (void)sendScrollVertical:(short)vertical horizontal:(short)horizontal generation:(uint64_t)generation geometryEpoch:(uint64_t)epoch leaseSerial:(uint64_t)serial NS_SWIFT_NAME(sendScroll(vertical:horizontal:generation:geometryEpoch:leaseSerial:));

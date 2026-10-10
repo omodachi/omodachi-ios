@@ -1,0 +1,17 @@
+{
+  "status": "native_action_required",
+  "native_request": {
+    "action": "choose_model",
+    "arguments": ""
+  },
+  "result": {
+    "summary": "Pick a model and effort with the Model control at the top."
+  },
+  "display": {
+    "key": "model.choose",
+    "args": {}
+  },
+  "command_id": "model",
+  "request_id": "request-fixture-01",
+  "contract_revision": "omodachi.v1"
+}

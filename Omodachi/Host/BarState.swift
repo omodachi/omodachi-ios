@@ -105,6 +105,9 @@ public struct HostBarLayoutDTO: Decodable, Equatable, Sendable {
             case "system_tray": return "tray"
             case "focused_window": return "focus"
             case "logo", "workspaces", "clock", "agent", "stream": return role
+            // POLISH-U: `bar.schema.json` calls it `agent_usage` (the copy of
+            // the fixture here still said `agent`).
+            case "agent_usage": return "agent"
             case "omodachi", "panel": return "panel"
             default: return "unsupported"
             }
@@ -296,6 +299,13 @@ struct NativeBarPlacement: Equatable, Sendable {
 
     mutating func choose(_ edge: HostBarPosition) {
         preferences.choose(edge)
+        update(width: width, height: height, reason: .windowGeometry)
+    }
+
+    /// TUTORIAL-1: the stored choice changed somewhere else (Settings).
+    mutating func apply(_ preferences: NativeBarEdgePreferences) {
+        guard preferences != self.preferences else { return }
+        self.preferences = preferences
         update(width: width, height: height, reason: .windowGeometry)
     }
 }

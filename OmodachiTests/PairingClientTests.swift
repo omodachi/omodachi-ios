@@ -85,7 +85,8 @@ private final class PairingURLProtocol: URLProtocol, @unchecked Sendable {
         XCTAssertEqual(pin.hostID, Self.hostID)
         XCTAssertEqual(pin.fingerprintSHA256, Self.fingerprint)
         XCTAssertEqual(pin.hostName, "omarchy-fixture")
-        XCTAssertEqual(pin.endpoints, [.init(host: "192.168.1.10", port: 8099)])
+        // TAIL-2: an address from a core that did not type it is typed here.
+        XCTAssertEqual(pin.endpoints, [.init(host: "192.168.1.10", port: 8099, kind: .lan)])
         XCTAssertNil(pinStore.load(account: endpoint.absoluteString))
         let requests = PairingURLProtocol.storage.requests
         XCTAssertEqual(requests.count, 3)

@@ -204,7 +204,7 @@ None in this repository. The pictures at the top are served by the site,
 | `Omodachi/Security/` | credentials, pinning, approvals, keys |
 | `Omodachi/DesignSystem/` | tokens, primitives and the type scale |
 | `OmodachiTests/`, `OmodachiUITests/` | unit tests, and navigation suites plus operator tests that only run against a real host |
-| `CoreFixtures/` | canonical host JSON the tests decode |
+| `CoreFixtures/` | canonical host JSON the tests decode (core's `contracts/fixtures`, pinned by `scripts/core-fixtures.lock`) |
 | `packages/RemoteInputCore/` | a local SwiftPM package of pure input mapping, no UIKit |
 | `Vendor/Moonlight/` | Moonlight iOS 9.0.2 plus our patches, recorded in `Vendor/Moonlight/PATCHES.md` |
 | `Vendor/LibVNCClient.xcframework/` | the VNC fallback backend |
@@ -279,7 +279,10 @@ repository as the source. Where that stands on 2026-09-25:
 Issues and pull requests are welcome. Run `scripts/build.sh test` before you
 open one, and say which Xcode and iOS versions you ran against. A change to
 what the host sends belongs in `CoreFixtures/` in the same commit, because the
-tests decode the host's wire shapes from there.
+tests decode the host's wire shapes from there. Those files are omodachi-core's
+`contracts/fixtures` at one core commit, recorded in `scripts/core-fixtures.lock`;
+copy them only with `scripts/sync_core_fixtures.py --write [--commit <core sha>]`
+(`--add <name>` for a new one). `scripts/build.sh lint` checks the pin.
 
 ---
 

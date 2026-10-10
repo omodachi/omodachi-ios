@@ -42,12 +42,30 @@ public struct HerdrPaneDTO: Decodable, Equatable, Sendable, Identifiable {
         case tabID = "tab_id", workspaceID = "workspace_id", agentStatus = "agent_status"
     }
 
-    /// What the grid row says under the pane id. Herdr's own title when it has
-    /// one; a pane it has not titled yet says so rather than borrowing one.
-    public var displayTitle: String {
+    /// HERDR-4: what a person calls this pane — never Herdr's id (`w1:p2`).
+    /// Herdr's own title when it has one, else the last folder of its working
+    /// directory, else nil (the layout then numbers it within its tab).
+    public var displayTitle: String? {
         if let title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return title }
-        return "untitled"
+        return cwdTail
     }
+
+    /// The last component of the working directory: `~/work/omodachi` → `omodachi`.
+    public var cwdTail: String? {
+        guard let cwd = cwd?.trimmingCharacters(in: .whitespacesAndNewlines), !cwd.isEmpty else { return nil }
+        let tail = (cwd as NSString).lastPathComponent
+        return tail.isEmpty || tail == "/" ? cwd : tail
+    }
+
+    /// The agent's own name ("claude", "codex"), without its status.
+    public var agentName: String? {
+        guard let agent else { return nil }
+        let name = (agent.kind ?? agent.name)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name?.isEmpty == false ? name : nil
+    }
+
+    /// HERDR-4 §3.3: blocked is said in words on the row, not by colour only.
+    public var isWaiting: Bool { status == .blocked || agent?.status == "blocked" }
 
     /// §1.3: an agent pane shows its kind and Herdr's own status word. Herdr's
     /// authority over a codex/claude pane is a screen heuristic and `unknown`
@@ -60,6 +78,29 @@ public struct HerdrPaneDTO: Decodable, Equatable, Sendable, Identifiable {
     }
 
     var status: AgentStatus { AgentStatus(rawValue: agentStatus ?? "") ?? .unknown }
+
+    /// MOTION-1: the agent's state for this pane, or nil for a pane with no
+    /// agent in it. Herdr says idle / working / blocked / done. Since HERDR-7
+    /// it is only words (the row's VoiceOver label); no face is drawn in Herdr.
+    var face: AgentFaceState? {
+        guard agent != nil else { return nil }
+        return AgentFaceMapping.herdr(agent?.status ?? agentStatus)
+    }
+
+    /// HERDR-7: the still marker for an agent's pane, or nil for a pane with
+    /// no agent (it keeps the status square). The vendor's mark where the App
+    /// ships one for the bar's idle Agent slot (`BrandMark.provider`), in the
+    /// colour of the row's status words.
+    var marker: HerdrPaneMarker? {
+        guard agent != nil else { return nil }
+        return HerdrPaneMarker(mark: BrandMark.provider(agentName), role: status.role)
+    }
+}
+
+/// HERDR-7: what `HerdrAgentMarker` draws for one pane.
+struct HerdrPaneMarker: Equatable, Sendable {
+    let mark: BrandMark?
+    let role: ThemeColorRole
 }
 
 public struct HerdrTabDTO: Decodable, Equatable, Sendable, Identifiable {
@@ -123,6 +164,16 @@ public struct HerdrLayoutDTO: Decodable, Equatable, Sendable {
         workspaces.first { $0.tabs.contains { $0.panes.contains { $0.id == paneID } } }
     }
 
+    /// HERDR-4: the name a person reads for a pane — its title or folder, or
+    /// "Pane 2" by its place in its tab. Never Herdr's own id.
+    public func name(of paneID: String) -> String {
+        guard let pane = pane(paneID) else { return Strings.herdrPaneNumbered("1") }
+        if let title = pane.displayTitle { return title }
+        if let agent = pane.agentName { return agent }
+        let index = tab(of: paneID)?.panes.firstIndex { $0.id == paneID } ?? 0
+        return Strings.herdrPaneNumbered(String(index + 1))
+    }
+
     /// The pane a freshly opened surface should show: the one Herdr says is
     /// focused, else the first pane in id order. Never a guess of "most
     /// interesting".
@@ -176,6 +227,90 @@ public struct HerdrSessionSelectionDTO: Decodable, Equatable, Sendable {
     public let selected: String
     public let owned: String
     public let scope: String?
+}
+
+/// HERDR-5: `POST /v1/herdr/sessions/{name}/start` and `POST /v1/herdr/sessions
+/// {name}`. Either way the session is running and is now this device's.
+public struct HerdrSessionStartDTO: Decodable, Equatable, Sendable {
+    public let selected: String
+    public let owned: String
+    public let scope: String?
+    /// False when it was already running (someone else started it first).
+    public let started: Bool
+    public let created: Bool
+}
+
+// MARK: - HERDR-6: a new workspace in a folder
+
+/// One folder core offers (`contracts/herdr-folders.schema.json`): `path` is
+/// resolved on the computer, `display` is the `~` form a person reads and
+/// types, `name` its last part.
+public struct HerdrFolderDTO: Decodable, Equatable, Sendable, Identifiable {
+    public let path: String
+    public let display: String
+    public let name: String
+    public var id: String { path + "\u{0}" + display }
+}
+
+/// One level of a folder: what is directly inside it, folders only.
+public struct HerdrFolderBrowseDTO: Decodable, Equatable, Sendable {
+    public let path: String
+    public let display: String
+    public let name: String
+    /// Nil at the home folder: there is no going above it.
+    public let parent: HerdrFolderDTO?
+    public let hidden: Bool
+    public let dirs: [HerdrFolderDTO]
+    /// More than 100 were there; the person types the rest of the path.
+    public let truncated: Bool
+}
+
+/// `GET /v1/herdr/folders`: recent and common, or (with `under`) a browse.
+public struct HerdrFoldersDTO: Decodable, Equatable, Sendable {
+    public let home: String
+    public let recent: [HerdrFolderDTO]?
+    public let common: [HerdrFolderDTO]?
+    public let browse: HerdrFolderBrowseDTO?
+    /// HERDR-11: the folders starred on this host, and what a new workspace
+    /// may start with. A core from before HERDR-11 sends neither, and then
+    /// the card has no stars and no Start row.
+    public var favourites: [HerdrFolderDTO]? = nil
+    public var launchers: [HerdrLauncherDTO]? = nil
+}
+
+/// HERDR-11: one thing a new workspace may start with - the operator's
+/// `launchers.toml` row, or `codex` / `claude` when they are installed.
+public struct HerdrLauncherDTO: Decodable, Equatable, Sendable, Identifiable {
+    public let command: String
+    public let label: String
+    public var id: String { command }
+}
+
+/// `POST /v1/herdr/sessions/{name}/workspaces`: made with `--no-focus`, and
+/// the session is now this device's. `workspace.pane` is where the panel
+/// lands, in its own view.
+public struct HerdrWorkspaceCreatedDTO: Decodable, Equatable, Sendable {
+    public struct Workspace: Decodable, Equatable, Sendable {
+        public let id: String
+        public let label: String?
+        public let number: Int?
+        public let focused: Bool
+        public let pane: String?
+        public let cwd: String
+        public let display: String
+    }
+    /// HERDR-11: what was typed into the new pane, when a launcher was asked for.
+    public struct Launch: Decodable, Equatable, Sendable {
+        public let command: String
+        public let pane: String?
+        public let sent: Bool
+        public let reason: String?
+    }
+    public let selected: String
+    public let owned: String
+    public let scope: String?
+    public let workspace: Workspace
+    public var launch: Launch? = nil
 }
 
 // MARK: - Stream messages

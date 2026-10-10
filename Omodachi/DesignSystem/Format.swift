@@ -16,6 +16,12 @@ enum Format {
         value.formatted(.number.grouping(.automatic))
     }
 
+    /// AGENT-FIX-2: an amount of text, "64 KB" / "1.2 MB", in the reader's
+    /// locale. Characters are counted as bytes: close enough for output.
+    static func size(_ characters: Int) -> String {
+        Int64(characters).formatted(.byteCount(style: .file))
+    }
+
     /// A whole-number percentage, with the locale's own percent sign and
     /// placement — `70%` in English, `70%` in Chinese, `%70` in Turkish.
     static func percent(_ fraction: Double) -> String {

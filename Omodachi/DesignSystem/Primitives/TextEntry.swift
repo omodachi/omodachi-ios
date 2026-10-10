@@ -22,4 +22,20 @@ extension View {
         contentShape(Rectangle())
             .onTapGesture { if enabled && !focused.wrappedValue { focused.wrappedValue = true } }
     }
+
+    /// AGENT-UI-1: the box a message is written in is a surface, not an
+    /// outline. Leo — "agent输入框是透明的 滚动的时候好脏": the composers drew
+    /// only a 1px `[controls] normal-border` at 0.4 alpha on the panel's own
+    /// background, so the box was the conversation's colour with a faint frame
+    /// in it, and the lines scrolling up to it read as running on into it.
+    ///
+    /// The fill is the host's control state (A-08): `normal-fill` idle — the
+    /// hint banner's band — and `focus-fill` while typing, the tokens a Tap is
+    /// drawn with, laid on the theme background with its alpha ignored. So the
+    /// box hides whatever is under it even when a theme makes its surfaces
+    /// translucent or the box sits on a moving picture (Remote's bar).
+    func textEntrySurface(focused: Bool) -> some View {
+        background(focused ? OmodachiTheme.focusFill : OmodachiTheme.normalFill)
+            .background(OmodachiTheme.solidBackground)
+    }
 }

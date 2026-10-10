@@ -21,10 +21,16 @@ actor AgentChatDemoTransport: AgentChatTransport {
         return snapshot
     }
 
-    private var rows: [AgentChatRow] = [
-        .message(.init(id: "demo-ask", turnID: "demo-turn-0", role: .user, text: Strings.demoAgentAsk)),
-        .message(.init(id: "demo-answer", turnID: "demo-turn-0", role: .assistant, text: Strings.demoAgentAnswer))
-    ]
+    private var rows: [AgentChatRow]
+
+    /// LINKS-1: a UI run can start the conversation with rows of its own
+    /// (`AgentChatLinksFixture`) and tap the links in them.
+    init(rows: [AgentChatRow]? = nil) {
+        self.rows = rows ?? [
+            .message(.init(id: "demo-ask", turnID: "demo-turn-0", role: .user, text: Strings.demoAgentAsk)),
+            .message(.init(id: "demo-answer", turnID: "demo-turn-0", role: .assistant, text: Strings.demoAgentAnswer))
+        ]
+    }
 
     private var snapshot: AgentChatSnapshot {
         AgentChatSnapshot(identity: Self.identity, rows: rows, activeTurn: nil, sequence: sequence)
@@ -56,4 +62,12 @@ actor AgentChatDemoTransport: AgentChatTransport {
     }
 
     func interrupt(turnID: String, in identity: AgentChatIdentity) async throws {}
+
+    /// AGENT-NEW-1: the demo's New conversation empties it, as a real one would.
+    func newConversation(expected identity: AgentChatIdentity) async throws -> AgentChatSnapshot {
+        guard identity == Self.identity else { throw AgentChatFailure.identityChanged }
+        rows = []
+        sequence += 1
+        return snapshot
+    }
 }

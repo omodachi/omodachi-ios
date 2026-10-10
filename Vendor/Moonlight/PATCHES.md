@@ -38,6 +38,9 @@ Local changes:
   renderer enqueued (`VideoDecoderRenderer.enqueuedFrameCount`). Only while
   the facade is Running, which is exactly the window common-c allows the RTT
   call in. No decode timing: AVSampleBufferDisplayLayer decodes internally.
+  POLISH-R: plus `windowAgeSeconds`, how long ago that window closed.
+  `Connection` closes a window only when a frame arrives, so during a stall
+  the last healthy window was being reported as current.
 - `Network/HttpManager`, `HttpResponse`, `PairManager`: remove stock CoreData
   dependencies; read HTTPS port directly from serverinfo; own persisted client
   ID and device name; suppress request/XML/PIN/launch-key logging. TLS accepts

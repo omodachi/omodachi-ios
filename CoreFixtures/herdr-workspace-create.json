@@ -1,0 +1,15 @@
+{
+  "contract_revision": "omodachi.v1",
+  "selected": "work",
+  "owned": "omodachi",
+  "scope": "device",
+  "workspace": {
+    "id": "w3",
+    "label": "omodachi",
+    "number": 3,
+    "focused": false,
+    "pane": "w3:p1",
+    "cwd": "/home/user/Work/omodachi",
+    "display": "~/Work/omodachi"
+  }
+}

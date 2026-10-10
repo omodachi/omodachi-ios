@@ -1,0 +1,13 @@
+{
+  "agent_id": "default",
+  "mode": "plan",
+  "changed": true,
+  "usage": {
+    "tokens": null,
+    "rate_limits": null,
+    "model": "gpt-fixture",
+    "effort": "high",
+    "mode": "plan"
+  },
+  "contract_revision": "omodachi.v1"
+}

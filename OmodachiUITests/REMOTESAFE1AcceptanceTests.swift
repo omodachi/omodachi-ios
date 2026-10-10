@@ -1,7 +1,7 @@
 import XCTest
 
-/// REMOTE-SAFE-1's acceptance run: an Extend session on the clean VM
-/// (`studio:sf-omodachi-vm`), with the host bar's two ends moved in clear of this
+/// REMOTE-SAFE-1's acceptance run: an Extend session on a clean lab VM, with
+/// the host bar's two ends moved in clear of this
 /// display's corners, portrait and landscape.
 ///
 /// The operator side runs on the VM while each hold lasts: `hyprctl layers`,
@@ -75,7 +75,7 @@ import XCTest
             XCTAssertTrue(app.otherElements["home-panel"].exists, "neither the gate nor a paired panel")
             return
         }
-        let manual = app.buttons["connect-add-manual"]
+        let manual = OnboardingNavigation.manualAdd(app)
         XCTAssertTrue(manual.waitForExistence(timeout: 10))
         manual.tap()
         let field = app.textFields["connect-manual-field"]

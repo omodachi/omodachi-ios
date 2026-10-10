@@ -1,0 +1,14 @@
+{
+  "seq": 1,
+  "event_id": "evt_00000001",
+  "type": "herdr.layout.changed",
+  "device_id": null,
+  "payload": {
+    "revision": 7,
+    "session": "probe",
+    "blocked": [],
+    "stopped": true
+  },
+  "ts": 1789430400.0,
+  "contract_revision": "omodachi.v1"
+}

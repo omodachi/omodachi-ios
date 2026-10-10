@@ -19,19 +19,10 @@ struct LicencePage: View {
                 note(Strings.licenceUnreadable)
             }
             ForEach(Array(components.enumerated()), id: \.offset) { index, component in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: component.name)
-                        .font(OmodachiTheme.font("subtitle"))
-                        .foregroundStyle(OmodachiTheme.text)
-                    Text(verbatim: component.licence)
-                        .font(OmodachiTheme.bodyFont("body-small"))
-                        .foregroundStyle(OmodachiTheme.tertiaryText)
-                }
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, minHeight: RowHeight.line, alignment: .leading)
-                .padding(.horizontal, OmodachiTheme.rowPaddingX)
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("licence-component-\(index)")
+                // SETTINGS-LAYOUT-1: a name and a short value, beside it.
+                ValueLine(name: component.name, value: component.licence)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("licence-component-\(index)")
             }
             DiagnosticBlock(title: Strings.licenceFullText, text: text,
                             copyTitle: Strings.settingsDiagnosticsCopy,

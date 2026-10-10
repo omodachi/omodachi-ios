@@ -81,6 +81,11 @@ rules() {
       # picture. Both are put up by the Shell, so a Surface may not have one.
       if (surface && $0 ~ /\.fullScreenCover[ \t]*\(/)
         say("full-screen-cover", "only the Shell may present a cover (A-55: Onboarding and the Remote picture)")
+      # HERDR-7 (Leo: "herdr 没必要为了 agent 加 agent 动画啦"): the animated
+      # face belongs to the Agent panel and the bar. A Herdr pane shows a still
+      # HerdrAgentMarker and says its state in words.
+      if (FILENAME ~ /\/Surfaces\/HerdrPanel\// && $0 ~ /(^|[^A-Za-z0-9_])AgentFace[ \t]*\(/)
+        say("herdr-face", "Herdr shows HerdrAgentMarker, not the animated AgentFace (HERDR-7)")
     }
 
     # --- ARCH-1 §6: every word the app says comes from the catalog -----------
@@ -291,6 +296,16 @@ import Foundation
 struct Wire: Decodable { let id: String }
 /// A doc comment may name Button( and Image(systemName: without being a call.
 SWIFT
+  # HERDR-7: a face in a Herdr row fires; the Agent panel's own face does not.
+  mkdir -p "$work/Omodachi/Surfaces/HerdrPanel" "$work/Omodachi/Surfaces/AgentPanel"
+  cat > "$work/Omodachi/Surfaces/HerdrPanel/Row.swift" <<'SWIFT'
+import SwiftUI
+struct Row: View { var body: some View { AgentFace(state: .waiting, surface: .pane, size: 24) } }
+SWIFT
+  cat > "$work/Omodachi/Surfaces/AgentPanel/Header.swift" <<'SWIFT'
+import SwiftUI
+struct Header: View { var body: some View { AgentFace(state: .idle, surface: .header, size: 32) } }
+SWIFT
   cat > "$work/Omodachi/Shell/Router.swift" <<'SWIFT'
 import SwiftUI
 struct Router: View { var body: some View { Text(verbatim: "x").fullScreenCover(isPresented: .constant(false)) { } } }
@@ -323,6 +338,7 @@ SWIFT
   expect hardcoded-copy 5
   expect foreign-copy 2
   expect backend-copy 2
+  expect herdr-face 1
   # The clean files must produce nothing: the DesignSystem primitive draws,
   # FallbackTheme writes a colour down, the wire file has no SwiftUI and names
   # two rules in a comment, and the Shell is allowed its two covers.
@@ -333,7 +349,7 @@ SWIFT
     rc=1
   fi
   rm -rf "$work"
-  [[ $rc -eq 0 ]] && printf 'lint_views self-test: 18 rules fire, 0 false positives\n'
+  [[ $rc -eq 0 ]] && printf 'lint_views self-test: 19 rules fire, 0 false positives\n'
   return $rc
 }
 

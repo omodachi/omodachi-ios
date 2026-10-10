@@ -18,6 +18,133 @@ import Foundation
 ///   arrive from the machine and are drawn verbatim, untranslated, because
 ///   they name things that exist on that computer.
 enum Strings {
+    // MARK: REMOTE-INPUT-2 — type in the App, send to the computer
+    static let remoteComposeInsert = String(localized: "remote.compose.insert", defaultValue: "只插入文字")
+    static let remoteComposeInsertHint = String(localized: "remote.compose.insertHint", defaultValue: "把文字打进电脑上当前的窗口，不按回车。")
+    static func remoteComposeConfirmLinesReturn(_ a: String) -> String {
+        String(localized: "remote.compose.confirmLinesReturn", defaultValue: "里面有 \(a) 个换行，每个都会在电脑上按一次回车，最后再按一次。")
+    }
+    static let remoteComposeBar = String(localized: "remote.compose.bar", defaultValue: "输入栏")
+    static let remoteComposePlaceholder = String(localized: "remote.compose.placeholder", defaultValue: "写给电脑")
+    static let remoteComposeFieldLabel = String(localized: "remote.compose.fieldLabel", defaultValue: "发到电脑的文字")
+    static let remoteComposeFieldHint = String(localized: "remote.compose.fieldHint", defaultValue: "用本机输入法写。按键盘上的发送：打进电脑上当前的窗口并按回车；只插入不回车用输入框右边的按钮。输入框空着时，删除、回车这些键直接发给电脑。")
+    static let remoteComposeSending = String(localized: "remote.compose.sending", defaultValue: "正在发送…")
+    static let remoteComposeSendAnyway = String(localized: "remote.compose.sendAnyway", defaultValue: "照样发送")
+    static let remoteComposeKeysMode = String(localized: "remote.compose.keysMode", defaultValue: "逐键")
+    static let remoteComposeKeysModeHint = String(localized: "remote.compose.keysModeHint", defaultValue: "键盘逐键直接发给电脑，适合 vim、快捷键和游戏。")
+    static let remoteComposeOn = String(localized: "remote.compose.on", defaultValue: "开")
+    static let remoteComposeOff = String(localized: "remote.compose.off", defaultValue: "关")
+    static func remoteComposeConfirmLines(_ a: String) -> String {
+        String(localized: "remote.compose.confirmLines", defaultValue: "里面有 \(a) 个换行，每个都会在电脑上按一次回车。")
+    }
+    static let remoteComposeWaiting = String(localized: "remote.compose.waiting", defaultValue: "画面正在重连，连上就发送。")
+    static let remoteComposeNotReconnected = String(localized: "remote.compose.notReconnected", defaultValue: "画面没有连回来，没有发送。文字还在。")
+    static let remoteComposeSessionEnded = String(localized: "remote.compose.sessionEnded", defaultValue: "Remote 会话已结束，没有发送。")
+    static let remoteComposeUnconfirmed = String(localized: "remote.compose.unconfirmed", defaultValue: "电脑没有确认收到。先看一眼电脑，再决定要不要重发。")
+    static let remoteComposeRefused = String(localized: "remote.compose.refused", defaultValue: "电脑没有接受这段文字。")
+    static let remoteComposeSent = String(localized: "remote.compose.sent", defaultValue: "已发送")
+    static func remoteComposeTooLong(_ a: String, _ b: String) -> String {
+        String(localized: "remote.compose.tooLong", defaultValue: "太长了：\(a) / \(b) 个字符。分几次发送。")
+    }
+    static func remoteComposeTooLongBytes(_ a: String, _ b: String) -> String {
+        String(localized: "remote.compose.tooLongBytes", defaultValue: "太长了：\(a) / \(b) 字节。分几次发送。")
+    }
+    static let remoteComposeHostTooOld = String(localized: "remote.compose.hostTooOld", defaultValue: "电脑上的 Omodachi 更新后才能用输入框，现在按键逐个发送。")
+    static func remoteKeySend(_ a: String) -> String {
+        String(localized: "remote.key.send", defaultValue: "向电脑发送 \(a)")
+    }
+    // MARK: ATTACH-1 — pictures and files for the agent and Herdr panes
+    static let attachButton = String(localized: "attach.button", defaultValue: "添加附件")
+    static let attachPhotos = String(localized: "attach.photos", defaultValue: "照片")
+    static let attachFiles = String(localized: "attach.files", defaultValue: "文件")
+    static let attachPaste = String(localized: "attach.paste", defaultValue: "粘贴图片")
+    static func attachChipImage(_ a: String) -> String {
+        String(localized: "attach.chip.image", defaultValue: "图片 #\(a)")
+    }
+    static func attachChipFile(_ a: String) -> String {
+        String(localized: "attach.chip.file", defaultValue: "文件 #\(a)")
+    }
+    static func attachUploading(_ a: String) -> String {
+        String(localized: "attach.uploading", defaultValue: "正在上传 \(a)")
+    }
+    static func attachRemove(_ a: String) -> String {
+        String(localized: "attach.remove", defaultValue: "移除 \(a)")
+    }
+    static let attachMarkerGone = String(localized: "attach.markerGone", defaultValue: "文字里没有它的标记了，发送时会放在最前面。")
+    static func attachTooLarge(_ a: String) -> String {
+        String(localized: "attach.error.tooLarge", defaultValue: "\(a) 超过 25 MB，太大了，发不了。")
+    }
+    static func attachBadType(_ a: String) -> String {
+        String(localized: "attach.error.badType", defaultValue: "\(a) 发不了。能发的是图片、PDF 和文本或代码文件。")
+    }
+    static let attachSVG = String(localized: "attach.error.svg", defaultValue: "SVG 不能发，因为它里面可能带脚本。换成 PNG 或 JPEG 就行。")
+    static func attachNotText(_ a: String) -> String {
+        String(localized: "attach.error.notText", defaultValue: "\(a) 不是纯文本，不能当文本文件发。")
+    }
+    static let attachHEIC = String(localized: "attach.error.heic", defaultValue: "电脑没能把这张照片转成 JPEG。")
+    static func attachEmpty(_ a: String) -> String {
+        String(localized: "attach.error.empty", defaultValue: "\(a) 是空的。")
+    }
+    static let attachGone = String(localized: "attach.error.gone", defaultValue: "有个附件已经不在电脑上了。移除后重新添加就好。")
+    static func attachFailed(_ a: String) -> String {
+        String(localized: "attach.error.failed", defaultValue: "\(a) 没传上去，再试一次。")
+    }
+    static let attachTooMany = String(localized: "attach.error.tooMany", defaultValue: "一条消息最多带十个附件。")
+    static let attachWait = String(localized: "attach.wait", defaultValue: "等上传完成再发送。")
+    static let attachPathOnly = String(localized: "attach.pathOnly", defaultValue: "agent 没能直接收下图片，改为收到了文件路径。")
+    static let attachPicture = String(localized: "attach.picture", defaultValue: "附了一张图片")
+    static func attachPictures(_ a: String) -> String {
+        String(localized: "attach.pictures", defaultValue: "附了 \(a) 张图片")
+    }
+    static let attachPasteNone = String(localized: "attach.pasteNone", defaultValue: "剪贴板里没有图片。")
+
+    // MARK: HERDR-3 — keys, typing, and handing the pane back
+    static let herdrType = String(localized: "herdr.type", defaultValue: "直接输入")
+    static let herdrTypeHint = String(localized: "herdr.type.hint", defaultValue: "打开后，你按的每个键都会直接送进这个 pane。")
+    static func herdrTypeStrip(_ a: String) -> String {
+        String(localized: "herdr.type.strip", defaultValue: "正在直接输入到 \(a)。点一下画面就停。")
+    }
+    static let herdrStop = String(localized: "herdr.stop", defaultValue: "停止")
+    static let herdrTypingIdleOff = String(localized: "herdr.type.idleOff", defaultValue: "好一会儿没有按键，直接输入先关掉了。")
+    static let herdrComposerPlaceholder = String(localized: "herdr.composer.placeholder", defaultValue: "写给这个 pane")
+    static let herdrSend = String(localized: "herdr.send", defaultValue: "发送")
+    static let herdrSending = String(localized: "herdr.sending", defaultValue: "正在发送…")
+    static let herdrSent = String(localized: "herdr.sent", defaultValue: "已发送 ✓")
+    static func herdrNotSubmitted(_ a: String) -> String {
+        String(localized: "herdr.notSubmitted", defaultValue: "没有提交 — \(a)")
+    }
+    static let herdrMore = String(localized: "herdr.more", defaultValue: "更多")
+    static let herdrActionCloseTab = String(localized: "herdr.action.closeTab", defaultValue: "关掉 tab")
+    static let herdrCloseTabTitle = String(localized: "herdr.closeTabTitle", defaultValue: "关掉这个 tab？")
+    static let herdrCloseTabDetail = String(localized: "herdr.closeTab.detail", defaultValue: "tab 里每个 pane 的进程都会结束。别的 tab 不受影响。")
+    static let herdrOnlyOneTab = String(localized: "herdr.onlyOneTab", defaultValue: "这个 workspace 只有这一个 tab。")
+    static let herdrModeTyping = String(localized: "herdr.mode.typing", defaultValue: "输入中")
+    static let herdrKeys = String(localized: "herdr.keys", defaultValue: "按键")
+    static func herdrKeySend(_ a: String) -> String {
+        String(localized: "herdr.key.send", defaultValue: "发送 \(a)")
+    }
+    static let herdrKeyEscape = String(localized: "herdr.key.escape", defaultValue: "Esc")
+    static let herdrKeyTab = String(localized: "herdr.key.tab", defaultValue: "Tab")
+    static let herdrKeyShiftTab = String(localized: "herdr.key.shiftTab", defaultValue: "Shift-Tab")
+    static let herdrKeyEnter = String(localized: "herdr.key.enter", defaultValue: "回车")
+    static let herdrKeySpace = String(localized: "herdr.key.space", defaultValue: "空格")
+    static let herdrKeyUp = String(localized: "herdr.key.up", defaultValue: "上箭头")
+    static let herdrKeyDown = String(localized: "herdr.key.down", defaultValue: "下箭头")
+    static let herdrKeyLeft = String(localized: "herdr.key.left", defaultValue: "左箭头")
+    static let herdrKeyRight = String(localized: "herdr.key.right", defaultValue: "右箭头")
+    static let herdrKeyCtrlC = String(localized: "herdr.key.ctrlC", defaultValue: "Control-C")
+    static let herdrKeyCtrlD = String(localized: "herdr.key.ctrlD", defaultValue: "Control-D")
+    static let reasonHerdrNotSeen = String(localized: "reason.herdrNotSeen", defaultValue: "文字没有出现在 pane 里，所以没有按回车。可能有个对话框拿着焦点。")
+    static let reasonHerdrSubmitFailed = String(localized: "reason.herdrSubmitFailed", defaultValue: "文字送到了，回车没有按成功。")
+    static let reasonHerdrNotRequested = String(localized: "reason.herdrNotRequested", defaultValue: "文字送到了，没有按回车。")
+    static let reasonHerdrAgentBlocked = String(localized: "reason.herdrAgentBlocked", defaultValue: "agent 正停在一个问题上，所以一个字都没打进去；用输入框上面的选项回答它，或者用按键（1、↓ ↩ 或 esc）。")
+    static let reasonInvalidKey = String(localized: "reason.invalidKey", defaultValue: "Herdr 不认识这个键。")
+    static let reasonHerdrKeyUnsupported = String(localized: "reason.herdrKeyUnsupported", defaultValue: "Herdr 发不了 PageUp、PageDown、Home、End、Insert 和 Delete。")
+    static let reasonHerdrTooManyKeys = String(localized: "reason.herdrTooManyKeys", defaultValue: "一次的按键太多了。")
+    static let reasonInvalidText = String(localized: "reason.invalidText", defaultValue: "文字里有终端控制字符，没有发送。")
+    static let reasonHerdrTextTooLong = String(localized: "reason.herdrTextTooLong", defaultValue: "文字超过 16 KB，没有发送。")
+    static let reasonHerdrPaneGone = String(localized: "reason.herdrPaneGone", defaultValue: "pane 已经不在电脑上了。")
+
     static let actionCancel = String(localized: "action.cancel", defaultValue: "取消")
     static let actionRetry = String(localized: "action.retry", defaultValue: "重试")
     static let actionConfirmEnd = String(localized: "action.confirmEnd", defaultValue: "确认结束")
@@ -48,9 +175,6 @@ enum Strings {
     /// PAIR-5 §2: nobody answered. Not the same thing as 连不上 (red), which is
     /// now only a host that answered with something this device cannot use.
     static let barConnectionOffline = String(localized: "bar.connection.offline", defaultValue: "主机离线")
-    static func panelHostOffline(_ a: String) -> String {
-        String(localized: "panel.hostOffline", defaultValue: "\(a) 离线。连上之后这里会自己恢复。")
-    }
     static let barWorkspaces = String(localized: "bar.workspaces", defaultValue: "工作区")
     static func barWorkspaceName(_ a: String) -> String {
         String(localized: "bar.workspace.name", defaultValue: "工作区 \(a)")
@@ -66,19 +190,14 @@ enum Strings {
     static let barEdgeTop = String(localized: "bar.edge.top", defaultValue: "bar 放上面")
     static let barEdgeBottom = String(localized: "bar.edge.bottom", defaultValue: "bar 放下面")
     static let quickKeyboard = String(localized: "quick.keyboard", defaultValue: "键盘")
-    static let quickRotationLock = String(localized: "quick.rotationLock", defaultValue: "锁定旋转")
     static let quickPointerMode = String(localized: "quick.pointerMode", defaultValue: "指针模式")
     static let quickHostAudio = String(localized: "quick.hostAudio", defaultValue: "主机音频")
-    static let quickEndSession = String(localized: "quick.endSession", defaultValue: "结束会话")
     static let quickKeyboardUp = String(localized: "quick.keyboard.up", defaultValue: "已弹出")
     static let quickKeyboardDown = String(localized: "quick.keyboard.down", defaultValue: "已收起")
-    static let quickRotationLocked = String(localized: "quick.rotation.locked", defaultValue: "已锁定")
-    static let quickRotationUnlocked = String(localized: "quick.rotation.unlocked", defaultValue: "未锁定")
     static let quickPointerTouchpad = String(localized: "quick.pointer.touchpad", defaultValue: "触控板")
     static let quickPointerDirect = String(localized: "quick.pointer.direct", defaultValue: "直接触摸")
     static let quickOn = String(localized: "quick.on", defaultValue: "开")
     static let quickOff = String(localized: "quick.off", defaultValue: "关")
-    static let quickTwoStep = String(localized: "quick.twoStep", defaultValue: "两步确认")
     static let quickUnavailable = String(localized: "quick.unavailable", defaultValue: "不可用")
     static let quickAudioNoChannel = String(localized: "quick.audio.noChannel", defaultValue: "VNC 没有音频通道，换 Sunshine")
     static let quickAudioOff = String(localized: "quick.audio.off", defaultValue: "主机音频在设置里关着")
@@ -132,6 +251,7 @@ enum Strings {
     static let remotePairAgain = String(localized: "remote.pairAgain", defaultValue: "补一次 Sunshine 配对")
     static let remotePairCancel = String(localized: "remote.pairCancel", defaultValue: "取消配对")
     static let remoteUseVNC = String(localized: "remote.useVNC", defaultValue: "改用 VNC 连接")
+    static let remoteSunshineFallsBackToVNC = String(localized: "remote.sunshineFallsBackToVNC", defaultValue: "Sunshine 现在推不了画面，会用 VNC 连接。")
     static func remoteOccupied(_ a: String) -> String {
         String(localized: "remote.occupied", defaultValue: "\(a) 上已经有一个会话")
     }
@@ -165,6 +285,11 @@ enum Strings {
     // REMOTE-6: WayVNC switched from the compositor's logical size to the
     // output's own pixels. The picture stays; only its sharpness changes.
     static let remoteFramebufferResizing = String(localized: "remote.framebufferResizing", defaultValue: "正在切到主机的原生像素…")
+    /// REMOTE-INPUT-1. Letters, digits and symbols go to the host as keys;
+    /// 中文 / emoji / accents are typed on the host by core. These two say why
+    /// such text did not arrive.
+    static let remoteTypingUnavailable = String(localized: "remote.typingUnavailable", defaultValue: "这台电脑还不能接收中文、emoji 这类文字：更新电脑上的 Omodachi，或切到电脑自己的输入法用字母打。")
+    static let remoteTypingFailed = String(localized: "remote.typingFailed", defaultValue: "这段文字没能在电脑上打出来。")
     static let remoteToastNotification = String(localized: "remote.toast.notification", defaultValue: "点这条打开通知")
     static let remoteToastApproval = String(localized: "remote.toast.approval", defaultValue: "点这条打开 Agent")
     static let remoteToastConnection = String(localized: "remote.toast.connection", defaultValue: "点这条打开 Remote")
@@ -177,7 +302,6 @@ enum Strings {
     static let agentSend = String(localized: "agent.send", defaultValue: "发送")
     static let agentSteer = String(localized: "agent.steer", defaultValue: "补充")
     static let agentInterrupt = String(localized: "agent.interrupt", defaultValue: "中断")
-    static let agentRun = String(localized: "agent.run", defaultValue: "执行")
     static let agentModel = String(localized: "agent.model", defaultValue: "模型")
     static let agentModelThread = String(localized: "agent.model.thread", defaultValue: "跟随线程")
     static let agentDetails = String(localized: "agent.details", defaultValue: "详情")
@@ -187,8 +311,6 @@ enum Strings {
     /// nothing has come back from it yet.
     static let agentThinking = String(localized: "agent.thinking", defaultValue: "正在想…")
     static let agentDismissResult = String(localized: "agent.dismissResult", defaultValue: "关闭结果")
-    static let agentRefreshCommands = String(localized: "agent.refreshCommands", defaultValue: "刷新命令")
-    static let agentLiteralText = String(localized: "agent.literalText", defaultValue: "当作普通文本")
     static let agentHandoffKeep = String(localized: "agent.handoff.keep", defaultValue: "继续用现在的 agent")
     static let agentHandoffReview = String(localized: "agent.handoff.review", defaultValue: "查看这次改动")
     static let agentHandoffConfirm = String(localized: "agent.handoff.confirm", defaultValue: "确认交接")
@@ -268,6 +390,8 @@ enum Strings {
                                                   defaultValue: "这台设备自己的记录。复制后可以直接贴给维护者。")
     static let settingsDiagnosticsSsh = String(localized: "settings.diagnostics.ssh", defaultValue: "SSH 连接")
     static let settingsDiagnosticsApproval = String(localized: "settings.diagnostics.approval", defaultValue: "主机验证")
+    static let settingsDiagnosticsRemote = String(localized: "settings.diagnostics.remote", defaultValue: "Remote · Sunshine 请求")
+    static let settingsDiagnosticsStalls = String(localized: "settings.diagnostics.stalls", defaultValue: "Remote · 卡顿（关掉 App 后仍保留）")
     static let settingsDiagnosticsEmpty = String(localized: "settings.diagnostics.empty", defaultValue: "这次启动之后还没有记录。")
     static let settingsDiagnosticsCopy = String(localized: "settings.diagnostics.copy", defaultValue: "复制")
     static let settingsDiagnosticsCopied = String(localized: "settings.diagnostics.copied", defaultValue: "已复制")
@@ -296,6 +420,9 @@ enum Strings {
     static let notificationsClearConfirm = String(localized: "notifications.clear.confirm", defaultValue: "确认清除")
     static let notificationsDelete = String(localized: "notifications.delete", defaultValue: "删除这条通知")
     static let notificationsInvoke = String(localized: "notifications.invoke", defaultValue: "在电脑上打开")
+    /// NOTIFY-3: a row opens on a tap; a request row says where it is decided.
+    static let notificationsOpen = String(localized: "notifications.open", defaultValue: "展开全文")
+    static let notificationsRequestOnComputer = String(localized: "notifications.request.onComputer", defaultValue: "这要在电脑上决定：点电脑上的这条通知，或打开 Omodachi › 设备。决定之后它会自己从这里消失。")
     static let notificationsHistory = String(localized: "notifications.history", defaultValue: "历史")
     static let settingsNoHosts = String(localized: "settings.noHosts", defaultValue: "这台设备还没有配对过电脑。")
     static let settingsNoHostsDetail = String(localized: "settings.noHosts.detail", defaultValue: "在主机列表里选一台，在电脑上批准一次。")
@@ -338,7 +465,11 @@ enum Strings {
     static let settingsDevice = String(localized: "settings.device", defaultValue: "这台设备")
     static let settingsBadge = String(localized: "settings.badge", defaultValue: "未读标记")
     static let settingsBarEdge = String(localized: "settings.barEdge", defaultValue: "bar 位置")
-    static let settingsBarEdgeDetail = String(localized: "settings.barEdge.detail", defaultValue: "竖屏时在左还是右。横屏恒在上。")
+    static let settingsBarEdgeDetail = String(localized: "settings.barEdge.detail", defaultValue: "竖屏时在左或右，横屏时在上或下。按住 bar 的空白处也能改。")
+    static let settingsBarEdgePortrait = String(localized: "settings.barEdge.portrait", defaultValue: "竖屏")
+    static let settingsBarEdgeLandscape = String(localized: "settings.barEdge.landscape", defaultValue: "横屏")
+    static let settingsBarEdgeTop = String(localized: "settings.barEdge.top", defaultValue: "上")
+    static let settingsBarEdgeBottom = String(localized: "settings.barEdge.bottom", defaultValue: "下")
     static let settingsAbout = String(localized: "settings.about", defaultValue: "关于")
     static let settingsVersion = String(localized: "settings.version", defaultValue: "版本")
     static let settingsContract = String(localized: "settings.contract", defaultValue: "契约")
@@ -354,9 +485,7 @@ enum Strings {
     static let licenceFullText = String(localized: "licence.fullText", defaultValue: "GNU GPL 第 3 版全文")
     static let licenceUnreadable = String(localized: "licence.unreadable", defaultValue: "App 包里读不到这个文件。")
     static let settingsRevoke = String(localized: "settings.revoke", defaultValue: "撤销")
-    static func settingsRevokeOnHost(_ a: String) -> String {
-        String(localized: "settings.revoke.onHost", defaultValue: "在电脑上跑 omodachi-host devices revoke \(a)。")
-    }
+    static let settingsRevokeOnHost = String(localized: "settings.revoke.onHost", defaultValue: "要撤销这台设备，在电脑上打开 Omodachi 面板，到 Devices 里按 Remove。")
     static let settingsForget = String(localized: "settings.forget", defaultValue: "忘记这台主机")
     static let settingsForgetConfirm = String(localized: "settings.forget.confirm", defaultValue: "再按一次以忘记")
     static let settingsPinnedAt = String(localized: "settings.pinnedAt", defaultValue: "配对时钉住")
@@ -448,7 +577,7 @@ enum Strings {
     static let hostsPermission = String(localized: "hosts.permission", defaultValue: "本地网络权限")
     static let hostsPermissionDetail = String(localized: "hosts.permissionDetail", defaultValue: "Omodachi 还没拿到「本地网络」权限。")
     static let hostsPermissionAsk = String(localized: "hosts.permissionAsk", defaultValue: "再问一次")
-    static let hostsManual = String(localized: "hosts.manual", defaultValue: "手动添加…")
+    static let hostsManual = String(localized: "hosts.manual", defaultValue: "按名字或地址添加…")
     static let hostsManualTitle = String(localized: "hosts.manualTitle", defaultValue: "手动添加")
     static let hostsManualField = String(localized: "hosts.manualField", defaultValue: "主机名或 IP")
     static let demoEnter = String(localized: "demo.enter", defaultValue: "看看演示")
@@ -526,11 +655,11 @@ enum Strings {
     static let gesturePinch = String(localized: "gesture.pinch", defaultValue: "三指捏合 / 张开")
     static let gestureWorkspaceNext = String(localized: "gesture.workspaceNext", defaultValue: "下一个工作区")
     static let gestureWorkspacePrevious = String(localized: "gesture.workspacePrevious", defaultValue: "上一个工作区")
-    static let gestureKeyboardLocal = String(localized: "gesture.keyboardLocal", defaultValue: "本机软键盘")
+    static let gestureKeyboardLocal = String(localized: "gesture.keyboardLocal", defaultValue: "本机输入栏")
     static let gestureNoHostBinding = String(localized: "gesture.noHostBinding", defaultValue: "主机没有此绑定")
     static let gestureNoWorkspaces = String(localized: "gesture.noWorkspaces", defaultValue: "主机没有可切换的工作区")
     static let settingsMultitaskingGestures = String(localized: "settings.multitaskingGestures", defaultValue: "Remote 的三指手势和 iPadOS 的多任务手势抢同一只手。在系统设置里关掉多任务手势。")
-    static let pairingCertificateChangedDetail = String(localized: "pairing.certificateChangedDetail", defaultValue: "刚跑过 omodachi-host tls rotate 就是预期的。否则不要信任。")
+    static let pairingCertificateChangedDetail = String(localized: "pairing.certificateChangedDetail", defaultValue: "电脑的证书刚换过就是预期的。否则不要信任。")
     static func agentModelValue(_ a: String, _ b: String) -> String {
         String(localized: "agent.modelValue", defaultValue: "模型 \(a)，强度 \(b)")
     }
@@ -598,7 +727,7 @@ enum Strings {
     static let remoteTouchHintTouchpad = String(localized: "remote.touchHint.touchpad", defaultValue: "滑动移指针，轻点点击，长按拖动")
     static let remoteTouchHintDirect = String(localized: "remote.touchHint.direct", defaultValue: "点画面直接操作，按住拖动")
     static func remoteTouchHintRest(_ a: String) -> String {
-        String(localized: "remote.touchHint.rest", defaultValue: "\(a)；双指滚动，三指轻点切键盘，三指左右滑切工作区。")
+        String(localized: "remote.touchHint.rest", defaultValue: "\(a)；双指滚动，三指轻点开关输入栏，三指左右滑切工作区。")
     }
     static let remoteStartExtend = String(localized: "remote.startExtend", defaultValue: "开始扩展")
     static let remoteStartTakeoverShort = String(localized: "remote.startTakeoverShort", defaultValue: "开始接管")
@@ -656,7 +785,7 @@ enum Strings {
     static let reasonRemotePermissionDenied = String(localized: "reason.remote.permissionDenied", defaultValue: "这个 Remote 会话属于另一台设备。")
     static let reasonMediaPairingRequired = String(localized: "reason.mediaPairingRequired", defaultValue: "Sunshine 还没批准这台设备的串流证书。")
     static let reasonWayvncRequired = String(localized: "reason.wayvncRequired", defaultValue: "主机没装 WayVNC 0.10.1，VNC 用不了。")
-    static let reasonSunshineDesktopUnavailable = String(localized: "reason.sunshineDesktopUnavailable", defaultValue: "主机上的 Sunshine 没有在跑受管桌面控制。")
+    static let reasonSunshineDesktopUnavailable = String(localized: "reason.sunshineDesktopUnavailable", defaultValue: "主机上的 Sunshine 没有能用的硬件编码器。")
     static let reasonSunshineControlUnavailable = String(localized: "reason.sunshineControlUnavailable", defaultValue: "暂时联系不上主机的 Sunshine。")
     static let reasonBackendNotInstalled = String(localized: "reason.backendNotInstalled", defaultValue: "这台主机没有装 Sunshine 后端。")
     static let reasonSunshineAssetsMissing = String(localized: "reason.sunshineAssetsMissing", defaultValue: "Sunshine 在软件编码，延迟会明显偏高。")
@@ -681,7 +810,7 @@ enum Strings {
     static let reasonMediaRequestNotUnique = String(localized: "reason.mediaRequestNotUnique", defaultValue: "主机上没有正好一个属于本设备的待配对请求。请重新发起。")
     static let reasonMediaRequestNotPending = String(localized: "reason.mediaRequestNotPending", defaultValue: "这个配对请求已经不在等待中，请重新发起。")
     static let reasonMediaCertificateAssociated = String(localized: "reason.mediaCertificateAssociated", defaultValue: "这张证书已经和主机配对过了。")
-    static let reasonMediaBindingMismatch = String(localized: "reason.mediaBindingMismatch", defaultValue: "配对绑定与本设备不符，请重新发起。")
+    static let reasonMediaBindingMismatch = String(localized: "reason.mediaBindingMismatch", defaultValue: "这台设备的远程证书还挂在它以前的一次配对上。在电脑上打开 Omodachi › 设备，移除那条旧记录，再回来点一次配对。")
     static let reasonMediaPermissionRequired = String(localized: "reason.mediaPermissionRequired", defaultValue: "主机还没有授权本设备串流。请在电脑上批准。")
     static let reasonMediaInvalidPin = String(localized: "reason.mediaInvalidPin", defaultValue: "PIN 不是四位数字。")
     static let reasonMediaCapacity = String(localized: "reason.mediaCapacity", defaultValue: "主机上待处理的配对太多，稍后再试。")
@@ -786,6 +915,7 @@ enum Strings {
     static let reasonUnknownCredential = String(localized: "reason.unknownCredential", defaultValue: "电脑不认这份凭据：它不是这台电脑签发的，或者已经损坏。")
     static let reasonCredentialRenewalNotDue = String(localized: "reason.credentialRenewalNotDue", defaultValue: "凭据还没到最后一周，现在不用续期。")
     static let reasonPluginCredential = String(localized: "reason.pluginCredential", defaultValue: "这是电脑上 Omodachi 面板自己的凭据，不能从这里续期或撤销。")
+    static let reasonAuthUnavailable = String(localized: "reason.authUnavailable", defaultValue: "电脑一时没能核对凭据。这台设备的配对还在，稍后会自己重连。")
     static let reasonDiscoveryUnavailable = String(localized: "reason.discoveryUnavailable", defaultValue: "主机没能在局域网上广播自己。")
     static let reasonDesktopEntryUnavailable = String(localized: "reason.desktopEntryUnavailable", defaultValue: "主机上没有这个桌面项。")
     static let reasonPreferencesInvalid = String(localized: "reason.preferencesInvalid", defaultValue: "主机的偏好设置无效。")
@@ -950,7 +1080,7 @@ enum Strings {
     static func herdrStreamClosed(_ a: String) -> String {
         String(localized: "herdr.streamClosed", defaultValue: "Herdr 关掉了这个 pane 的流（\(a)）。")
     }
-    static let herdrReadOnly = String(localized: "herdr.readOnly", defaultValue: "这个 pane 现在是只读观察。")
+    static let herdrReadOnly = String(localized: "herdr.readOnly", defaultValue: "要在这里打字，打开「直接输入」，或者写在下面的框里。")
     static let herdrNoSelectedPane = String(localized: "herdr.noSelectedPane", defaultValue: "没有选中的 pane。")
     static let herdrOnlyOnePane = String(localized: "herdr.onlyOnePane", defaultValue: "这个 tab 里只有一个 pane。")
     static let vncLoopbackUnavailable = String(localized: "vnc.loopbackUnavailable", defaultValue: "本机开不了 VNC 中转端口。")
@@ -975,7 +1105,7 @@ enum Strings {
     static func remoteFailureAtStage(_ a: String, _ b: String) -> String {
         String(localized: "remote.failureAtStage", defaultValue: "\(a)（在\(b)）")
     }
-    static let remotePairingRenewing = String(localized: "remote.pairingRenewing", defaultValue: "主机上没有本设备的串流证书，正在重新申请配对…")
+    static let remotePairingRenewing = String(localized: "remote.pairingRenewing", defaultValue: "正在为这台设备续上远程配对，你什么都不用做…")
     static let remotePairingStarting = String(localized: "remote.pairingStarting", defaultValue: "正在向主机的 Sunshine 申请配对…")
     static let remoteFingerprintUnusable = String(localized: "remote.fingerprintUnusable", defaultValue: "本机的串流证书指纹不可用。")
     static let remoteWaitingViewport = String(localized: "remote.waitingViewport", defaultValue: "正在等窗口尺寸，稍后再连接。")
@@ -1022,9 +1152,6 @@ enum Strings {
         String(localized: "shortcut.target.workspace", defaultValue: "bar 上的工作区 \(a)")
     }
     static let agentTurnFailed = String(localized: "agent.turnFailed", defaultValue: "这一轮失败了。")
-    static func agentWaitingForYou(_ a: String) -> String {
-        String(localized: "agent.waitingForYou", defaultValue: "\(a) 在等你")
-    }
 
     // MARK: - I18N-1: the agent conversation
 
@@ -1035,12 +1162,6 @@ enum Strings {
     static let agentSteerUnconfirmed = String(localized: "agent.steerUnconfirmed", defaultValue: "补充没有确认。你的文字还在，检查这一轮后再发。")
     static let agentAnswerUnconfirmed = String(localized: "agent.answerUnconfirmed", defaultValue: "主机没有确认这个回答，agent 还在等。")
     static let agentModelsUnreadable = String(localized: "agent.modelsUnreadable", defaultValue: "读不到这个 agent 的模型。下一条沿用当前设置。")
-    static let agentCommandsUnreadable = String(localized: "agent.commandsUnreadable", defaultValue: "读不到这个 agent 的命令。草稿没有动。")
-    static let agentUnknownCommand = String(localized: "agent.unknownCommand", defaultValue: "没有这个命令。换一个，或按普通文字发出去。")
-    static let agentCommandUnsupported = String(localized: "agent.commandUnsupported", defaultValue: "这个命令这里还用不了。")
-    static let agentWaitForTurn = String(localized: "agent.waitForTurn", defaultValue: "等这一轮跑完再用这个命令。")
-    static let agentCommandUnconfirmed = String(localized: "agent.commandUnconfirmed", defaultValue: "命令结果未确认，草稿没有动。")
-    static let agentCommandNeedsNative = String(localized: "agent.commandNeedsNative", defaultValue: "这个命令需要一个还没接上的原生动作。")
     static let agentStopUnconfirmed = String(localized: "agent.stopUnconfirmed", defaultValue: "没能确认停止。重新连接后看这一轮。")
     static let approvalKindCommand = String(localized: "approval.kind.command", defaultValue: "执行一条命令")
     static let approvalKindFileChange = String(localized: "approval.kind.fileChange", defaultValue: "改动文件")
@@ -1061,7 +1182,6 @@ enum Strings {
     static let agentContinue = String(localized: "agent.continue", defaultValue: "接着用默认 agent。")
     static let agentRoleYou = String(localized: "agent.role.you", defaultValue: "你")
     static let agentRoleAgent = String(localized: "agent.role.agent", defaultValue: "Agent")
-    static let agentLoadingCommands = String(localized: "agent.loadingCommands", defaultValue: "正在读命令…")
     static let agentCheckingSession = String(localized: "agent.checkingSession", defaultValue: "正在检查当前会话…")
     static let agentHandoffRollback = String(localized: "agent.handoffRollback", defaultValue: "如果连接失败")
     static let agentConnectingConversation = String(localized: "agent.connectingConversation", defaultValue: "正在接上同一段对话…")
@@ -1078,8 +1198,7 @@ enum Strings {
         String(localized: "approval.answeredOnHost", defaultValue: "\(a)（在电脑上）")
     }
     static let approvalYourAnswer = String(localized: "approval.yourAnswer", defaultValue: "你的回答")
-    static let herdrModeControl = String(localized: "herdr.mode.control", defaultValue: "控制")
-    static let herdrModeObserve = String(localized: "herdr.mode.observe", defaultValue: "观察")
+    static let herdrModeObserve = String(localized: "herdr.mode.observe", defaultValue: "只看")
     static func herdrModeRetry(_ a: String) -> String {
         String(localized: "herdr.mode.retry", defaultValue: "重试 \(a)")
     }
@@ -1105,9 +1224,6 @@ enum Strings {
 
     static let herdrActionPreviousPane = String(localized: "herdr.action.previousPane", defaultValue: "上一个 pane")
     static let herdrActionNextPane = String(localized: "herdr.action.nextPane", defaultValue: "下一个 pane")
-    static let herdrActionSplitRight = String(localized: "herdr.action.splitRight", defaultValue: "向右分屏")
-    static let herdrActionSplitDown = String(localized: "herdr.action.splitDown", defaultValue: "向下分屏")
-    static let herdrActionZoom = String(localized: "herdr.action.zoom", defaultValue: "放大")
     static let herdrActionClosePane = String(localized: "herdr.action.closePane", defaultValue: "关掉 pane")
     static let herdrActionNewTab = String(localized: "herdr.action.newTab", defaultValue: "新建 tab")
     static func keybindingsCoveredHere(_ a: String) -> String {
@@ -1132,4 +1248,550 @@ enum Strings {
     static let sessionStateSuspended = String(localized: "session.state.suspended", defaultValue: "已挂起")
     static let sessionStateFailed = String(localized: "session.state.failed", defaultValue: "失败")
     static let sessionStateExited = String(localized: "session.state.exited", defaultValue: "已退出")
+    // TAIL-2
+    static let pairErrorBusy = String(localized: "pair.error.busy", defaultValue: "这台电脑上等着的配对请求太多了。先在电脑上批准或拒绝它们，再试一次。")
+    static let pairErrorUnreachable = String(localized: "pair.error.unreachable", defaultValue: "这个地址上没有电脑回应。检查地址，并确认本设备能到达它：同一个网络，或已打开 Tailscale。")
+    static let hostErrorEventStreamSilent = String(localized: "host.error.eventStreamSilent", defaultValue: "主机的事件连接没有回应了，正在重新连接。")
+    static let sshTailscaleSSH = String(localized: "ssh.tailscaleSSH", defaultValue: "这台电脑开着 Tailscale SSH。经 Tailscale 连接时，22 端口由 Tailscale 接管，不经过电脑的 SSH 服务，所以 Omodachi 的密钥和授权都不起作用，Tailscale 可能还要你在浏览器里登录。在电脑上运行 tailscale set --ssh=false 关掉它。")
+    static let remoteTailnetRelayed = String(localized: "remote.tailnetRelayed", defaultValue: "Tailscale 正在中转这条连接（没有直连），所以 Remote 默认用 VNC、低码率，画面会慢一两秒。")
+    // MARK: - TAIL-3b: one road per host, the Tailscale first screen, app links
+    static let onbLede = String(localized: "onb.lede", defaultValue: "经 Tailscale、用电脑的名字连到你的 Omarchy 电脑。")
+    static let tsNameLabel = String(localized: "ts.nameLabel", defaultValue: "电脑的名字")
+    static let tsFieldHint = String(localized: "ts.fieldHint", defaultValue: "从 Tailscale app 复制：完整名、短名或 100.x 都行。")
+    static func tsResolved(_ a: String) -> String { String(localized: "ts.resolved", defaultValue: "将用 \(a) 连接") }
+    static let tsResolving = String(localized: "ts.resolving", defaultValue: "正在查名字…")
+    static func tsHereYes(_ a: String) -> String { String(localized: "ts.here.yes", defaultValue: "这台 \(a) 的 Tailscale 开着。") }
+    static func tsHereNo(_ a: String) -> String { String(localized: "ts.here.no", defaultValue: "这台 \(a) 的 Tailscale 没开，或者没装。") }
+    static let tsHereHow = String(localized: "ts.here.how", defaultValue: "Omodachi 只看这台设备现在有没有 Tailscale 地址。")
+    static let tsWhere = String(localized: "ts.where", defaultValue: "名字在哪？")
+    static let tsFirstTime = String(localized: "ts.firstTime", defaultValue: "第一次用 Tailscale？")
+    static let tsStep1 = String(localized: "ts.step1", defaultValue: "电脑上：Omarchy 菜单 › Install › Service › Tailscale，然后在浏览器里登录。")
+    static func tsStep2(_ a: String) -> String { String(localized: "ts.step2", defaultValue: "这台 \(a) 上：从 App Store 装 Tailscale，用同一个账号登录并打开。") }
+    static let tsStep2Get = String(localized: "ts.step2.get", defaultValue: "去 App Store")
+    static let lanEntry = String(localized: "lan.entry", defaultValue: "我不用 Tailscale")
+    static let lanEntryDetail = String(localized: "lan.entryDetail", defaultValue: "只在这个 Wi-Fi 上找电脑。iOS 会问「本地网络」权限。")
+    static let whereTitle = String(localized: "where.title", defaultValue: "名字在哪")
+    static func where1(_ a: String) -> String { String(localized: "where.1", defaultValue: "在这台 \(a) 上打开 Tailscale app。") }
+    static let where2 = String(localized: "where.2", defaultValue: "它按名字列出你的设备。电脑的名字就是它的主机名，Omarchy 上常叫 omarchy。")
+    static let where3 = String(localized: "where.3", defaultValue: "按住那一行或点进去，复制名字或 100.x 地址。")
+    static let where4 = String(localized: "where.4", defaultValue: "回到这里，点「粘贴」。")
+    static let wherePanel = String(localized: "where.panel", defaultValue: "电脑上的 Omodachi 面板也写着这个名字。")
+    static let whereDone = String(localized: "where.done", defaultValue: "知道了")
+    static func pairingAlreadyPaired(_ a: String) -> String { String(localized: "pairing.alreadyPaired", defaultValue: "这台设备以前和 \(a) 配对过。在电脑上批准后，旧钥匙会被换掉。") }
+    static let roadTailscale = String(localized: "road.tailscale", defaultValue: "Tailscale")
+    static let roadLAN = String(localized: "road.lan", defaultValue: "只在这个 Wi-Fi")
+    static func roadA11yTailscale(_ a: String) -> String { String(localized: "road.a11y.tailscale", defaultValue: "经 Tailscale 连接，名字 \(a)") }
+    static func roadA11yLAN(_ a: String) -> String { String(localized: "road.a11y.lan", defaultValue: "只在这个 Wi-Fi 上连接，地址 \(a)") }
+    static let lanTitle = String(localized: "lan.title", defaultValue: "只在这个 Wi-Fi 上")
+    static func lanExplain(_ a: String) -> String { String(localized: "lan.explain", defaultValue: "Omodachi 在这台 \(a) 连着的网络里找装了 Omodachi 的电脑，只有在这个网络上才连得到。") }
+    static let lanPrompt = String(localized: "lan.prompt", defaultValue: "iOS 会问一次能否查找本地网络上的设备。点「允许」，不然这里什么也找不到。")
+    static let lanGo = String(localized: "lan.go", defaultValue: "开始查找")
+    static let lanLater = String(localized: "lan.later", defaultValue: "以后可以在设置里把电脑改用 Tailscale。")
+    static let lanBack = String(localized: "lan.back", defaultValue: "改用 Tailscale")
+    static let lanDeniedTailscale = String(localized: "lan.deniedTailscale", defaultValue: "用 Tailscale 不需要「本地网络」权限。")
+    static let hostRoad = String(localized: "host.road", defaultValue: "怎么连到它")
+    static func hostRoadTailscale(_ a: String) -> String { String(localized: "host.road.tailscale", defaultValue: "经 Tailscale，用名字 \(a)。在家在外都一样。") }
+    static func hostRoadLAN(_ a: String) -> String { String(localized: "host.road.lan", defaultValue: "只在这个 Wi-Fi 上，地址 \(a)。离开这个网络就连不上。") }
+    static let moveRow = String(localized: "move.row", defaultValue: "这台电脑改用 Tailscale")
+    static func moveRowDetail(_ a: String) -> String { String(localized: "move.rowDetail", defaultValue: "在哪都能连到 \(a)。改一次，不用重新配对。") }
+    static func moveTitle(_ a: String) -> String { String(localized: "move.title", defaultValue: "\(a) 改用 Tailscale") }
+    static func moveBody(_ a: String) -> String { String(localized: "move.body", defaultValue: "以后只经 Tailscale 连 \(a)，在家也一样。") }
+    static func moveKnown(_ a: String) -> String { String(localized: "move.known", defaultValue: "\(a) 在 Tailscale 上的名字：") }
+    static func moveUnknown(_ a: String) -> String { String(localized: "move.unknown", defaultValue: "\(a) 没有报出 Tailscale 名字。先在它上面装好 Tailscale，或者从 Tailscale app 粘贴它的名字。") }
+    static let moveGo = String(localized: "move.go", defaultValue: "检查并切换")
+    static func moveChecking(_ a: String, _ b: String) -> String { String(localized: "move.checking", defaultValue: "正在确认 \(a) 就是 \(b)…") }
+    static func moveDone(_ a: String) -> String { String(localized: "move.done", defaultValue: "\(a) 现在用 Tailscale 连接。") }
+    static func moveNotSame(_ a: String, _ b: String) -> String { String(localized: "move.notSame", defaultValue: "\(a) 有回应，但它不是 \(b)。什么都没改。") }
+    static func moveNoAnswer(_ a: String, _ b: String) -> String { String(localized: "move.noAnswer", defaultValue: "\(a) 没有经 Tailscale 回应。什么都没改，\(b) 仍然用这个 Wi-Fi。") }
+    static func errTsOffTitle(_ a: String) -> String { String(localized: "err.tsOff.title", defaultValue: "这台 \(a) 的 Tailscale 没开") }
+    static func errTsOffBody(_ a: String) -> String { String(localized: "err.tsOff.body", defaultValue: "\(a) 设为用 Tailscale 连接。打开 Tailscale app 把它打开。iOS 同一时间只开一个 VPN。") }
+    static func errLanAwayTitle(_ a: String) -> String { String(localized: "err.lanAway.title", defaultValue: "\(a) 设为只在这个 Wi-Fi 上连接") }
+    static let errLanAwayBody = String(localized: "err.lanAway.body", defaultValue: "离开它的 Wi-Fi 就连不到它。想在哪都能连，就改用 Tailscale。")
+    static func errLanAwayGo(_ a: String) -> String { String(localized: "err.lanAway.go", defaultValue: "\(a) 改用 Tailscale…") }
+    static func errAsleepTitle(_ a: String) -> String { String(localized: "err.asleep.title", defaultValue: "\(a) 没有回应") }
+    static let errAsleepBody = String(localized: "err.asleep.body", defaultValue: "它可能睡着了、关机了，或者 Tailscale 退出了登录。叫醒它再试一次。")
+    static func errNoNameTitle(_ a: String) -> String { String(localized: "err.noName.title", defaultValue: "你的 Tailscale 里没有叫 \(a) 的电脑") }
+    static let errNoNameBody = String(localized: "err.noName.body", defaultValue: "检查一下拼写，或者从 Tailscale app 里重新复制。")
+    static func errNotTailscaleTitle(_ a: String) -> String { String(localized: "err.notTailscale.title", defaultValue: "\(a) 不是 Tailscale 上的名字") }
+    static let errNotTailscaleBody = String(localized: "err.notTailscale.body", defaultValue: "这一页只经 Tailscale 连接。从 Tailscale app 复制名字；不用 Tailscale 的话，就在这个 Wi-Fi 上找电脑。")
+    static func errNoPtrTitle(_ a: String) -> String { String(localized: "err.noPtr.title", defaultValue: "查不到 \(a) 的名字") }
+    static let errNoPtrBody = String(localized: "err.noPtr.body", defaultValue: "改为复制名字，它以 .ts.net 结尾。没有的话，到 Tailscale 管理后台打开 MagicDNS。")
+    static func errNoHostTitle(_ a: String) -> String { String(localized: "err.noHost.title", defaultValue: "\(a) 有回应，但上面没在跑 Omodachi") }
+    static let errNoHostBody = String(localized: "err.noHost.body", defaultValue: "在电脑上从顶栏打开 Omodachi 面板，按 Install 或 Start。")
+    // MARK: - LITE-1c: the web app's name is said in one place
+    /// The web app the host serves. Every sentence that names it takes this
+    /// as its slot, so a rename is one catalog line.
+    // MARK: - NOTIFY-2: the app's own alerts, and where a tap lands
+    static let attentionApprovalTitle = String(localized: "attention.approval.title", defaultValue: "Agent 需要你批准")
+    static func attentionApprovalBody(_ a: String) -> String { String(localized: "attention.approval.body", defaultValue: "在 \(a) 上。点一下，到 Agent 里处理。") }
+    static let attentionInputTitle = String(localized: "attention.input.title", defaultValue: "Agent 在等你回复")
+    static func attentionInputBody(_ a: String) -> String { String(localized: "attention.input.body", defaultValue: "它在 \(a) 上等一个回答。点一下打开 Agent。") }
+    static func attentionHerdrTitle(_ a: String) -> String { String(localized: "attention.herdr.title", defaultValue: "\(a) 在 Herdr 里卡住了") }
+    static let attentionHerdrSomeone = String(localized: "attention.herdr.someone", defaultValue: "有个 agent")
+    static func attentionHerdrBody(_ a: String, _ b: String) -> String { String(localized: "attention.herdr.body", defaultValue: "\(a) 上的 \(b) 会话里有个 pane 在等你。点一下直接过去。") }
+    static func attentionMore(_ a: String) -> String { String(localized: "attention.more", defaultValue: "（另有 \(a) 条）") }
+    static let attentionPaneGone = String(localized: "attention.paneGone", defaultValue: "提醒里的那个 pane 已经不在了，可能刚关掉。")
+    static func attentionAfterRemote(_ a: String) -> String { String(localized: "attention.afterRemote", defaultValue: "这件事在 \(a) 上。先结束这里的 Remote 会话，再点一次就能过去。") }
+    static func alertsTitle(_ a: String) -> String { String(localized: "alerts.title", defaultValue: "这台 \(a) 上的提醒") }
+    static func alertsOn(_ a: String) -> String { String(localized: "alerts.on", defaultValue: "agent 或 Herdr 里的 pane 在等你时，这台 \(a) 会提醒你：不管你在哪个面板，刚离开 App 的那几秒里也会。") }
+    static func alertsOff(_ a: String) -> String { String(localized: "alerts.off", defaultValue: "打开以后，agent 或 Herdr 里的 pane 在等你时，这台 \(a) 会提醒你，不管你在哪个面板。") }
+    static let alertsQuiet = String(localized: "alerts.quiet", defaultValue: "现在是静默的：提醒只进通知中心，没有横幅，也没有声音。打开以后，事情一发生你就能看到。")
+    static func alertsDenied(_ a: String) -> String { String(localized: "alerts.denied", defaultValue: "这台 \(a) 的「设置」里关掉了 Omodachi 的通知。想要的话，可以在那里重新打开。") }
+    static let alertsTurnOn = String(localized: "alerts.turnOn", defaultValue: "开启提醒")
+    static let alertsOpenSettings = String(localized: "alerts.openSettings", defaultValue: "打开设置")
+    static func alertsLocked(_ a: String, _ b: String) -> String { String(localized: "alerts.locked", defaultValue: "App 关着、或者 \(a) 锁着屏的时候，只有 \(b) 能找到你。") }
+    static let alertsStateOn = String(localized: "alerts.state.on", defaultValue: "已开")
+    static let alertsStateQuiet = String(localized: "alerts.state.quiet", defaultValue: "静默")
+    static let alertsStateOff = String(localized: "alerts.state.off", defaultValue: "未开")
+    // MARK: - NOTIFY-1: deciding on the alert, quiet at the desk, finished and not seen
+    static let attentionActionAllow = String(localized: "attention.action.allow", defaultValue: "允许")
+    static let attentionActionDeny = String(localized: "attention.action.deny", defaultValue: "拒绝")
+    static let attentionActionAnswer = String(localized: "attention.action.answer", defaultValue: "去回答…")
+    static let attentionAllowedTitle = String(localized: "attention.allowed.title", defaultValue: "已允许")
+    static func attentionAllowedBody(_ a: String) -> String { String(localized: "attention.allowed.body", defaultValue: "你在提醒上允许了。\(a) 上的 agent 接着做。") }
+    static let attentionDeniedTitle = String(localized: "attention.denied.title", defaultValue: "已拒绝")
+    static func attentionDeniedBody(_ a: String) -> String { String(localized: "attention.denied.body", defaultValue: "你在提醒上拒绝了。\(a) 上的 agent 已经知道不行。") }
+    static let attentionNotSentTitle = String(localized: "attention.notSent.title", defaultValue: "这次什么都没发出去")
+    static let attentionNotSentGone = String(localized: "attention.notSent.gone", defaultValue: "这条请求在电脑上已经处理过了，所以什么都没发。点一下，看看 Agent 现在怎样。")
+    static let attentionNotSentChanged = String(localized: "attention.notSent.changed", defaultValue: "提醒发出之后这条请求变了，所以什么都没发。点一下，看清楚再决定。")
+    static func attentionNotSentUnreachable(_ a: String) -> String { String(localized: "attention.notSent.unreachable", defaultValue: "没能连上 \(a)，所以什么都没发。点一下打开 Omodachi，在那里处理。") }
+    static let attentionNoticeGone = String(localized: "attention.notice.gone", defaultValue: "那条请求在电脑上已经处理过了，所以刚才什么都没发。")
+    static let attentionNoticeChanged = String(localized: "attention.notice.changed", defaultValue: "提醒发出之后那条请求变了，所以刚才什么都没发。先在这里看清楚再决定。")
+    static func attentionNoticeUnreachable(_ a: String) -> String { String(localized: "attention.notice.unreachable", defaultValue: "刚才没能连上 \(a)，所以什么都没发。连上以后在这里处理。") }
+    static let attentionTheComputer = String(localized: "attention.theComputer", defaultValue: "电脑")
+    static func attentionHerdrManyTitle(_ a: String) -> String { String(localized: "attention.herdr.many.title", defaultValue: "\(a) 个 agent 在等你") }
+    static func attentionHerdrManyBody(_ a: String) -> String { String(localized: "attention.herdr.many.body", defaultValue: "\(a) 上 Herdr 里有几个 pane 在等你。点一下，先去第一个。") }
+    static func attentionFinishedTitle(_ a: String) -> String { String(localized: "attention.finished.title", defaultValue: "\(a) 做完了") }
+    static func attentionFinishedBody(_ a: String, _ b: String) -> String { String(localized: "attention.finished.body", defaultValue: "\(a) 上的 \(b) 会话里有个 pane 做完了，你还没看。点一下直接过去。") }
+    static let attentionAgentFinishedTitle = String(localized: "attention.agentFinished.title", defaultValue: "Agent 做完了")
+    static func attentionAgentFinishedBody(_ a: String) -> String { String(localized: "attention.agentFinished.body", defaultValue: "它在 \(a) 上的这一轮结束了，你还没看。点一下打开 Agent。") }
+    static let alertsAtDesk = String(localized: "alerts.atDesk", defaultValue: "人在电脑前也提醒我")
+    static let alertsAtDeskDetail = String(localized: "alerts.atDesk.detail", defaultValue: "关着时：你正在用电脑，提醒就先等着。电脑闲置两分钟或锁屏后，还没处理的才会响，已经在电脑上处理掉的不再响。Herdr 的提醒总会先等 30 秒，好几个 pane 在等时合成一条。")
+    static let alertsFinished = String(localized: "alerts.finished", defaultValue: "agent 做完时告诉我")
+    static let alertsFinishedDetail = String(localized: "alerts.finished.detail", defaultValue: "Agent 或 Herdr 里的 agent 做完一件事、而你还没看时，提醒一次。")
+    static func alertsActions(_ a: String) -> String { String(localized: "alerts.actions", defaultValue: "Agent 请你批准时，可以直接在提醒上允许或拒绝；\(a) 锁着屏时先要用面容 ID 或密码解锁。") }
+    static let badgeUnseen = String(localized: "badge.unseen", defaultValue: "有做完还没看的")
+    static let reasonAgentApprovalChanged = String(localized: "reason.agentApprovalChanged", defaultValue: "这条审批在你看到之后变了，所以什么都没发。")
+    static let odomoName = String(localized: "odomo.name", defaultValue: "Odomo")
+    static func odomoRow(_ a: String, _ b: String) -> String { String(localized: "odomo.row", defaultValue: "这台 \(a) 的通知 → \(b)") }
+    static func odomoRowDetail(_ a: String) -> String { String(localized: "odomo.rowDetail", defaultValue: "就在 app 里打开 \(a)。从「分享」把它添加到主屏幕，再开通知。") }
+    static func odomoNone(_ a: String, _ b: String) -> String { String(localized: "odomo.none", defaultValue: "这台电脑还没有 \(a) 地址：\(b) 要电脑上开着 Tailscale。") }
+    // MARK: - LITE-1d: Odomo where people look for notifications
+    static func odomoCardTitle(_ a: String) -> String { String(localized: "odomo.card.title", defaultValue: "\(a) 锁着屏，也能收到通知") }
+    static func odomoCardWhy(_ a: String, _ b: String) -> String { String(localized: "odomo.card.why", defaultValue: "这个 App 只有开着的时候才能告诉你电脑上的事；\(a) 让这台电脑在你的 \(b) 锁着屏时也能找到你。") }
+    static func odomoCardOpen(_ a: String) -> String { String(localized: "odomo.card.open", defaultValue: "打开 \(a)") }
+    // ODOMO-CARD: Hide, and the switch in Settings that brings the card back.
+    static let odomoCardHide = String(localized: "odomo.card.hide", defaultValue: "隐藏")
+    static func odomoCardHidden(_ a: String, _ b: String) -> String { String(localized: "odomo.card.hidden", defaultValue: "好的，已经隐藏了。想要的时候，可以在「\(a) › \(b)」里把它加回来。") }
+    static let odomoCardShow = String(localized: "odomo.card.show", defaultValue: "在通知页上显示")
+    static func odomoCardShowHere(_ a: String, _ b: String) -> String { String(localized: "odomo.card.showHere", defaultValue: "\(a) 已经在这台 \(b) 上了，所以没有显示。如果你把它从主屏幕移走了，打开这里就会再显示。") }
+    static func odomoNoneTailscale(_ a: String) -> String { String(localized: "odomo.none.tailscale", defaultValue: "这台电脑已经在用 Tailscale 了，电脑上的 Omodachi 面板会告诉你 \(a) 还差什么。") }
+    static func odomoLockedRow(_ a: String, _ b: String) -> String { String(localized: "odomo.locked.row", defaultValue: "\(a) 锁屏时的通知 → \(b)") }
+    static let odomoStateOn = String(localized: "odomo.state.on", defaultValue: "这台电脑已经开好了。")
+    static let odomoStateOff = String(localized: "odomo.state.off", defaultValue: "还没设置。")
+    // ODOMO-CARD: learnt from a link Odomo handed to the app.
+    static func odomoStateHere(_ a: String, _ b: String) -> String { String(localized: "odomo.state.here", defaultValue: "\(a) 已经在这台 \(b) 上了。") }
+    static let odomoStateHereDetail = String(localized: "odomo.state.hereDetail", defaultValue: "从主屏幕打开它；如果它的通知还没开，就在那里打开。")
+    static let linkUnknownHost = String(localized: "link.unknownHost", defaultValue: "这个链接指向一台还没和这台设备配对的电脑。")
+    static let linkInvalid = String(localized: "link.invalid", defaultValue: "这个链接打不开。")
+    // MARK: HERDR-4 — quick rows, fit to width, visibility
+    static let herdrZoomFit = String(localized: "herdr.zoom.fit", defaultValue: "适应宽度")
+    static let herdrZoomActual = String(localized: "herdr.zoom.actual", defaultValue: "原始大小")
+    static let herdrZoomWrap = String(localized: "herdr.zoom.wrap", defaultValue: "换行显示")
+    static let herdrMirrorHint = String(localized: "herdr.mirror.hint", defaultValue: "在换行显示、适应宽度和原始大小之间切换。")
+    static let herdrMirrorHintPhone = String(localized: "herdr.mirror.hint.phone", defaultValue: "在换行显示和适应宽度之间切换。")
+    static let herdrFullScreenNote = String(localized: "herdr.fullScreen.note", defaultValue: "全屏程序，按它的画面显示")
+    // HERDR-10: copying from the grid (Fit and Actual).
+    static let herdrCopy = String(localized: "herdr.copy", defaultValue: "复制")
+    static let herdrSelectAll = String(localized: "herdr.selectAll", defaultValue: "全选")
+    static let herdrCopyOutput = String(localized: "herdr.copyOutput", defaultValue: "复制输出")
+    static let herdrCopyOutputDone = String(localized: "herdr.copyOutput.done", defaultValue: "已复制这个 pane 现在的画面。")
+    static let herdrNewOutput = String(localized: "herdr.newOutput", defaultValue: "有新输出 ↓")
+    static let herdrKeysHint = String(localized: "herdr.keys.hint", defaultValue: "显示或收起 Esc、Tab、方向键、^C 和数字键。")
+    static let hintHerdrPhone = String(localized: "hint.herdr.phone", defaultValue: "双击画面，就能在换行显示和适应宽度之间切换。「按键」里有 Esc、方向键和 ^C。")
+    static let hintHerdrCompact = String(localized: "hint.herdr.compact", defaultValue: "双击画面，在换行显示、适应宽度和原始大小之间切换。「按键」里有 Esc、方向键和 ^C。")
+    static let herdrChoicesTitle = String(localized: "herdr.choices.title", defaultValue: "pane 在等你回答。")
+    static let herdrChoicesHint = String(localized: "herdr.choices.hint", defaultValue: "把这个回答发给 pane，和在电脑上按下它一样。")
+    static let herdrChoicesSelected = String(localized: "herdr.choices.selected", defaultValue: "pane 上现在选中的是这一项。")
+    static let herdrChoicesLasting = String(localized: "herdr.choices.lasting", defaultValue: "这一项以后也算数，不只这一次。")
+    static let herdrChoicesEscapeHint = String(localized: "herdr.choices.escapeHint", defaultValue: "按 Esc，取消或退出这个问题。")
+    static let herdrChoicesYes = String(localized: "herdr.choices.yes", defaultValue: "是")
+    static let herdrChoicesNo = String(localized: "herdr.choices.no", defaultValue: "否")
+    static let herdrChoicesAnswered = String(localized: "herdr.choices.answered", defaultValue: "已经发给 pane，等它往下走。")
+    static let herdrChoicesChanged = String(localized: "herdr.choices.changed", defaultValue: "pane 上的问题刚刚变了，所以什么都没发。再看一眼再点。")
+    static func herdrEchoLabel(_ a: String) -> String {
+        String(localized: "herdr.echo.label", defaultValue: "刚发给 pane 的键：\(a)")
+    }
+    static let herdrKeyBackspace = String(localized: "herdr.key.backspace", defaultValue: "删除")
+    static let herdrComposerFieldHint = String(localized: "herdr.composer.fieldHint", defaultValue: "按键盘上的发送，把文字打进 pane 并按回车。输入框空着时，删除、回车和方向键直接发给 pane。")
+    static let herdrQuick = String(localized: "herdr.quick", defaultValue: "快捷")
+    static let herdrQuickHint = String(localized: "herdr.quick.hint", defaultValue: "一点就把常用的回复或命令发进这个 pane。")
+    static let herdrQuickConfirm = String(localized: "herdr.quick.confirm", defaultValue: "确认")
+    static let herdrQuickCommon = String(localized: "herdr.quick.common", defaultValue: "常用")
+    static let herdrQuickCommands = String(localized: "herdr.quick.commands", defaultValue: "你的命令")
+    static let herdrQuickHarness = String(localized: "herdr.quick.harness", defaultValue: "这个 agent 的命令")
+    static let herdrHarnessModel = String(localized: "herdr.harness.model", defaultValue: "模型")
+    static let herdrHarnessEffort = String(localized: "herdr.harness.effort", defaultValue: "思考力度")
+    static let herdrHarnessCompact = String(localized: "herdr.harness.compact", defaultValue: "压缩")
+    static let herdrHarnessResume = String(localized: "herdr.harness.resume", defaultValue: "继续以前的")
+    static func herdrHarnessHint(_ a: String) -> String {
+        String(localized: "herdr.harness.hint", defaultValue: "发送 \(a)，pane 里会打开 agent 自己的选择器。")
+    }
+    static let herdrTapAgain = String(localized: "herdr.tapAgain", defaultValue: "再点一次")
+    static let herdrPresets = String(localized: "herdr.presets", defaultValue: "预设按键")
+    static func herdrOperatorUnparsed(_ a: String) -> String {
+        String(localized: "herdr.operator.unparsed", defaultValue: "电脑上的 \(a) 读不出来了，所以还在用上一版能用的。")
+    }
+    static func herdrOperatorDropped(_ a: String) -> String {
+        String(localized: "herdr.operator.dropped", defaultValue: "\(a) 里有几行用不了，已经跳过了。")
+    }
+    static let herdrSentLight = String(localized: "herdr.sent.light", defaultValue: "已发送。它很短，屏幕上不好确认，看一眼 pane 吧。")
+    static let herdrWaiting = String(localized: "herdr.waiting", defaultValue: "在等你")
+    static func herdrPaneNumbered(_ a: String) -> String {
+        String(localized: "herdr.pane.numbered", defaultValue: "第 \(a) 个 pane")
+    }
+    static let hintHerdr = String(localized: "hint.herdr", defaultValue: "在这里写，或者用下面的按键。「直接输入」会把你按的每个键都送进去，vim 这类全屏程序也一样。点一下画面可以收起键盘；双击画面，可以在适应宽度和原始大小之间切换。")
+    static let hintDismiss = String(localized: "hint.dismiss", defaultValue: "知道了")
+    static func herdrTapAgainToSend(_ a: String) -> String {
+        String(localized: "herdr.tapAgainToSend", defaultValue: "再点一次 \(a) 才会发出去。")
+    }
+    // HERDR-5: start a stopped session, make a new one
+    static func herdrSessionStart(_ a: String) -> String {
+        String(localized: "herdr.session.start", defaultValue: "启动 \(a)")
+    }
+    static let herdrSessionStartDetail = String(localized: "herdr.session.start.detail", defaultValue: "它在电脑上停着；启动时不开窗口，里面照原样回来。")
+    static func herdrSessionStarting(_ a: String) -> String {
+        String(localized: "herdr.session.starting", defaultValue: "正在电脑上启动 \(a)…")
+    }
+    static let herdrSessionNew = String(localized: "herdr.session.new", defaultValue: "新会话…")
+    static let herdrSessionNewDetail = String(localized: "herdr.session.new.detail", defaultValue: "在电脑上开一个新的 Herdr 会话")
+    static let herdrNewSessionTitle = String(localized: "herdr.newSession.title", defaultValue: "新的 Herdr 会话")
+    static let herdrNewSessionDetail = String(localized: "herdr.newSession.detail", defaultValue: "它在电脑上你的主目录里开始，你离开之后也会一直开着。")
+    static let herdrNewSessionPlaceholder = String(localized: "herdr.newSession.placeholder", defaultValue: "名字，比如 work")
+    static let herdrNewSessionCreate = String(localized: "herdr.newSession.create", defaultValue: "创建")
+    static let herdrNewSessionCreating = String(localized: "herdr.newSession.creating", defaultValue: "正在创建…")
+    static let reasonInvalidSession = String(localized: "reason.invalidSession", defaultValue: "电脑上已经没有这个会话了。")
+    static let reasonInvalidSessionName = String(localized: "reason.invalidSessionName", defaultValue: "名字只能用字母、数字和 . _ -，以字母或数字开头，最多 32 个字符。")
+    static let reasonHerdrSessionExists = String(localized: "reason.herdrSessionExists", defaultValue: "电脑上已经有一个叫这个名字的会话了。换个名字，或者在列表里选它。")
+    static let reasonHerdrSessionStartFailed = String(localized: "reason.herdrSessionStartFailed", defaultValue: "会话没能在电脑上启动起来。过一会儿再试一次。")
+    // HERDR-6: a new workspace, in a folder the person picks
+    static let herdrActionNewWorkspace = String(localized: "herdr.action.newWorkspace", defaultValue: "新工作区…")
+    static let herdrActionNewWorkspaceDetail = String(localized: "herdr.action.newWorkspace.detail", defaultValue: "在你选的文件夹里开一个")
+    static let herdrNewWorkspaceTitle = String(localized: "herdr.newWorkspace.title", defaultValue: "新工作区")
+    static func herdrNewWorkspaceDetail(_ a: String) -> String {
+        String(localized: "herdr.newWorkspace.detail", defaultValue: "在 \(a) 里开一个新工作区，从你选的文件夹开始。电脑屏幕停在原处，不会跳过去。")
+    }
+    static let herdrNewWorkspacePath = String(localized: "herdr.newWorkspace.path", defaultValue: "文件夹")
+    static let herdrNewWorkspacePathPlaceholder = String(localized: "herdr.newWorkspace.path.placeholder", defaultValue: "文件夹（不填就是主目录）")
+    static let herdrNewWorkspaceBrowse = String(localized: "herdr.newWorkspace.browse", defaultValue: "浏览")
+    static let herdrNewWorkspaceUp = String(localized: "herdr.newWorkspace.up", defaultValue: "上一层")
+    static let herdrNewWorkspaceHidden = String(localized: "herdr.newWorkspace.hidden", defaultValue: "显示隐藏的")
+    static let herdrNewWorkspaceRecent = String(localized: "herdr.newWorkspace.recent", defaultValue: "最近")
+    static let herdrNewWorkspaceCommon = String(localized: "herdr.newWorkspace.common", defaultValue: "常用")
+    static let herdrNewWorkspaceLoading = String(localized: "herdr.newWorkspace.loading", defaultValue: "正在找你的文件夹…")
+    static let herdrNewWorkspaceEmpty = String(localized: "herdr.newWorkspace.empty", defaultValue: "这里面没有文件夹。")
+    static let herdrNewWorkspaceTruncated = String(localized: "herdr.newWorkspace.truncated", defaultValue: "只列出前 100 个。要往下找，把路径接着打完。")
+    static let herdrNewWorkspaceName = String(localized: "herdr.newWorkspace.name", defaultValue: "名字")
+    static let herdrNewWorkspaceNamePlaceholder = String(localized: "herdr.newWorkspace.name.placeholder", defaultValue: "名字（可不填，默认用文件夹名）")
+    static let herdrNewWorkspaceCloseBrowser = String(localized: "herdr.newWorkspace.closeBrowser", defaultValue: "收起浏览")
+    // HERDR-11: launch, one honest connection
+    static let connectionReconnecting = String(localized: "connection.reconnecting", defaultValue: "正在重新连接…")
+    static func connectionConnecting(_ a: String) -> String {
+        String(localized: "connection.connecting", defaultValue: "正在连接 \(a)…")
+    }
+    static func connectionDeviceOffline(_ a: String) -> String {
+        String(localized: "connection.deviceOffline", defaultValue: "这台 \(a) 没联网")
+    }
+    static func connectionHostUnreachable(_ a: String) -> String {
+        String(localized: "connection.hostUnreachable", defaultValue: "连不上 \(a)")
+    }
+    static func connectionHerdrDown(_ a: String) -> String {
+        String(localized: "connection.herdrDown", defaultValue: "\(a) 上的 Herdr 没在运行")
+    }
+    static let connectionTryAgain = String(localized: "connection.tryAgain", defaultValue: "再试一次")
+    static func herdrMirrorLastUpdate(_ a: String) -> String {
+        String(localized: "herdr.mirror.lastUpdate", defaultValue: "最后更新 \(a)")
+    }
+    static let herdrNewWorkspaceStart = String(localized: "herdr.newWorkspace.start", defaultValue: "开好以后启动")
+    static let herdrNewWorkspaceStartShell = String(localized: "herdr.newWorkspace.start.shell", defaultValue: "只开 shell")
+    static let herdrNewWorkspaceStartDetail = String(localized: "herdr.newWorkspace.start.detail", defaultValue: "只在新工作区的第一个 pane 里输入这一条命令，别处一个字也不碰。")
+    static let herdrNewWorkspaceFavourites = String(localized: "herdr.newWorkspace.favourites", defaultValue: "收藏")
+    static let herdrNewWorkspaceFavourite = String(localized: "herdr.newWorkspace.favourite", defaultValue: "收藏这个文件夹")
+    static let herdrNewWorkspaceUnfavourite = String(localized: "herdr.newWorkspace.unfavourite", defaultValue: "取消收藏")
+    static func herdrNewWorkspaceCreateAndStart(_ a: String) -> String {
+        String(localized: "herdr.newWorkspace.createAndStart", defaultValue: "创建并启动 \(a)")
+    }
+    static func herdrLaunchNotSent(_ a: String) -> String {
+        String(localized: "herdr.launch.notSent", defaultValue: "工作区开好了，但 \(a) 没能启动。在 pane 里自己启动一下就行。")
+    }
+    static let reasonHerdrLaunchNotAllowed = String(localized: "reason.herdrLaunchNotAllowed", defaultValue: "电脑上已经没有这个启动项了。关掉卡片再打开一次看看。")
+    static let reasonInvalidFolder = String(localized: "reason.invalidFolder", defaultValue: "这看起来不像一个文件夹。试试 ~/Work/project 这样的路径。")
+    static let reasonFolderOutsideHome = String(localized: "reason.folderOutsideHome", defaultValue: "请选电脑上你主目录里面的文件夹。")
+    static let reasonFolderPrivate = String(localized: "reason.folderPrivate", defaultValue: "这个文件夹里放着密钥或私密设置，Omodachi 不会在这里开工作区。")
+    static let reasonFolderNotFound = String(localized: "reason.folderNotFound", defaultValue: "电脑上没有这个文件夹。检查一下路径，或者从列表里选一个。")
+    static let reasonFolderUnreadable = String(localized: "reason.folderUnreadable", defaultValue: "这个文件夹打不开，没法看里面有什么。")
+    static let reasonInvalidWorkspaceName = String(localized: "reason.invalidWorkspaceName", defaultValue: "名字只能一行，最多 64 个字符。")
+
+    // MARK: MOTION-1 — the agent face says its state in words too
+    static let agentFaceIdle = String(localized: "agentFace.idle", defaultValue: "空闲")
+    static let agentFaceThinking = String(localized: "agentFace.thinking", defaultValue: "在想")
+    static let agentFaceWorking = String(localized: "agentFace.working", defaultValue: "在干活")
+    static let agentFaceTool = String(localized: "agentFace.tool", defaultValue: "在跑命令")
+    static let agentFaceWaiting = String(localized: "agentFace.waiting", defaultValue: "在等你")
+    static let agentFaceDone = String(localized: "agentFace.done", defaultValue: "做完了")
+    static let agentFaceError = String(localized: "agentFace.error", defaultValue: "出错了")
+    static let agentFaceOffline = String(localized: "agentFace.offline", defaultValue: "离线")
+    /// INTEGRATE-2: a turn the user interrupted - calm, not an error.
+    static let agentFaceStopped = String(localized: "agentFace.stopped", defaultValue: "已停止")
+    static func agentFaceLabel(_ a: String, _ b: String) -> String {
+        String(localized: "agentFace.label", defaultValue: "\(a)：\(b)")
+    }
+
+    // MARK: - AGENT-NEW-1: New conversation, tool rows that end, slash answers in words
+
+    static let agentNewAction = String(localized: "agent.new.action", defaultValue: "新对话")
+    static let agentNewBody = String(localized: "agent.new.body", defaultValue: "这会和 agent 开始一段新对话。旧的那段还留在电脑上。")
+    static let agentNewStart = String(localized: "agent.new.start", defaultValue: "开始新对话")
+    static let agentNewLater = String(localized: "agent.new.later", defaultValue: "先不")
+    static let agentNewStarting = String(localized: "agent.new.starting", defaultValue: "正在开始新对话…")
+    static let agentNewWhileWorking = String(localized: "agent.new.whileWorking", defaultValue: "agent 正在跑这一轮。等它跑完或先停下，再开始新对话。")
+    static let agentNewWhileWaiting = String(localized: "agent.new.whileWaiting", defaultValue: "agent 在等你回答。先回答它，再开始新对话。")
+    static let agentNewUnavailable = String(localized: "agent.new.unavailable", defaultValue: "对话还没连上。")
+    static let toolStatusInterrupted = String(localized: "tool.status.interrupted", defaultValue: "已停止")
+    // MARK: AGENT-COLLIE-1 — steps, runs, change cards, questions, find
+    static let agentStepRead = String(localized: "agent.step.read", defaultValue: "读取")
+    static let agentStepListed = String(localized: "agent.step.listed", defaultValue: "列出")
+    static let agentStepSearched = String(localized: "agent.step.searched", defaultValue: "搜索")
+    static let agentStepEdited = String(localized: "agent.step.edited", defaultValue: "编辑")
+    static let agentStepCreated = String(localized: "agent.step.created", defaultValue: "新建")
+    static let agentStepDeleted = String(localized: "agent.step.deleted", defaultValue: "删除")
+    static let agentStepMoved = String(localized: "agent.step.moved", defaultValue: "移动")
+    static func agentStepAndMore(_ a: String, _ b: String) -> String {
+        String(localized: "agent.step.andMore", defaultValue: "\(a) 和另外 \(b) 个")
+    }
+    static func agentToolExit(_ a: String) -> String {
+        String(localized: "agent.tool.exit", defaultValue: "退出码 \(a)")
+    }
+    static let agentRunCommand = String(localized: "agent.run.command", defaultValue: "1 条命令")
+    static func agentRunCommands(_ a: String) -> String {
+        String(localized: "agent.run.commands", defaultValue: "\(a) 条命令")
+    }
+    static let agentRunRead = String(localized: "agent.run.read", defaultValue: "读了 1 个文件")
+    static func agentRunReads(_ a: String) -> String {
+        String(localized: "agent.run.reads", defaultValue: "读了 \(a) 个文件")
+    }
+    static let agentRunSearch = String(localized: "agent.run.search", defaultValue: "1 次搜索")
+    static func agentRunSearches(_ a: String) -> String {
+        String(localized: "agent.run.searches", defaultValue: "\(a) 次搜索")
+    }
+    static let agentRunEdit = String(localized: "agent.run.edit", defaultValue: "改了 1 个文件")
+    static func agentRunEdits(_ a: String) -> String {
+        String(localized: "agent.run.edits", defaultValue: "改了 \(a) 个文件")
+    }
+    static let agentRunOther = String(localized: "agent.run.other", defaultValue: "1 个其他步骤")
+    static func agentRunOthers(_ a: String) -> String {
+        String(localized: "agent.run.others", defaultValue: "\(a) 个其他步骤")
+    }
+    static func agentRunFailed(_ a: String) -> String {
+        String(localized: "agent.run.failed", defaultValue: "\(a) 个失败")
+    }
+    static let agentRunEarlier = String(localized: "agent.run.earlier", defaultValue: "前面还有 1 步")
+    static func agentRunEarlierMany(_ a: String) -> String {
+        String(localized: "agent.run.earlierMany", defaultValue: "前面还有 \(a) 步")
+    }
+    static let agentRunFold = String(localized: "agent.run.fold", defaultValue: "收起这些步骤")
+    static let agentRunExpandHint = String(localized: "agent.run.expandHint", defaultValue: "展开后能看到每一步。")
+    static func agentChangeMore(_ a: String) -> String {
+        String(localized: "agent.change.more", defaultValue: "再显示 \(a) 行")
+    }
+    static let agentChangeLess = String(localized: "agent.change.less", defaultValue: "少显示一些")
+    static func agentChangeOmitted(_ a: String) -> String {
+        String(localized: "agent.change.omitted", defaultValue: "还有 \(a) 行没有发到手机上，在电脑上能看到。")
+    }
+    static func agentChangeFilesOmitted(_ a: String) -> String {
+        String(localized: "agent.change.filesOmitted", defaultValue: "还改了 \(a) 个文件，在电脑上能看到。")
+    }
+    static let agentChangeWaiting = String(localized: "agent.change.waiting", defaultValue: "等你允许这处改动")
+    static let agentChangeFile = String(localized: "agent.change.file", defaultValue: "1 个文件")
+    static func agentChangeFiles(_ a: String) -> String {
+        String(localized: "agent.change.files", defaultValue: "\(a) 个文件")
+    }
+    static let agentChangeSee = String(localized: "agent.change.see", defaultValue: "看这处改动")
+    static func agentChangeLinesLabel(_ a: String, _ b: String) -> String {
+        String(localized: "agent.change.linesLabel", defaultValue: "加了 \(a) 行，删了 \(b) 行")
+    }
+    static let agentQuestionOther = String(localized: "agent.question.other", defaultValue: "其他…")
+    static let agentQuestionOtherPlaceholder = String(localized: "agent.question.otherPlaceholder", defaultValue: "用你自己的话回答")
+    static func agentQuestionStep(_ a: String, _ b: String) -> String {
+        String(localized: "agent.question.step", defaultValue: "第 \(a) 题，共 \(b) 题")
+    }
+    static let agentQuestionBack = String(localized: "agent.question.back", defaultValue: "上一题")
+    static let agentQuestionNext = String(localized: "agent.question.next", defaultValue: "下一题")
+    static let agentQuestionReview = String(localized: "agent.question.review", defaultValue: "看一遍你的回答")
+    static let agentQuestionHidden = String(localized: "agent.question.hidden", defaultValue: "已隐藏")
+    static let agentQuestionUnanswered = String(localized: "agent.question.unanswered", defaultValue: "还没回答")
+    static let agentQuestionSelected = String(localized: "agent.question.selected", defaultValue: "已选")
+    static func approvalAnsweredWith(_ a: String) -> String {
+        String(localized: "approval.answeredWith", defaultValue: "已回答：\(a)")
+    }
+    static let agentFind = String(localized: "agent.find", defaultValue: "查找")
+    static let agentFindPlaceholder = String(localized: "agent.find.placeholder", defaultValue: "在对话里查找")
+    static func agentFindCountLabel(_ a: String, _ b: String) -> String {
+        String(localized: "agent.find.countLabel", defaultValue: "第 \(a) 处，共 \(b) 处")
+    }
+    static let agentFindNone = String(localized: "agent.find.none", defaultValue: "没有找到")
+    static let agentFindPrevious = String(localized: "agent.find.previous", defaultValue: "上一处")
+    static let agentFindNext = String(localized: "agent.find.next", defaultValue: "下一处")
+    static let agentFindClose = String(localized: "agent.find.close", defaultValue: "关闭查找")
+    static let agentJumpNewest = String(localized: "agent.jump.newest", defaultValue: "跳到最新")
+    static let agentJumpUnseen = String(localized: "agent.jump.unseen", defaultValue: "下面有新内容")
+    /// AGENT-FIX-2: above a tool's output when core kept only its newest part.
+    static func agentToolTruncated(_ a: String) -> String {
+        String(localized: "agent.tool.truncated", defaultValue: "更早的 \(a) 输出没有显示")
+    }
+    static let reasonAgentReplaced = String(localized: "reason.agent.replaced", defaultValue: "这段对话已经换成了新的一段，现在显示新的。")
+    static let reasonAgentChanging = String(localized: "reason.agent.changing", defaultValue: "正在开始新对话，稍等再试。")
+    static let reasonAgentNewConfirm = String(localized: "reason.agent.newConfirm", defaultValue: "开始新对话前要先确认。")
+    static let reasonAgentNewUnconfirmed = String(localized: "reason.agent.newUnconfirmed", defaultValue: "新对话还没确认好，再试一次。")
+    // MARK: AGENT-PLAN-1 — codex's Plan mode: the chip, /plan, the plan card
+    static let agentPlanChip = String(localized: "agent.plan.chip", defaultValue: "计划")
+    static let agentPlanChipLabel = String(localized: "agent.plan.chipLabel", defaultValue: "计划模式已开启")
+    static let agentPlanChipHint = String(localized: "agent.plan.chipHint", defaultValue: "点一下回到默认模式。")
+    static let agentPlanWhileWorking = String(localized: "agent.plan.whileWorking", defaultValue: "这一轮跑完后，才能切换计划模式。")
+    static let agentPlanSwitching = String(localized: "agent.plan.switching", defaultValue: "正在切换模式…")
+    static let agentPlanFailed = String(localized: "agent.plan.failed", defaultValue: "模式没有切换成功，再试一次。")
+    static let agentPlanTitle = String(localized: "agent.plan.title", defaultValue: "拟定的计划")
+    static let agentPlanImplement = String(localized: "agent.plan.implement", defaultValue: "按这个计划动手")
+    static let agentPlanImplementHint = String(localized: "agent.plan.implementHint", defaultValue: "这会退出计划模式，让 agent 开始动手。")
+    static let agentPlanImplementMessage = String(localized: "agent.plan.implementMessage", defaultValue: "按计划开始实施。")
+    static let reasonAgentModeUnavailable = String(localized: "reason.agent.modeUnavailable", defaultValue: "电脑上的 Codex 现在切换不了计划模式。")
+    static let reasonAgentModeInvalid = String(localized: "reason.agent.modeInvalid", defaultValue: "这里没有这个模式。")
+    static let reasonAgentCommandOnComputer = String(localized: "reason.agent.commandOnComputer", defaultValue: "这个命令在电脑上的 Codex 里用，手机上不运行。")
+    static let agentDiffTitle = String(localized: "agent.diff.title", defaultValue: "这段对话改过的文件")
+    static let agentDiffEmpty = String(localized: "agent.diff.empty", defaultValue: "这段对话还没有改过文件。")
+    static let agentDiffClose = String(localized: "agent.diff.close", defaultValue: "关掉改动")
+    static func agentDiffOmitted(_ a: String) -> String {
+        String(localized: "agent.diff.omitted", defaultValue: "更早的 \(a) 处改动没有显示。")
+    }
+    static let reasonAgentCommandWhileWorking = String(localized: "reason.agent.commandWhileWorking", defaultValue: "等 agent 跑完这一轮，才能用这个。")
+
+    // MARK: - AGENT-QUEUE-1: the queue, the checklist, a reason, earlier messages
+
+    static func agentQueueCount(_ a: String) -> String {
+        String(localized: "agent.queue.count", defaultValue: "\(a) 条在等")
+    }
+    static let agentQueueWhenEnds = String(localized: "agent.queue.whenEnds", defaultValue: "这一轮结束后就发出去。")
+    static let agentQueueWaiting = String(localized: "agent.queue.waiting", defaultValue: "已经停下了。准备好就发吧。")
+    static let agentQueueSendNow = String(localized: "agent.queue.sendNow", defaultValue: "现在发")
+    static let agentQueueEdit = String(localized: "agent.queue.edit", defaultValue: "编辑")
+    static let agentQueueDelete = String(localized: "agent.queue.delete", defaultValue: "删除")
+    static let agentQueueSave = String(localized: "agent.queue.save", defaultValue: "保存")
+    static let agentQueueLabel = String(localized: "agent.queue.label", defaultValue: "在等的消息")
+    static let agentQueueEditGone = String(localized: "agent.queue.editGone", defaultValue: "它已经发出去了，你改的字放回了输入框。")
+    static let agentQueueUnconfirmed = String(localized: "agent.queue.unconfirmed", defaultValue: "没有送到电脑上，再试一次。")
+    static let agentStepsTitle = String(localized: "agent.steps.title", defaultValue: "步骤")
+    static func agentStepsProgress(_ a: String, _ b: String) -> String {
+        String(localized: "agent.steps.progress", defaultValue: "\(a)/\(b)")
+    }
+    static let agentStepsShow = String(localized: "agent.steps.show", defaultValue: "展开步骤")
+    static let agentStepsHide = String(localized: "agent.steps.hide", defaultValue: "收起步骤")
+    static let agentStepsDone = String(localized: "agent.steps.done", defaultValue: "已完成")
+    static let agentStepsNow = String(localized: "agent.steps.now", defaultValue: "进行中")
+    static let agentStepsTodo = String(localized: "agent.steps.todo", defaultValue: "待做")
+    static let agentPlanKeep = String(localized: "agent.plan.keep", defaultValue: "继续规划")
+    static let agentPlanKeepHint = String(localized: "agent.plan.keepHint", defaultValue: "留在计划模式，写下想改的地方。")
+    static let agentDeclineWhy = String(localized: "agent.decline.why", defaultValue: "拒绝并说明原因…")
+    static let agentDeclinePlaceholder = String(localized: "agent.decline.placeholder", defaultValue: "为什么不行？一句话，可不填")
+    static let agentEarlier = String(localized: "agent.earlier", defaultValue: "更早的消息")
+    static let agentEarlierLoading = String(localized: "agent.earlier.loading", defaultValue: "正在载入更早的消息…")
+    static func agentTrimmed(_ a: String) -> String {
+        String(localized: "agent.trimmed", defaultValue: "还有 \(a) 个字符没在这里显示。")
+    }
+
+    // MARK: - LINKS-1: links open the right way
+
+    static let linkReaching = String(localized: "link.reaching", defaultValue: "正在连电脑上的这个页面…")
+    static let linkComputerOnly = String(localized: "link.computerOnly", defaultValue: "这个页面只开给电脑自己看，手机连不上它。")
+    static let linkOpenOnComputer = String(localized: "link.openOnComputer", defaultValue: "在电脑上打开")
+    static let linkOpeningOnComputer = String(localized: "link.openingOnComputer", defaultValue: "正在电脑上打开…")
+    static let agentCopyReply = String(localized: "agent.copyReply", defaultValue: "复制这条回复")
+    static let linkStartRemoteFirst = String(localized: "link.startRemoteFirst", defaultValue: "先开始 Remote，再点一次这个链接。")
+    static let linkNoComputer = String(localized: "link.noComputer", defaultValue: "现在没连着电脑，所以没法在电脑上打开。")
+    static let linkNoticeLabel = String(localized: "link.noticeLabel", defaultValue: "链接")
+    static let reasonOpenNotMentioned = String(localized: "reason.open.notMentioned", defaultValue: "这个路径不在那条消息里（或者已经不在那个窗格的屏幕上了），所以没有打开。")
+    static let reasonOpenOutsideRoots = String(localized: "reason.open.outsideRoots", defaultValue: "这个文件不在你的主目录、这段工作的文件夹或 /tmp 里，所以不从手机上打开。")
+    static let reasonOpenDenied = String(localized: "reason.open.denied", defaultValue: "这是个私密的地方（钥匙、配置之类），不从手机上打开。")
+    static let reasonOpenExecutable = String(localized: "reason.open.executable", defaultValue: "这是个程序或脚本。从手机上只打开文件，从不运行程序。")
+    static let reasonOpenMissing = String(localized: "reason.open.missing", defaultValue: "电脑上没有这个文件。")
+    static let reasonOpenSourceGone = String(localized: "reason.open.sourceGone", defaultValue: "那条消息或那个窗格已经不在了。")
+    static let reasonOpenTypeRefused = String(localized: "reason.open.typeRefused", defaultValue: "这不是普通的文件或文件夹，所以没有打开。")
+    static let reasonOpenURLRefused = String(localized: "reason.open.urlRefused", defaultValue: "在电脑上只能打开网页地址。")
+    static let reasonOpenRateLimited = String(localized: "reason.open.rateLimited", defaultValue: "刚才打开得太多了，过一会儿再试。")
+    static let reasonOpenUnavailable = String(localized: "reason.open.unavailable", defaultValue: "电脑这会儿没有能打开它的桌面。")
+    static let reasonOpenUnsupported = String(localized: "reason.open.unsupported", defaultValue: "这台电脑上的 Omodachi 太旧了，还不能在那里打开文件。到电脑上更新一下。")
+
+    // MARK: TUTORIAL-1 — the first-steps tour along the bar
+    static let tourNext = String(localized: "tour.next", defaultValue: "下一步")
+    static let tourSkip = String(localized: "tour.skip", defaultValue: "跳过")
+    static let tourDone = String(localized: "tour.done", defaultValue: "完成")
+    static func tourProgress(_ a: String, _ b: String) -> String {
+        String(localized: "tour.progress", defaultValue: "第 \(a) 步，共 \(b) 步")
+    }
+    static let tourBarTitle = String(localized: "tour.bar.title", defaultValue: "你的 bar")
+    static let tourBarBody = String(localized: "tour.bar.body", defaultValue: "每个面板都在这条 bar 上，一点就到；点 logo 是电脑的 Omarchy 菜单。按住图标能看到它的名字，按住空白处可以把 bar 挪到另一边。")
+    static let tourRemoteTitle = String(localized: "tour.remote.title", defaultValue: "Remote")
+    static let tourRemoteBody = String(localized: "tour.remote.body", defaultValue: "电脑的屏幕，就在这台设备上。可以把它当成电脑旁边的又一块屏，也可以接管整个桌面。")
+    static let tourAgentTitle = String(localized: "tour.agent.title", defaultValue: "Agent")
+    static let tourAgentBody = String(localized: "tour.agent.body", defaultValue: "和电脑上的 agent 聊天，也能发照片或文件给它。它要运行命令或改文件之前，会先在这里问你。")
+    static let tourHerdrTitle = String(localized: "tour.herdr.title", defaultValue: "Herdr")
+    static let tourHerdrBody = String(localized: "tour.herdr.body", defaultValue: "看着 agent 们在各自的 pane 里干活，也能往任何一个里打字。「快捷」一点就发出常用的回复。")
+    static let tourNotificationsTitle = String(localized: "tour.notifications.title", defaultValue: "通知")
+    static let tourNotificationsBody = String(localized: "tour.notifications.body", defaultValue: "电脑上的通知都在这一张列表里，最上面是勿扰。")
+    static let tourSettingsTitle = String(localized: "tour.settings.title", defaultValue: "设置")
+    static let tourSettingsBody = String(localized: "tour.settings.body", defaultValue: "电脑、bar 和 Remote 的选项都在这里。这段导览也在，就在靠上的「再看一遍导览」。")
+    static let settingsTourGroup = String(localized: "settings.tour.group", defaultValue: "帮助")
+    static let settingsTourReplay = String(localized: "settings.tour.replay", defaultValue: "再看一遍导览")
+    static let settingsTourReplayDetail = String(localized: "settings.tour.replayDetail", defaultValue: "沿着 bar 走一圈。Herdr 和 Agent 里的小提示也会再出现。")
+
+    // MARK: OVERVIEW-1 — one list of what wants you, across the Agent and every Herdr pane
+    static let overviewTitle = String(localized: "overview.title", defaultValue: "谁在等你")
+    static let overviewOpen = String(localized: "overview.open", defaultValue: "看看谁在等你")
+    static let overviewOpenHint = String(localized: "overview.openHint", defaultValue: "列出 Agent 和每个会话里在等你、在做和做完的 agent。")
+    static let overviewEmpty = String(localized: "overview.empty", defaultValue: "现在没有等你的事。")
+    static let overviewSectionNeedsYou = String(localized: "overview.section.needsYou", defaultValue: "在等你")
+    static let overviewSectionWorking = String(localized: "overview.section.working", defaultValue: "在做")
+    static let overviewSectionDone = String(localized: "overview.section.done", defaultValue: "做完了，还没看")
+    static func overviewCountNeedsYou(_ a: String) -> String {
+        String(localized: "overview.count.needsYou", defaultValue: "等你 \(a)")
+    }
+    static func overviewCountWorking(_ a: String) -> String {
+        String(localized: "overview.count.working", defaultValue: "在做 \(a)")
+    }
+    static func overviewCountDone(_ a: String) -> String {
+        String(localized: "overview.count.done", defaultValue: "做完 \(a)")
+    }
+    static let overviewAskApproveCommand = String(localized: "overview.ask.approveCommand", defaultValue: "批准一条命令")
+    static let overviewAskApproveFiles = String(localized: "overview.ask.approveFiles", defaultValue: "批准文件改动")
+    static let overviewAskApprovePermissions = String(localized: "overview.ask.approvePermissions", defaultValue: "批准更多权限")
+    static let overviewAskApprove = String(localized: "overview.ask.approve", defaultValue: "批准一个请求")
+    static let overviewAskAnswer = String(localized: "overview.ask.answer", defaultValue: "回答一个问题")
+    static let overviewAskPick = String(localized: "overview.ask.pick", defaultValue: "选一个选项")
+    static func overviewAskPickQuestion(_ a: String) -> String {
+        String(localized: "overview.ask.pickQuestion", defaultValue: "选一个：\(a)")
+    }
+    static let overviewAskYesNo = String(localized: "overview.ask.yesNo", defaultValue: "回答是或否")
+    static func overviewAskYesNoQuestion(_ a: String) -> String {
+        String(localized: "overview.ask.yesNoQuestion", defaultValue: "是或否：\(a)")
+    }
+    static let overviewAskWorking = String(localized: "overview.ask.working", defaultValue: "正在做")
+    static func overviewAskYourMove(_ a: String) -> String {
+        String(localized: "overview.ask.yourMove", defaultValue: "该你了：\(a)")
+    }
+    static let overviewAskFinished = String(localized: "overview.ask.finished", defaultValue: "做完了")
+    static let overviewAskFailed = String(localized: "overview.ask.failed", defaultValue: "出错停下了")
+    static func badgeNeedsYou(_ a: String) -> String {
+        String(localized: "badge.needsYou", defaultValue: "\(a) 个在等你")
+    }
+    static let overviewChipNeedsYou = String(localized: "overview.chip.needsYou", defaultValue: "有在等你的")
+    static let overviewChipWorking = String(localized: "overview.chip.working", defaultValue: "有在做的")
 }

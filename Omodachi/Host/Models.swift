@@ -51,6 +51,9 @@ struct HostState: Sendable {
     var streamState = "Disconnected"
     var defaultAgentKind: String? = nil
     var agentStatus: AgentStatus = .unknown
+    /// MOTION-1: `state.agent.status` as core wrote it, and `state.agent.chat`.
+    var agentStatusText: String? = nil
+    var agentActivity: AgentActivity? = nil
     var herdrAgentCount: Int? = nil
     var online = false
     var toggles: [String: Bool] = ["trigger.toggle.top-bar": true, "trigger.toggle.notifications": true, "trigger.toggle.nightlight": false]
@@ -96,6 +99,13 @@ struct SessionDescriptor: Identifiable, Codable, Equatable, Sendable {
     /// descriptor stored before it still decodes; it falls back to the address.
     var hostDisplayName: String? = nil
     var reattachable: Bool { kind == .agent || kind == .herdr }
+    /// TAIL-2 P0-4. The same session of the same host, created when the host
+    /// was reached on another road: everything but the dialled address agrees.
+    func sameSessionOnAnotherRoad(_ other: SessionDescriptor) -> Bool {
+        kind == other.kind && argv == other.argv && !host.mock && !other.host.mock
+            && host.id == other.host.id && host.username == other.host.username
+            && host.port == other.host.port && host.herdrSession == other.host.herdrSession
+    }
     var reuseIdentity: SessionReuseIdentity {
         .init(kind: kind, connection: host.sshConnectionIdentity, namedSession: host.herdrSession, argv: argv)
     }

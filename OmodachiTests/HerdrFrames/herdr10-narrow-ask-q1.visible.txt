@@ -1,0 +1,28 @@
+› 混合宽度
+   名称        说明            状态
+  ━━━━━━━━━━  ━━━━━━━━━━━━━━  ━━━━━━━━━━━
+   测试一      中文表格内容    ✅ 完成
+  ──────────  ──────────────  ───────────
+   test two    mixed 中英      ⏳ 进行中
+
+  Worked for <1s • 1:49 AM
+
+
+› 请问我两个问题
+
+
+
+  Question 1/2 (2 unanswered)
+  你更喜欢哪种回答风格？
+
+  › 1. 具体例子 (Recommended)  先用一个直观例子说明，再总
+                               结规律和要点。
+    2. 核心原理                先讲清楚概念和原理，再给出
+                               简短的例子。
+    3. 实际操作                先带你做一遍，边做边解释每
+                               一步的作用。
+    4. None of the above       Optionally, add details in
+                               notes (tab)
+
+  tab to add notes | enter to submit answer
+  ←/→ to navigate questions | esc to interrupt

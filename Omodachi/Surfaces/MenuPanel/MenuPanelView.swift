@@ -26,6 +26,8 @@ struct MenuPanelView: View {
     @EnvironmentObject private var stores: SurfaceStores
     @EnvironmentObject private var sessions: SessionStore
     @Environment(\.horizontalSizeClass) private var horizontal
+    /// SHELL-FIX-1: which way up is the window's answer, not this panel's.
+    @Environment(\.windowSize) private var windowSize
 
     @State private var editingMenuPins = false
     @State private var editingKeyPins = false
@@ -40,7 +42,7 @@ struct MenuPanelView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let landscape = proxy.size.width >= proxy.size.height
+            let landscape = PanelMeasure.isLandscape(window: windowSize, area: proxy.size)
             let sideBySide = PanelMeasure.sideBySide(landscape: landscape, width: proxy.size.width)
             Group {
                 if sideBySide {
@@ -115,13 +117,40 @@ struct MenuPanelView: View {
     /// about a connection that is not up: there is no "authorization is not
     /// connected" to sit in any more, because a host that refuses this device
     /// takes the Panel away instead of leaving a sentence under the menu.
+    ///
+    /// TAIL-3b: and it says *why*, by the host's road. A Tailscale host while
+    /// this device has no Tailscale address is about this device (E01); a
+    /// Wi-Fi host is only reachable on its Wi-Fi, and the one-time move to
+    /// Tailscale is offered right here (E02). Never a silent other road.
     @ViewBuilder private var offlineRow: some View {
+        // TAIL-3b I1: a link named a computer this device is not paired with.
+        if let message = home.linkMessage {
+            InlineError(message: message, identifier: "panel-link-unknown") {
+                FlowButton(title: Strings.whereDone, kind: .secondary) { home.linkMessage = nil }
+            }
+        }
         if home.hostOffline {
-            InlineError(message: Strings.panelHostOffline(home.state.hostName),
-                        identifier: "panel-host-offline") {
-                FlowButton(title: Strings.actionRetry, kind: .secondary) {
-                    Task { await home.connectCompanion() }
+            let name = home.state.hostName
+            let retry = FlowButton(title: Strings.actionRetry, kind: .secondary) {
+                Task { await home.connectCompanion() }
+            }
+            switch home.hostRoad?.kind.isTailscale {
+            case true? where !TailscaleAddress.isUp:
+                NoticeBlock(title: Strings.errTsOffTitle(DeviceWord.current), detail: Strings.errTsOffBody(name),
+                            identifier: "panel-host-offline") { retry }
+            case false?:
+                NoticeBlock(title: Strings.errLanAwayTitle(name), detail: Strings.errLanAwayBody,
+                            identifier: "panel-host-offline") {
+                    FlowButton(title: Strings.errLanAwayGo(name)) {
+                        home.pendingMoveAccount = HostAccount.canonical(home.profile.companionURL)
+                        router.show(.settings)
+                    }
+                    .accessibilityIdentifier("panel-host-move")
+                    retry.frame(maxWidth: 110)
                 }
+            default:
+                NoticeBlock(title: Strings.errAsleepTitle(name), detail: Strings.errAsleepBody,
+                            identifier: "panel-host-offline") { retry }
             }
         }
     }
@@ -134,6 +163,8 @@ struct MenuPanelView: View {
             HostSwitcher(title: home.state.hostName,
                          records: directory.records,
                          locked: router.hasSession,
+                         road: home.hostRoad,
+                         wide: horizontal == .regular,
                          onSelect: switchHost)
         } else {
             PanelTitle(home.state.hostName)
@@ -308,11 +339,21 @@ struct MenuPanelView: View {
 
 /// N-26. "Which computer am I on" is answered where the user is already
 /// looking, and the answer opens the list of the others.
+///
+/// TAIL-3b H-A: the name has the first line to itself (it shrinks to 85%, then
+/// cuts in the middle: `workst…desk`), and the road is the second line — one
+/// blue "Tailscale" or one yellow "This Wi-Fi only"; on an iPad, with the name
+/// it is reached by beside it. TAIL-2's chip beside the name, which left the
+/// name about seven characters on an iPhone, is gone.
 struct HostSwitcher: View {
     let title: String
     let records: [PairedHostRecord]
     /// N-26 rev 5: no host switching while a Remote session owns the machine.
     let locked: Bool
+    /// The road this host is set to, connected or not.
+    var road: HostRoad? = nil
+    /// iPad: room for the address beside the road word.
+    var wide = false
     let onSelect: (PairedHostRecord) -> Void
 
     var body: some View {
@@ -321,19 +362,28 @@ struct HostSwitcher: View {
                 TextTap(record.hostName) { onSelect(record) }
             }
         } label: {
-            HStack(spacing: 4) {
-                Text(title)
-                    .font(OmodachiTheme.font("heading"))
-                    .kerning(-0.2)
-                    .foregroundStyle(OmodachiTheme.current.color(.brightForeground))
-                    .lineLimit(1).truncationMode(.tail)
-                Glyph(Icon.chevronDown, step: "icon-small")
-                    .foregroundStyle(OmodachiTheme.secondaryText)
-                // N-26: the control itself is the report — dimmed, with its
-                // chevron dead — and the chip beside it is a label, not a
-                // sentence explaining the rule. The reason a screen reader
-                // needs is on `accessibilityValue`.
-                if locked { StateChip(text: Strings.menuHostLocked) }
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Text(title)
+                        .font(OmodachiTheme.font("heading"))
+                        .kerning(-0.2)
+                        .foregroundStyle(OmodachiTheme.current.color(.brightForeground))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .truncationMode(.middle)
+                        .accessibilityIdentifier("panel-host-name")
+                    Glyph(Icon.chevronDown, step: "icon-small")
+                        .foregroundStyle(OmodachiTheme.secondaryText)
+                    // N-26: the control itself is the report — dimmed, with its
+                    // chevron dead — and the chip beside it is a label, not a
+                    // sentence explaining the rule. The reason a screen reader
+                    // needs is on `accessibilityValue`.
+                    if locked { StateChip(text: Strings.menuHostLocked) }
+                }
+                if let road {
+                    RoadLine(road: road, showsAddress: wide, size: 12)
+                        .accessibilityIdentifier("panel-host-road")
+                }
             }
             .frame(minHeight: NativeBarMetrics.hit)
             .contentShape(Rectangle())
@@ -341,7 +391,8 @@ struct HostSwitcher: View {
         }
         .disabled(locked)
         .accessibilityLabel(Strings.menuHostCurrent)
-        .accessibilityValue(locked ? Strings.menuHostLockedValue(title) : title)
+        .accessibilityValue(locked ? Strings.menuHostLockedValue(title)
+                            : [title, road.map(HostRoadWords.a11y)].compactMap { $0 }.joined(separator: " · "))
         .accessibilityIdentifier("panel-host-switcher")
     }
 }

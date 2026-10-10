@@ -32,14 +32,27 @@ enum SafeAreaLayoutPolicy {
     /// What the panel area has to clear: three sides of the window's own insets.
     /// The fourth is the edge the bar is on, and the content does not start
     /// there — the bar does.
-    static func stage(edge: HostBarPosition, window: EdgeInsets) -> EdgeInsets {
-        switch edge {
-        case .left:  EdgeInsets(top: window.top, leading: 0, bottom: window.bottom, trailing: window.trailing)
-        case .right: EdgeInsets(top: window.top, leading: window.leading, bottom: window.bottom, trailing: 0)
-        case .top:   EdgeInsets(top: 0, leading: window.leading, bottom: window.bottom, trailing: window.trailing)
+    ///
+    /// HERDR-5: `keyboard` is how much of the window the soft keyboard really
+    /// covers (`KeyboardOverlapReader`). The whole layout — bar and panel — is
+    /// lifted by that much (`keyboardLift`), and the panel's own bottom inset
+    /// is what the home indicator still needs above the keyboard's top edge,
+    /// which is nothing once a keyboard is up. Before, SwiftUI's keyboard area
+    /// lifted the layout and the indicator's 34 points were added on top: a
+    /// band between the Herdr bar and an iPhone keyboard.
+    static func stage(edge: HostBarPosition, window: EdgeInsets, keyboard: CGFloat = 0) -> EdgeInsets {
+        let bottom = max(0, window.bottom - max(0, keyboard))
+        return switch edge {
+        case .left:  EdgeInsets(top: window.top, leading: 0, bottom: bottom, trailing: window.trailing)
+        case .right: EdgeInsets(top: window.top, leading: window.leading, bottom: bottom, trailing: 0)
+        case .top:   EdgeInsets(top: 0, leading: window.leading, bottom: bottom, trailing: window.trailing)
         case .bottom: EdgeInsets(top: window.top, leading: window.leading, bottom: 0, trailing: window.trailing)
         }
     }
+
+    /// HERDR-5: how far the panels stage (bar and panel together, as the
+    /// keyboard area used to move them) rides up on a docked keyboard.
+    static func keyboardLift(_ keyboard: CGFloat) -> CGFloat { max(0, keyboard) }
 
     /// A surface with no bar of its own clears all four. The Remote picture is
     /// not one of these: it is edge to edge on purpose (A-58).

@@ -1,0 +1,22 @@
+{
+  "status": "completed",
+  "result": {
+    "state": "idle",
+    "cwd": "/home/fixture/.local/share/omodachi/agent-workspace",
+    "name": null,
+    "model": "gpt-6-astra",
+    "summary": "Idle in /home/fixture/.local/share/omodachi/agent-workspace with gpt-6-astra."
+  },
+  "display": {
+    "key": "status",
+    "args": {
+      "state": "idle",
+      "cwd": "/home/fixture/.local/share/omodachi/agent-workspace",
+      "name": null,
+      "model": "gpt-6-astra"
+    }
+  },
+  "command_id": "status",
+  "request_id": "request-fixture-03",
+  "contract_revision": "omodachi.v1"
+}

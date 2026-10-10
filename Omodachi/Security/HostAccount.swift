@@ -52,11 +52,16 @@ enum HostAccount {
         let account = HostAccount.canonical(rawAccount)
         // Read the SSH target before the pin that carries it is deleted.
         let ssh = pins.load(account: account)?.ssh
+        let hostID = pins.load(account: account)?.hostID
         var complete = true
         // The credential first: it is the record that refuses a new pairing.
         do { try credentials.removeToken(account: account) } catch { complete = false }
         do { try pins.remove(account: account) } catch { complete = false }
         if let ssh { try? hostKeys.reset(host: ssh.host, port: ssh.port) }
+        // TAIL-2 P0-4: the pin a paired host's SSH key lives under.
+        if let hostID, let ssh {
+            try? hostKeys.reset(host: HostTrustCoordinator.hostKeyIdentity(hostID: hostID), port: ssh.port)
+        }
         // AUTH-1: the approval key goes with everything else. It authorizes
         // nothing once the host no longer holds its public half, but a key
         // left behind for a host this device has forgotten is still a key

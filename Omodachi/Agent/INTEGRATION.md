@@ -134,30 +134,18 @@ existing transport conformances compiling while A adds HTTP. These placeholders
 are not implemented handoff. Tests now prove no confirm on open/prepare/Not now,
 exactly one confirm after explicit review, and same-thread snapshot after success.
 
-## Native slash commands (current slice)
+## Slash commands: none on the phone (AGENT-PLAN-1)
 
-A implements new transport methods:
-- slashCommands(): GET `/v1/agent/default/chat/commands`, decode AgentSlashCatalog
-  (revision/provider/provider_version/commands id/name/description/argument_hint/
-  execution/available/reason/turn_policy; extra contract_revision is ignored).
-- executeSlash(commandID:revision:arguments:requestID:): POST
-  `/v1/agent/default/chat/commands/{id}:execute` with revision, arguments unchanged,
-  request_id. Map status/command_id/result to AgentSlashResult. For
-  native_action_required map native_request.action/arguments to
-  AgentSlashNativeRequest; onNativeCommand opens the existing recognized native UI.
-  Unknown native actions remain unsupported; never feed their text into turn/start.
-
-Composer text beginning with / opens the provider command list. It supports name
-filtering, descriptions, argument hints and precise unsupported feedback. Selecting
-only changes the draft; Run executes. The whitespace separator and all arguments
-are preserved exactly. Code blocks, quoted lines and embedded slash stay normal
-chat. Unknown/unsupported slash stays in draft and never becomes a model prompt.
-Treat as message text explicitly opts back into literal ordinary send.
-
-No command runs on initialization/list loading/selection. New/reset/context-changing
-commands remain unsupported until an explicit native confirmation flow is wired;
-this component never blindly executes a native_request. Current turn_policy allowed
-works during a turn; idle_required/interrupts do not silently interrupt current work.
+Leo (2026-10-07): "甚至是 / 的优化整个都可以砍掉 只透传". There is no slash list, no
+`/` button, no hint and no per-command answer any more. Whatever is typed is
+sent to `POST /v1/agent/default/chat/messages` as typed - `/model`, `/new`,
+`/vim` included (the header has the model picker and New conversation).
+Core handles four basics itself and says so in the send answer
+(`command`, and `delivery: "command"` when no turn starts): `/plan` (codex's
+Plan mode, shown by the header chip), `/compact`, `/review [words]` and
+`/diff` (the conversation's change cards, drawn as a card here).
+`AgentChatModel.sendAnswered` settles the echo and the phase from that answer.
+Core still serves `…/chat/commands` for older Apps; this one never calls it.
 A may add the corresponding explicit interaction later. Full official command list
 and exact supported subset come from B; UI does not claim every command works.
 

@@ -511,7 +511,9 @@ private actor FixtureCompanion: CompanionServing {
             XCTAssertEqual(bar.nativeLayout?.position, .top)
             XCTAssertEqual(bar.nativeLayout?.left, ["logo", "workspaces", "focus"])
             XCTAssertEqual(bar.nativeLayout?.center, ["clock"])
-            XCTAssertEqual(bar.nativeLayout?.right, ["tray", "agent", "stream"])
+            // POLISH-U: core names the agent module `agent_usage` now, and
+            // lists network, audio and power, which have no state here.
+            XCTAssertEqual(bar.nativeLayout?.right, ["tray", "agent", "unsupported", "unsupported", "unsupported", "stream"])
             XCTAssertNil(unavailable.nativeLayout)
             XCTAssertEqual(state.workspace?.items?.count, 10)
             XCTAssertEqual(state.workspace?.items?.first?.selectEntryID, "omodachi.workspace.select.1")

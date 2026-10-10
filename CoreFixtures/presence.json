@@ -1,0 +1,17 @@
+{
+  "contract_revision": "omodachi.v1",
+  "device_id": "ipad-fixture",
+  "foreground": true,
+  "alerts": [
+    "agent_approval",
+    "agent_needs_input",
+    "herdr_blocked",
+    "host_notification"
+  ],
+  "quiets": [
+    "agent_approval",
+    "agent_needs_input",
+    "herdr_blocked",
+    "host_notification"
+  ]
+}

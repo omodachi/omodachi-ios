@@ -237,6 +237,69 @@ import XCTest
         XCTAssertEqual(none.resolvedDefault, .vnc)
     }
 
+    // MARK: - REMOTE-FIX-1 red only for a press that cannot stream
+
+    private func capabilities(sunshine: Bool, reason: String?, vnc: Bool, defaultBackend: String) throws -> RemoteCapabilitiesDTO {
+        let json = """
+        {"backends":{"sunshine":{"available":\(sunshine),"reason":\(reason.map { "\"\($0)\"" } ?? "null"),
+                                 "backend":"wlr","encoder":"vaapi","codecs":["h264"]},
+                     "vnc":{"available":\(vnc),"reason":null}},
+         "modes":["extend","takeover"],"placement_options":["right"],
+         "lock_local_input_supported":true,"encoder_limits":null,"default_backend":"\(defaultBackend)"}
+        """
+        return try JSONDecoder().decode(RemoteCapabilitiesDTO.self, from: Data(json.utf8))
+    }
+
+    /// Leo's report: Sunshine chosen, the host says it cannot run, the press
+    /// connects over VNC - under a red line. The line is quiet now, and says
+    /// what the press does.
+    func testASunshineTheHostCannotRunIsAQuietLineWhenVNCCarriesThePress() throws {
+        let down = try capabilities(sunshine: false, reason: "sunshine_desktop_unavailable", vnc: true,
+                                    defaultBackend: "vnc")
+        XCTAssertEqual(RemoteBackendChoice.sunshine.effective(down), .vnc)
+        let notice = RemoteEntryNotice.make(choice: .sunshine, capabilities: down)
+        XCTAssertEqual(notice, .quiet(Strings.remoteSunshineFallsBackToVNC))
+        XCTAssertEqual(notice?.isWarning, false)
+        // Auto already resolves to VNC and says nothing, as before.
+        XCTAssertNil(RemoteEntryNotice.make(choice: .auto, capabilities: down))
+        XCTAssertNil(RemoteEntryNotice.make(choice: .vnc, capabilities: down))
+    }
+
+    func testRedIsForAPressThatCannotStartAStreamAtAll() throws {
+        let nothing = try capabilities(sunshine: false, reason: "sunshine_desktop_unavailable", vnc: false,
+                                       defaultBackend: "sunshine")
+        let red = RemoteEntryNotice.error(RemoteReasonCopy.sentence("sunshine_desktop_unavailable"))
+        XCTAssertEqual(RemoteEntryNotice.make(choice: .sunshine, capabilities: nothing), red)
+        XCTAssertEqual(RemoteEntryNotice.make(choice: .auto, capabilities: nothing), red)
+        XCTAssertEqual(RemoteEntryNotice.make(choice: .sunshine, capabilities: nothing)?.isWarning, true)
+        // The control socket being down is the same: nothing else can carry it.
+        let control = try capabilities(sunshine: false, reason: "sunshine_control_unavailable", vnc: false,
+                                       defaultBackend: "sunshine")
+        XCTAssertEqual(RemoteEntryNotice.make(choice: .sunshine, capabilities: control),
+                       .error(RemoteReasonCopy.sentence("sunshine_control_unavailable")))
+    }
+
+    func testAWorkingSunshineSaysNothingOrItsAdvisory() throws {
+        // Core's answer for an unpinned fork whose probe chose VAAPI.
+        let working = try capabilities(sunshine: true, reason: nil, vnc: true, defaultBackend: "sunshine")
+        XCTAssertNil(RemoteEntryNotice.make(choice: .sunshine, capabilities: working))
+        XCTAssertNil(RemoteEntryNotice.make(choice: .auto, capabilities: working))
+        XCTAssertEqual(RemoteBackendChoice.sunshine.effective(working), .sunshine)
+        let software = try capabilities(sunshine: true, reason: "sunshine_assets_missing", vnc: true,
+                                        defaultBackend: "sunshine")
+        XCTAssertEqual(RemoteEntryNotice.make(choice: .sunshine, capabilities: software),
+                       .advisory(RemoteReasonCopy.sentence("sunshine_assets_missing")))
+        XCTAssertNil(RemoteEntryNotice.make(choice: .auto, capabilities: nil))
+    }
+
+    func testAnExplicitChoiceStandsWhileItCanRun() throws {
+        let both = try capabilities(sunshine: true, reason: nil, vnc: true, defaultBackend: "sunshine")
+        XCTAssertEqual(RemoteBackendChoice.vnc.effective(both), .vnc)
+        let vncDown = try capabilities(sunshine: true, reason: nil, vnc: false, defaultBackend: "sunshine")
+        XCTAssertEqual(RemoteBackendChoice.vnc.effective(vncDown), .sunshine)
+        XCTAssertEqual(RemoteBackendChoice.sunshine.effective(nil), .sunshine)
+    }
+
     // MARK: - §15 ⑧ who is holding the host (core §1.2)
 
     func testTheOccupiedMessageNamesTheDeviceRatherThanSayingSomebody() {

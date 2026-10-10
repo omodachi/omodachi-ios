@@ -1,0 +1,102 @@
+{
+  "agent": "claude-code",
+  "family": "claude",
+  "quick": [
+    {
+      "id": null,
+      "title": "bestätigen",
+      "items": [
+        "ja",
+        "nein"
+      ],
+      "operator": true
+    },
+    {
+      "id": null,
+      "title": "häufig",
+      "items": [
+        "weiter",
+        "nochmal"
+      ],
+      "operator": true
+    }
+  ],
+  "keys": [
+    {
+      "label": "Back",
+      "keys": [
+        "shift+Tab"
+      ],
+      "danger": false,
+      "operator": true
+    },
+    {
+      "label": "Quit",
+      "keys": [
+        "ctrl+d"
+      ],
+      "danger": true,
+      "operator": true
+    }
+  ],
+  "harness": [
+    {
+      "id": null,
+      "label": "Status",
+      "command": "/statusline",
+      "confirm": false,
+      "operator": true
+    },
+    {
+      "id": null,
+      "label": "clear",
+      "command": "/clear",
+      "confirm": true,
+      "operator": true
+    }
+  ],
+  "commands": [
+    {
+      "command": "/statusline",
+      "description": "Set the status line",
+      "arg_hint": null,
+      "confirm": false
+    },
+    {
+      "command": "/standup",
+      "description": "Post today's standup",
+      "arg_hint": null,
+      "confirm": false
+    },
+    {
+      "command": "/clear",
+      "description": null,
+      "arg_hint": null,
+      "confirm": true
+    }
+  ],
+  "sources": [
+    {
+      "file": "quick-replies.toml",
+      "origin": "collie",
+      "warning": null
+    },
+    {
+      "file": "keys.toml",
+      "origin": "omodachi",
+      "warning": {
+        "code": "operator_rows_dropped",
+        "detail": "ignoring \"Page\" - a chord is not a key herdr accepts"
+      }
+    },
+    {
+      "file": "commands.toml",
+      "origin": "omodachi",
+      "warning": {
+        "code": "operator_file_unparsed",
+        "detail": "Illegal character '\\n' (at line 2, column 23)"
+      }
+    }
+  ],
+  "contract_revision": "omodachi.v1"
+}

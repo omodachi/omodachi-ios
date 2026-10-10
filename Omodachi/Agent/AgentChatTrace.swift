@@ -44,7 +44,7 @@ extension AgentChatTrace {
         case .turnFinished(let id, _): self.event("turn-finished", turn: id, sequence: sequence)
         case .turnFailed(let id, _): self.event("turn-failed", turn: id, sequence: sequence)
         case .approvalRequested, .approvalResolved, .statusChanged, .usageUpdated,
-             .connectionLost, .ignored:
+             .connectionLost, .ignored, .toolOutput, .queueChanged, .checklistUpdated:
             break
         }
     }

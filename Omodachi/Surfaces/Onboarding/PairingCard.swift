@@ -42,6 +42,11 @@ struct PairingCard: View {
 
     private var hostName: String { flow.candidate?.name ?? Strings.pairingThisComputer }
 
+    private var road: HostRoad? {
+        guard let url = flow.candidate?.url, let host = url.host, !host.isEmpty else { return nil }
+        return HostRoad(host: host, port: url.port ?? 8099)
+    }
+
     // MARK: - The head every state shares
 
     @ViewBuilder private var head: some View {
@@ -54,11 +59,15 @@ struct PairingCard: View {
             .font(OmodachiTheme.font(size: 22))
             .foregroundStyle(OmodachiTheme.text)
             .padding(.horizontal, 12)
-        Text(flow.candidate?.secondLine ?? "")
-            .font(OmodachiTheme.font(size: 11))
-            .foregroundStyle(OmodachiTheme.tertiaryText)
-            .padding(.horizontal, 12)
-            .padding(.top, 4)
+        // TAIL-3b S04 / W04: the road, said once, on its own line under the
+        // name — `Tailscale · <MagicDNS name>` or `This Wi-Fi only · <address>`.
+        // Never the 100.x, never "via" twice.
+        if let road {
+            RoadLine(road: road)
+                .padding(.horizontal, 12)
+                .padding(.top, 4)
+                .accessibilityIdentifier("pair-address")
+        }
         grantLine
     }
 
@@ -116,6 +125,10 @@ struct PairingCard: View {
         .padding(.top, 10)
         .accessibilityIdentifier("pair-waiting")
         note(Strings.pairingApproveOnComputer)
+        // TAIL-3b E08: core says this device holds a credential there already.
+        if flow.alreadyPaired {
+            StatusLine(text: Strings.pairingAlreadyPaired(hostName), kind: .warn, identifier: "pair-already-paired")
+        }
         FlowButton(title: Strings.actionCancel, kind: .ghost) { flow.backToList() }
             .padding(.horizontal, 12)
             .accessibilityIdentifier("pair-cancel")

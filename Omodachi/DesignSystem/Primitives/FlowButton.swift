@@ -122,6 +122,9 @@ struct HostCandidate: Identifiable, Equatable, Sendable {
 struct HostRow: View {
     let candidate: HostCandidate
     var trailing: String?
+    /// TAIL-3b: a paired host's second line is its road ("Tailscale · name",
+    /// "This Wi-Fi only · address") instead of the id suffix and address.
+    var road: HostRoad? = nil
     let action: () -> Void
 
     var body: some View {
@@ -135,10 +138,14 @@ struct HostRow: View {
                         .font(OmodachiTheme.font("heading"))
                         .foregroundStyle(OmodachiTheme.text)
                         .lineLimit(1)
-                    Text(candidate.secondLine)
-                        .font(OmodachiTheme.font(size: 11))
-                        .foregroundStyle(OmodachiTheme.tertiaryText)
-                        .lineLimit(1)
+                    if let road {
+                        RoadLine(road: road)
+                    } else {
+                        Text(candidate.secondLine)
+                            .font(OmodachiTheme.font(size: 11))
+                            .foregroundStyle(OmodachiTheme.tertiaryText)
+                            .lineLimit(1)
+                    }
                 }
                 Spacer(minLength: 6)
                 StateChip(text: trailing ?? candidate.statusLabel, kind: candidate.pairing)

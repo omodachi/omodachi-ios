@@ -1,0 +1,9 @@
+{
+  "action": "text",
+  "pane": "w1:p2",
+  "delivered": false,
+  "submitted": false,
+  "reason": "herdr_agent_blocked",
+  "proof": null,
+  "contract_revision": "omodachi.v1"
+}

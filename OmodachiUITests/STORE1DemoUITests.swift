@@ -74,8 +74,12 @@ final class STORE6DemoUITests: XCTestCase {
         let lock = any["menu-system.lock"].firstMatch
         XCTAssertTrue(lock.waitForExistence(timeout: 5))
         lock.tap()
-        XCTAssertTrue(any["menu-confirm-system.lock"].firstMatch.waitForExistence(timeout: 2), "the first tap arms it")
-        lock.tap()
+        let armed = any["menu-confirm-system.lock"].firstMatch
+        XCTAssertTrue(armed.waitForExistence(timeout: 2), "the first tap arms it")
+        // Let that question lapse, then ask and answer inside the window
+        // without a lookup between the taps (MENU4ConfirmUITests).
+        XCTAssertTrue(armed.waitForNonExistence(timeout: 5), "the question goes away on its own")
+        lock.tapTwiceInsideTheConfirmWindow(in: app)
         let toast = any["panel-toast"].firstMatch
         XCTAssertTrue(toast.waitForExistence(timeout: 3))
         XCTAssertTrue(toast.label.contains("ran on the demo computer"), toast.label)

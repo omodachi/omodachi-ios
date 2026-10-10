@@ -12,40 +12,51 @@ import SwiftUI
 /// settle core's resource model first.
 struct AgentPanelView: View {
     @ObservedObject var store: AgentChatStore
+    @EnvironmentObject private var home: HomeStore
+    @EnvironmentObject private var stores: SurfaceStores
 
     var body: some View {
-        AgentChatView(model: $store.model,
+        AgentChatView(model: $store.model, attachments: store.attachments,
+                      face: home.agentFace(unseenOnly: false),
             onSend: { _ in Task { await store.send() } },
             onCancel: { Task { await store.cancel() } },
             onRetry: { Task { await store.retry() } },
             onPrepareHandoff: { Task { await store.prepareHandoff() } },
             onConfirmHandoff: { Task { await store.confirmPreparedHandoff() } },
             onDeferHandoff: { store.deferHandoff() },
-            onLoadSlash: { Task { await store.loadSlashCommands() } },
-            onSelectSlash: { store.selectSlash($0) },
             onSteer: { Task { await store.steer() } },
             onDecide: { id, decision in Task { await store.decide(requestID: id, decision: decision) } },
             onAnswer: { id, input in Task { await store.answer(requestID: id, input: input) } },
             onLoadModels: { Task { await store.loadModels() } },
-            onChooseModel: { store.choose(model: $0, effort: $1) })
+            onChooseModel: { store.choose(model: $0, effort: $1) },
+            onAskNew: { store.askNewConversation() },
+            onCancelNew: { store.cancelNewConversation() },
+            onConfirmNew: { Task { await store.confirmNewConversation() } },
+            onLeavePlan: { Task { await store.leavePlan() } },
+            onImplementPlan: { Task { await store.implementPlan() } },
+            onCloseDiff: { store.closeDiff() },
+            onQueue: { Task { await store.queueDraft() } },
+            onQueueItem: { id, action, text in Task { await store.queueItem(id, action, text: text) } },
+            onLoadEarlier: { Task { await store.loadEarlier() } },
+            onDeclineWhy: { id, reason in Task { await store.declineWithReason(requestID: id, reason: reason) } },
+            onOpenLink: { url, source in
+                AppLinkTrace.note("open tapped scheme=\(url.scheme ?? "-")") // non-copy: a log line
+                stores.links.open(url: url, from: source)
+            })
             .task {
-                AgentApprovalNotifier.shared.prepare()
-                store.onApprovalRequested = { approval in
-                    AgentApprovalNotifier.shared.approvalRequested(
-                        approval, agentName: store.model.identity?.agentID ?? Strings.panelAgent)
-                }
+                // NOTIFY-2: the alerts are the app's now (`AttentionNotifier`),
+                // read from the host's events whatever panel is up. Entering
+                // here still asks for the quiet delivery it always asked for,
+                // never for more; "Turn on alerts" is the real question.
+                AttentionNotifier.shared.prepareQuietly()
                 await store.open()
             }
-            // A prompt that stopped waiting — answered here or on the host —
-            // has no reason to keep a banner in Notification Centre.
-            .onChange(of: store.model.approvals) { _, approvals in
-                for approval in approvals where !approval.isPending {
-                    AgentApprovalNotifier.shared.resolved(requestID: approval.requestID)
-                }
-            }
-            .onDisappear {
-                store.onApprovalRequested = nil
-                store.leave()
-            }
+            // REL2-POLISH-1: counted, so the old panel going away after a
+            // turn of the phone does not stop the new one's observation.
+            .onDisappear { store.panelDisappeared() }
+            // MOTION-1: a finished or failed turn shown here has been seen; the
+            // bar goes back to the vendor's mark.
+            .onAppear { store.panelAppeared(); home.markAgentSeen() }
+            .onChange(of: home.state.agentActivity) { _, _ in home.markAgentSeen() }
     }
 }

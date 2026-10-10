@@ -46,14 +46,11 @@ final class MENU4ConfirmUITests: XCTestCase {
 
     func testTheFirstTapAsksAndTheSecondSends() {
         let lock = openLock()
-        lock.tap()
         let armed = app.descendants(matching: .any)["menu-confirm-system.lock"].firstMatch
-        XCTAssertTrue(armed.waitForExistence(timeout: 2), "the first tap arms the row")
-        // STORE-6: the second tap has to land inside the two-second window,
-        // so nothing slow happens between the taps. A screenshot there made
-        // this test fail whenever the simulator was busy: the window lapsed
-        // and the second tap only armed the row again.
-        lock.tap()
+        // STORE-6 / INTEGRATE-3: the second tap has to land inside the
+        // two-second window, so nothing slow happens between the taps - no
+        // screenshot, no lookup. Both taps go to where the row was measured.
+        lock.tapTwiceInsideTheConfirmWindow(in: app)
         XCTAssertTrue(toast.waitForExistence(timeout: 3), "the second tap sends it")
         XCTAssertTrue(toast.label.contains("Lock"), toast.label)
         XCTAssertFalse(armed.exists)
@@ -92,5 +89,21 @@ final class MENU4ConfirmUITests: XCTestCase {
         shot.name = name
         shot.lifetime = .keepAlways
         add(shot)
+    }
+}
+
+extension XCUIElement {
+    /// A confirm row (Study 04 A-68) sends only on a second tap inside
+    /// `ConfirmArm.window` (two seconds). `tap()` on an element resolves it
+    /// again first - a query over the whole menu - and on a busy simulator
+    /// that alone outlasted the window, so the second tap only armed the row
+    /// again (MENU4ConfirmUITests, STORE6DemoUITests). The row's centre is
+    /// measured once and both taps go to that point.
+    func tapTwiceInsideTheConfirmWindow(in app: XCUIApplication) {
+        let frame = self.frame
+        let centre = app.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
+        centre.tap()
+        centre.tap()
     }
 }

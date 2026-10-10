@@ -57,7 +57,7 @@ import XCTest
                       "an unpaired app is the host list and nothing else")
         // The side-by-side host does not advertise itself (`--discovery off`),
         // so it is typed in. Manual add starts the handshake directly.
-        let manual = app.descendants(matching: .any)["connect-add-manual"]
+        let manual = OnboardingNavigation.manualAdd(app)
         XCTAssertTrue(appears(manual, seconds: 30), "the host list has no manual entry")
         manual.tap()
         let field = app.textFields["connect-manual-field"]

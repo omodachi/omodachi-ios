@@ -361,7 +361,7 @@ import XCTest
 
 final class BarModelTests: XCTestCase {
     private let entries = 6
-    private let five = QuickAction.allCases
+    private let three = QuickAction.allCases
 
     /// Study 04 §6, line by line. `available` is the long edge minus the safe
     /// area the window reserves at its two ends.
@@ -372,62 +372,65 @@ final class BarModelTests: XCTestCase {
                                   ("iPhone landscape", CGFloat(852 - 21)),
                                   ("iPhone portrait", CGFloat(852 - 34))] {
             let plan = BarMetrics.plan(available: available, workspaces: workspaces,
-                                       occupied: [1, 2, 7], entries: entries, actions: five)
+                                       occupied: [1, 2, 7], entries: entries, actions: three)
             XCTAssertEqual(plan.ladder, .full, name)
             XCTAssertEqual(plan.workspaces, workspaces, name)
         }
     }
 
-    /// 318 + 220 + 264 + 34 = 836 ≤ 852. rev 5's headline: with the microphone
-    /// gone the phone no longer gives anything up.
+    /// 318 + 132 + 264 + 34 = 748 ≤ 852. rev 5's headline: with the microphone
+    /// gone the phone no longer gives anything up (and POLISH-R took the end
+    /// square and the rotation lock out too).
     func testThePhoneInPortraitNoLongerNeedsTheLadder() {
         let plan = BarMetrics.plan(available: 852 - 34, workspaces: [1, 2, 3, 4, 5, 7],
-                                   occupied: [1, 2, 7], entries: 6, actions: five)
+                                   occupied: [1, 2, 7], entries: 6, actions: three)
         XCTAssertEqual(plan.ladder, .full)
         XCTAssertEqual(plan.centreSlot, 44)
-        XCTAssertEqual(plan.visibleActions.count, 5)
+        XCTAssertEqual(plan.visibleActions.count, 3)
     }
 
     /// The Duo's outer screen is the one combination the study admits it cannot
-    /// always solve: 678 high, six workspaces, five actions. Study 04 §7 open
-    /// question 2 does the arithmetic — with four or fewer occupied workspaces
+    /// always solve: 678 high, six workspaces, three actions. Study 04 §7 open
+    /// question 2 does the arithmetic — with five or fewer occupied workspaces
     /// the ladder's last rung is enough, and beyond that the workspace segment
     /// has to scroll.
     func testTheDuoOuterScreenWalksTheWholeLadder() {
         let workspaces = [1, 2, 3, 4, 5, 7]
         let three = BarMetrics.plan(available: 678 - 34, workspaces: workspaces,
-                                    occupied: [1, 2, 7], entries: 6, actions: five)
+                                    occupied: [1, 2, 7], entries: 6, actions: three)
         XCTAssertEqual(three.ladder, .occupiedWorkspaces)
         XCTAssertFalse(three.scrollsWorkspaces)
         XCTAssertEqual(three.workspaces, [1, 2, 7], "only the ones holding something")
-        XCTAssertEqual(three.visibleActions, BarMetrics.overflowActions)
-        XCTAssertEqual(three.overflowActions, [.rotationLock, .hostAudio])
+        XCTAssertEqual(three.visibleActions, QuickAction.allCases,
+                       "a `…` standing in for one action would save nothing, so all three stay")
+        XCTAssertTrue(three.overflowActions.isEmpty)
 
-        // Five occupied: 44 + 10 + 5×44 + 4×32 + 264 = 666 > 644. The entries
+        // Six occupied: 44 + 10 + 6×44 + 3×32 + 264 = 678 > 644. The entries
         // and the centre are already as small as they are allowed to get, so
         // the squares scroll rather than the way in shrinking.
-        let five = BarMetrics.plan(available: 678 - 34, workspaces: workspaces,
-                                   occupied: [1, 2, 3, 4, 7], entries: 6, actions: Self.actions)
-        XCTAssertEqual(five.ladder, .scrollingWorkspaces)
-        XCTAssertTrue(five.scrollsWorkspaces)
-        XCTAssertEqual(five.visibleActions.count, 3, "入口段永远不许收")
+        let six = BarMetrics.plan(available: 678 - 34, workspaces: workspaces,
+                                  occupied: [1, 2, 3, 4, 5, 7], entries: 6, actions: Self.actions)
+        XCTAssertEqual(six.ladder, .scrollingWorkspaces)
+        XCTAssertTrue(six.scrollsWorkspaces)
+        XCTAssertEqual(six.visibleActions.count, 3, "入口段永远不许收")
     }
 
     private static let actions = QuickAction.allCases
 
     func testTheLadderIsWalkedInOrder() {
         let workspaces = [1, 2, 3, 4, 5, 7]
-        // Just short of full: 318 + 220 + 264 = 802.
-        XCTAssertEqual(BarMetrics.plan(available: 801, workspaces: workspaces, occupied: [1],
-                                       entries: 6, actions: five).ladder, .compactCentre)
-        // Short of the compact centre too: 318 + 160 + 264 = 742.
-        XCTAssertEqual(BarMetrics.plan(available: 741, workspaces: workspaces, occupied: [1],
-                                       entries: 6, actions: five).ladder, .overflowCentre)
+        // Just short of full: 318 + 132 + 264 = 714.
+        XCTAssertEqual(BarMetrics.plan(available: 713, workspaces: workspaces, occupied: [1],
+                                       entries: 6, actions: three).ladder, .compactCentre)
+        // Short of the compact centre too: 318 + 96 + 264 = 678. With three
+        // actions the overflow saves nothing, so the workspaces give next.
+        XCTAssertEqual(BarMetrics.plan(available: 677, workspaces: workspaces, occupied: [1],
+                                       entries: 6, actions: three).ladder, .occupiedWorkspaces)
     }
 
     func testTheEntriesAndTheCentreNeverShrinkPastTheOverflow() {
         let plan = BarMetrics.plan(available: 320, workspaces: [1, 2, 3, 4, 5, 7],
-                                   occupied: [1], entries: 6, actions: five)
+                                   occupied: [1], entries: 6, actions: three)
         XCTAssertEqual(BarMetrics.rightWidth(entries: 6), 264, "入口段永远不许收")
         XCTAssertEqual(plan.visibleActions.count, 3)
         XCTAssertEqual(plan.centreSlot, 32)
@@ -443,17 +446,17 @@ final class BarModelTests: XCTestCase {
 
     func testDisablingEntriesGivesTheBarRoomBack() {
         let workspaces = [1, 2, 3, 4, 5, 7]
-        let six = BarMetrics.plan(available: 741, workspaces: workspaces, occupied: [1],
-                                  entries: 6, actions: five)
-        let four = BarMetrics.plan(available: 741, workspaces: workspaces, occupied: [1],
-                                   entries: 4, actions: five)
-        XCTAssertEqual(six.ladder, .overflowCentre)
-        XCTAssertEqual(four.ladder, .full, "two entries off is 88 points back")
+        let six = BarMetrics.plan(available: 713, workspaces: workspaces, occupied: [1],
+                                  entries: 6, actions: three)
+        let fourEntries = BarMetrics.plan(available: 713, workspaces: workspaces, occupied: [1],
+                                          entries: 4, actions: three)
+        XCTAssertEqual(six.ladder, .compactCentre)
+        XCTAssertEqual(fourEntries.ladder, .full, "two entries off is 88 points back")
     }
 }
 
 final class QuickActionTests: XCTestCase {
-    /// Study 04 §21 board ④d: only one of the five depends on the backend.
+    /// Study 04 §21 board ④d: only one of the three depends on the backend.
     func testOnlyHostAudioEverDimsForTheBackend() {
         let states = QuickActionContext(hasSession: true, backendHasAudio: false).states()
         let dimmed = states.filter { !$0.enabled }.map(\.action)
@@ -470,21 +473,25 @@ final class QuickActionTests: XCTestCase {
 
     func testTheLocalSwitchesAreNeverDimmed() {
         let states = QuickActionContext(hasSession: true).states()
-        for action in [QuickAction.keyboard, .rotationLock, .pointerMode] {
+        for action in [QuickAction.keyboard, .pointerMode] {
             XCTAssertTrue(states.first { $0.action == action }?.enabled == true, "\(action)")
         }
     }
 
-    /// The centre segment only exists while a session does, so `endSession` is
-    /// never on screen in the state that would dim it.
-    func testEndSessionIsTheOneThatCannotDimAlone() {
-        XCTAssertFalse(QuickActionContext(hasSession: false).states()
-            .first { $0.action == .endSession }?.enabled == true)
+    /// POLISH-R: the end square only opened the Remote panel, which Leo read
+    /// as a pause button that does nothing, and the rotation lock is the
+    /// system's job. Both are gone; ending is the session card's two-step End,
+    /// one tap from the logo mark.
+    func testThereIsNoEndSquareAndNoRotationLock() {
+        let names = QuickAction.allCases.map(\.rawValue)
+        XCTAssertFalse(names.contains("endSession"))
+        XCTAssertFalse(names.contains("rotationLock"))
+        XCTAssertEqual(QuickAction.allCases, [.keyboard, .pointerMode, .hostAudio])
     }
 
     /// N-35 rev 5: the microphone is not one of them, anywhere.
     func testThereIsNoMicrophone() {
-        XCTAssertEqual(QuickAction.allCases.count, 5)
+        XCTAssertEqual(QuickAction.allCases.count, 3)
         XCTAssertFalse(QuickAction.allCases.map(\.rawValue).contains { $0.contains("mic") })
     }
 

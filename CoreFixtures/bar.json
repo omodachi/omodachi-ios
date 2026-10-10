@@ -2,6 +2,24 @@
   "source": "shell.json",
   "source_status": "fixture",
   "position": "top",
+  "modules": [
+    {
+      "id": "omarchy.network",
+      "role": "network",
+      "status": null
+    },
+    {
+      "id": "omarchy.audio",
+      "role": "audio",
+      "status": null
+    },
+    {
+      "id": "omarchy.power",
+      "role": "power",
+      "status": null
+    }
+  ],
+  "geometry": null,
   "left": [
     {
       "id": "omarchy.menu",
@@ -29,12 +47,24 @@
     },
     {
       "id": "omarchy.agents",
-      "role": "agent"
+      "role": "agent_usage"
+    },
+    {
+      "id": "omarchy.network",
+      "role": "network"
+    },
+    {
+      "id": "omarchy.audio",
+      "role": "audio"
+    },
+    {
+      "id": "omarchy.power",
+      "role": "power"
     },
     {
       "id": "omodachi.stream",
       "role": "stream"
     }
   ],
-  "revision": "bb63213e1105eb0d"
+  "revision": "69dfcb4cb4753d4b"
 }

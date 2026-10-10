@@ -68,7 +68,11 @@ final class ApprovalSignatureFormatTests: XCTestCase {
         XCTAssertEqual(signature.first, 0x30, "core parses a DER SEQUENCE and nothing else")
         XCTAssertEqual(Int(signature[1]), signature.count - 2, "DER length must cover the body exactly")
         XCTAssertNotEqual(signature.count, 64, "a raw r||s signature is refused by core")
-        XCTAssertTrue((70...72).contains(signature.count), "P-256 DER is 70-72 bytes, got \(signature.count)")
+        // r and s are DER INTEGERs: each is 32 bytes, one more when its top bit
+        // is set, and fewer when it starts with zero bytes (about 1 in 256 each),
+        // so a valid P-256 signature is 70-72 bytes most of the time but can be
+        // shorter. 8 is the floor (two one-byte integers).
+        XCTAssertTrue((8...72).contains(signature.count), "P-256 DER is at most 72 bytes, got \(signature.count)")
 
         let identity = try ApprovalKeyStore.identity(of: key)
         let point = try XCTUnwrap(Data(base64Encoded: identity.publicKey))

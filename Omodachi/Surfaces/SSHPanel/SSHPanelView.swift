@@ -67,6 +67,20 @@ private struct TerminalContent: View {
                                         appearanceRevision: OmodachiTheme.appearanceRevision)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
+            // TAIL-2 P1-1. Over the tailnet with Tailscale SSH on, port 22 is
+            // tailscaled's and the connect can wait on a browser check; the
+            // terminal says so instead of sitting on "connecting".
+            if let notice = home.sshTailscaleNotice, runtime.state != .connected, !runtime.descriptor.host.mock {
+                HStack(alignment: .top) {
+                    Glyph(symbol: "info.circle")
+                    Text(notice).font(OmodachiTheme.font("caption"))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                }
+                .padding(10).background(OmodachiTheme.warning.opacity(0.12))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("terminal-tailscale-ssh")
+            }
             if let error = runtime.errorMessage {
                 HStack {
                     Glyph(symbol: "exclamationmark.triangle")

@@ -3,8 +3,12 @@
   "transport": "wss",
   "path": "/v1/remote/sessions/rs_00000000000000000000000000000000/vnc",
   "output_id": "OMODACHI-0123456789abcdef",
+  "initial_framebuffer_pixels": {
+    "width": 2560,
+    "height": 1788
+  },
   "framebuffer_pixels": {
-    "width": 1280,
-    "height": 894
+    "width": 2560,
+    "height": 1788
   }
 }

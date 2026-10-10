@@ -1,7 +1,7 @@
 {
-  "contract_revision": "omodachi.v1.2026-09-16.1",
-  "revision": "008a589a5e4ed049",
-  "source_revision": "b403c630eb4a0709",
+  "contract_revision": "omodachi.v1",
+  "revision": "3f0af054c4448610",
+  "source_revision": "fcc7fbd06ce6a008",
   "entries": [
     {
       "label": "Go",
@@ -16,6 +16,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "root",
       "kind": "menu",
       "parent_id": "",
@@ -35,10 +36,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "root",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -54,6 +55,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "apps",
       "kind": "menu",
       "parent_id": "root",
@@ -77,10 +79,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "apps",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -96,6 +98,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "learn",
       "kind": "menu",
       "parent_id": "root",
@@ -115,10 +118,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "learn",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -134,6 +137,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "trigger",
       "kind": "menu",
       "parent_id": "root",
@@ -153,10 +157,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "trigger",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -172,6 +176,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "style",
       "kind": "menu",
       "parent_id": "root",
@@ -191,10 +196,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "style",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -210,6 +215,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "setup",
       "kind": "menu",
       "parent_id": "root",
@@ -229,10 +235,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "setup",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -248,6 +254,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "install",
       "kind": "menu",
       "parent_id": "root",
@@ -267,10 +274,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "install",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -286,6 +293,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "remove",
       "kind": "menu",
       "parent_id": "root",
@@ -305,10 +313,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "remove",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -324,6 +332,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "update",
       "kind": "menu",
       "parent_id": "root",
@@ -343,10 +352,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "update",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -362,6 +371,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "about",
       "kind": "menu",
       "parent_id": "root",
@@ -381,10 +391,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "about",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -400,6 +410,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "system",
       "kind": "menu",
       "parent_id": "root",
@@ -419,10 +430,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "system",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -438,6 +449,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "trigger.toggle",
       "kind": "menu",
       "parent_id": "trigger",
@@ -457,10 +469,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "trigger.toggle",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -478,6 +490,7 @@
       "description": "",
       "provider": "",
       "when": "",
+      "icon_kind": "none",
       "id": "trigger.toggle.notifications",
       "kind": "action",
       "parent_id": "trigger.toggle",
@@ -517,6 +530,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "install.demo",
       "kind": "action",
       "parent_id": "install",
@@ -557,6 +571,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "update.demo",
       "kind": "action",
       "parent_id": "update",
@@ -597,6 +612,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "about.demo",
       "kind": "action",
       "parent_id": "about",
@@ -637,6 +653,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "learn.demo",
       "kind": "action",
       "parent_id": "learn",
@@ -665,6 +682,48 @@
       }
     },
     {
+      "label": "Keybindings",
+      "action": "omarchy-menu-keybindings",
+      "parent": "learn",
+      "icon": "",
+      "iconFont": "",
+      "title": "",
+      "target": "",
+      "description": "",
+      "provider": "omodachi.keybindings",
+      "aliases": [],
+      "when": "",
+      "checked": "",
+      "icon_kind": "glyph",
+      "id": "learn.keybindings",
+      "kind": "action",
+      "parent_id": "learn",
+      "conditions": {
+        "when": {
+          "status": "available",
+          "value": true
+        },
+        "checked": {
+          "status": "available",
+          "value": null
+        }
+      },
+      "visible": true,
+      "checked_state": null,
+      "provider_state": {
+        "status": "unavailable",
+        "reason": "provider_adapter_unavailable"
+      },
+      "order": 17,
+      "route": {
+        "route": "native",
+        "supported": true,
+        "native_view": "shortcuts",
+        "entry_id": "learn.keybindings",
+        "ready": true
+      }
+    },
+    {
       "label": "Omodachi",
       "icon": "",
       "parent": "root",
@@ -677,6 +736,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi",
       "kind": "menu",
       "parent_id": "root",
@@ -692,14 +752,14 @@
       },
       "visible": true,
       "checked_state": null,
-      "order": 17,
+      "order": 18,
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "omodachi",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -716,6 +776,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.desktop",
       "kind": "menu",
       "parent_id": "omodachi",
@@ -731,7 +792,7 @@
       },
       "visible": true,
       "checked_state": null,
-      "order": 18,
+      "order": 19,
       "route": {
         "route": "desktop",
         "supported": true,
@@ -754,6 +815,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.agent",
       "kind": "menu",
       "parent_id": "omodachi",
@@ -769,7 +831,7 @@
       },
       "visible": true,
       "checked_state": null,
-      "order": 19,
+      "order": 20,
       "route": {
         "route": "terminal",
         "supported": true,
@@ -797,50 +859,8 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.herdr",
-      "kind": "menu",
-      "parent_id": "omodachi",
-      "conditions": {
-        "when": {
-          "status": "available",
-          "value": true
-        },
-        "checked": {
-          "status": "available",
-          "value": null
-        }
-      },
-      "visible": true,
-      "checked_state": null,
-      "order": 20,
-      "route": {
-        "route": "terminal",
-        "supported": true,
-        "argv": [
-          "herdr",
-          "session",
-          "attach",
-          "session-fixture-01"
-        ],
-        "entry_id": "omodachi.herdr",
-        "ready": true
-      }
-    },
-    {
-      "label": "Configuration plan",
-      "surface": "native:config-plan",
-      "parent": "omodachi",
-      "icon": "",
-      "iconFont": "",
-      "title": "",
-      "target": "",
-      "description": "",
-      "action": "",
-      "provider": "",
-      "aliases": [],
-      "when": "",
-      "checked": "",
-      "id": "omodachi.config",
       "kind": "menu",
       "parent_id": "omodachi",
       "conditions": {
@@ -857,10 +877,15 @@
       "checked_state": null,
       "order": 21,
       "route": {
-        "route": "native",
+        "route": "terminal",
         "supported": true,
-        "native_view": "config-plan",
-        "entry_id": "omodachi.config",
+        "argv": [
+          "herdr",
+          "session",
+          "attach",
+          "session-fixture-01"
+        ],
+        "entry_id": "omodachi.herdr",
         "ready": true
       }
     },
@@ -880,6 +905,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace",
       "kind": "menu",
       "parent_id": "omodachi",
@@ -899,10 +925,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "omodachi.workspace",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -918,6 +944,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select",
       "kind": "menu",
       "parent_id": "omodachi.workspace",
@@ -937,10 +964,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "omodachi.workspace.select",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -956,6 +983,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move",
       "kind": "menu",
       "parent_id": "omodachi.workspace",
@@ -975,10 +1003,10 @@
       "route": {
         "route": "host",
         "supported": false,
-        "reason": "route adapter is not registered",
+        "reason": "menu_row_not_invocable",
         "entry_id": "omodachi.workspace.move",
         "ready": false,
-        "readiness_reason": "route adapter is not registered"
+        "readiness_reason": "menu_row_not_invocable"
       }
     },
     {
@@ -1003,6 +1031,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.1",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1051,6 +1080,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.1",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1100,6 +1130,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.2",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1148,6 +1179,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.2",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1197,6 +1229,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.3",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1245,6 +1278,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.3",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1294,6 +1328,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.4",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1342,6 +1377,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.4",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1391,6 +1427,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.5",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1439,6 +1476,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.5",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1488,6 +1526,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.6",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1536,6 +1575,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.6",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1585,6 +1625,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.7",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1633,6 +1674,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.7",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1682,6 +1724,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.8",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1730,6 +1773,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.8",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1779,6 +1823,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.9",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1827,6 +1872,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.9",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1876,6 +1922,7 @@
       "provider": "",
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.select.10",
       "kind": "action",
       "parent_id": "omodachi.workspace.select",
@@ -1924,6 +1971,7 @@
       "description": "",
       "provider": "",
       "checked": "",
+      "icon_kind": "none",
       "id": "omodachi.workspace.move.10",
       "kind": "action",
       "parent_id": "omodachi.workspace.move",
@@ -1966,6 +2014,7 @@
       "aliases": [],
       "when": "",
       "checked": "",
+      "icon_kind": "none",
       "parent_id": "apps",
       "providerMenu": "apps",
       "conditions": {

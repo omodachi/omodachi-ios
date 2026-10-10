@@ -112,10 +112,16 @@ extension Row where Trailing == EmptyView {
 }
 
 /// A 44-high name/value line: what a setting is, and what it is set to.
+///
+/// SETTINGS-LAYOUT-1: the name is a title like every other row's (it used to
+/// be smaller than its own value), and a value too long to sit beside it goes
+/// under it instead of being cut in the middle. `long` is for the values that
+/// are always long — a fingerprint, an id — and always go under.
 struct ValueLine: View {
     let name: String
     let value: String
     var identifier: String?
+    var long = false
     /// UX-4 §2. A value that is *wrong* rather than merely informational —
     /// the host's fingerprint when it is not this device's. Nothing else in
     /// Settings needs it, and a row that is red for any other reason would
@@ -123,18 +129,7 @@ struct ValueLine: View {
     var wrong = false
 
     var body: some View {
-        HStack(spacing: OmodachiTheme.space("lg")) {
-            Text(name)
-                .font(OmodachiTheme.font("body-small"))
-                .foregroundStyle(OmodachiTheme.secondaryText)
-            Spacer(minLength: OmodachiTheme.space("lg"))
-            Text(value)
-                .font(OmodachiTheme.font("subtitle"))
-                .foregroundStyle(wrong ? OmodachiTheme.danger : OmodachiTheme.text)
-                .lineLimit(1).truncationMode(.middle)
-                .accessibilityIdentifier(identifier ?? "value-\(name)")
-        }
-        .padding(.horizontal, OmodachiTheme.rowPaddingX)
-        .frame(minHeight: RowHeight.line)
+        SettingValue(name: name, value: value, identifier: identifier,
+                     arrangement: long ? .under : .fitting, wrong: wrong)
     }
 }

@@ -52,9 +52,10 @@ final class HerdrSSHTests: XCTestCase {
         XCTAssertEqual(plain.status, .unknown)
     }
 
-    /// A pane Herdr has not titled yet says so rather than borrowing a title
-    /// from its neighbour — a freshly split pane has `"title": null`.
-    func testAnUntitledPaneSaysUntitledRatherThanBorrowingATitle() throws {
+    /// A pane Herdr has not titled yet does not borrow a title from its
+    /// neighbour — a freshly split pane has `"title": null`. HERDR-4: nor does
+    /// it show Herdr's id; it is "Pane 1" by its place in its tab.
+    func testAnUntitledPaneIsNamedByItsPlaceNotItsID() throws {
         let json = """
         {"revision": 4, "workspaces": [{"id": "w1", "focused": true, "tabs": [
           {"id": "w1:t1", "focused": true, "zoomed": false, "panes": [
@@ -63,7 +64,9 @@ final class HerdrSSHTests: XCTestCase {
              "size": {"cols": null, "rows": null}, "revision": 0}]}]}]}
         """
         let value = try JSONDecoder().decode(HerdrLayoutDTO.self, from: Data(json.utf8))
-        XCTAssertEqual(value.pane("w1:p3")?.displayTitle, "untitled")
+        XCTAssertNil(value.pane("w1:p3")?.displayTitle)
+        XCTAssertEqual(value.name(of: "w1:p3"), Strings.herdrPaneNumbered("1"))
+        XCTAssertFalse(value.name(of: "w1:p3").contains("w1:p3"))
         XCTAssertNil(value.pane("w1:p3")?.size?.cols)
         XCTAssertEqual(value.preferredPane, "w1:p3")
     }
@@ -204,12 +207,6 @@ final class HerdrSSHTests: XCTestCase {
     /// code, which is the whole point of the semantic bar.
     func testEveryControlResolvesToAHerdrRouteAndNeverToAKeyCode() throws {
         let value = try layout()
-        XCTAssertEqual(HerdrControlMapper.request(.splitRight, layout: value, selected: "w1:p1"),
-                       .pane(pane: "w1:p1", action: .split(direction: .right)))
-        XCTAssertEqual(HerdrControlMapper.request(.splitDown, layout: value, selected: "w1:p1"),
-                       .pane(pane: "w1:p1", action: .split(direction: .down)))
-        XCTAssertEqual(HerdrControlMapper.request(.zoom, layout: value, selected: "w1:p1"),
-                       .pane(pane: "w1:p1", action: .zoom(mode: .toggle)))
         XCTAssertEqual(HerdrControlMapper.request(.close, layout: value, selected: "w1:p2"),
                        .pane(pane: "w1:p2", action: .close))
 
@@ -221,17 +218,15 @@ final class HerdrSSHTests: XCTestCase {
         XCTAssertEqual(HerdrPaneAction.close.body, [:])
     }
 
-    /// Tapping a pane is absolute focus, which 0.8.2's CLI cannot do — the
-    /// bridge answers a directionless focus with the protocol's `pane.focus`.
-    /// A direction is never inferred from a tap.
-    func testATapIsAbsoluteFocusWithNoDirection() {
-        XCTAssertEqual(HerdrControlMapper.focus(pane: "w1:p2"),
-                       .pane(pane: "w1:p2", action: .focus(direction: nil)))
+    /// The wire still knows absolute focus (core keeps `pane.focus`), though
+    /// since HERDR-5 nothing in the App sends it.
+    func testAbsoluteFocusHasNoDirectionOnTheWire() throws {
         XCTAssertEqual(HerdrPaneAction.focus(direction: nil).body, [:])
         XCTAssertEqual(HerdrPaneAction.focus(direction: .left).body, ["direction": "left"])
     }
 
-    func testPaneCyclingWrapsInsideTheTabAndSaysSoWhenThereIsOnlyOnePane() throws {
+    /// ⌘[ and ⌘] walk every pane in the list, and say so when there is one.
+    func testPaneCyclingWrapsAndSaysSoWhenThereIsOnlyOnePane() throws {
         let value = try layout()
         XCTAssertEqual(HerdrControlMapper.request(.nextPane, layout: value, selected: "w1:p1"),
                        .select(pane: "w1:p2"))
@@ -251,15 +246,18 @@ final class HerdrSSHTests: XCTestCase {
                        .unsupported(reason: Strings.herdrOnlyOnePane))
     }
 
-    /// The bridge has split, zoom, focus, close and `workspaces/{id}/select`
-    /// and no tab route, so the control says why instead of doing nothing.
-    func testNewTabIsUnsupportedBecauseTheBridgeHasNoTabRoute() throws {
+    /// HERDR-3: core has had `POST …/workspaces/{id}/tabs` since `be14eb9`;
+    /// the menu's New tab now uses it.
+    func testNewTabIsTheWorkspacesTabRoute() throws {
         XCTAssertEqual(HerdrControlMapper.request(.newTab, layout: try layout(), selected: "w1:p1"),
-                       .unsupported(reason: HerdrControlMapper.noTabRoute))
+                       .newTab(workspace: "w1"))
     }
 
     func testEveryControlIsUnsupportedWithNoSelectedPane() throws {
-        for action in HerdrControlAction.allCases {
+        // HERDR-6: but a new workspace is the session's, and an empty session
+        // is exactly where the first one is made.
+        XCTAssertEqual(HerdrControlMapper.request(.newWorkspace, layout: try layout(), selected: nil), .newWorkspace)
+        for action in HerdrControlAction.allCases where action != .newWorkspace {
             guard case .unsupported = HerdrControlMapper.request(action, layout: try layout(), selected: nil) else {
                 return XCTFail("\(action) must not resolve without a pane")
             }

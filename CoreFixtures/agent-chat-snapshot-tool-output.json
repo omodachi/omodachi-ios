@@ -1,0 +1,38 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-01"
+  },
+  "rows": [
+    {
+      "kind": "tool",
+      "id": "item-fixture-build",
+      "turnID": "turn-fixture-01",
+      "name": "make",
+      "status": "succeeded",
+      "detail": "compile step 03998\ncompile step 03999\n",
+      "detail_truncated": 10464
+    }
+  ],
+  "activeTurn": "turn-fixture-01",
+  "sequence": 4,
+  "acceptedRequestIDs": [],
+  "pendingApprovals": [],
+  "status": {
+    "type": "unknown",
+    "activeFlags": [],
+    "waiting": null
+  },
+  "usage": {
+    "tokens": null,
+    "rate_limits": null,
+    "model": null,
+    "effort": null,
+    "mode": null
+  },
+  "earlier": false,
+  "queue": null,
+  "checklist": null
+}

@@ -76,7 +76,7 @@ import XCTest
         let app = try application()
         let gate = app.otherElements["onboarding-gate"]
         if !gate.waitForExistence(timeout: 10) { return }
-        let manual = app.buttons["connect-add-manual"]
+        let manual = OnboardingNavigation.manualAdd(app)
         if manual.waitForExistence(timeout: 10) {
             manual.tap()
             let field = app.textFields["connect-manual-field"]

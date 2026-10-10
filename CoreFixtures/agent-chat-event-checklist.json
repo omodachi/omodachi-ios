@@ -1,0 +1,29 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a11332-4d95-7e10-bf77-a7a95540db4b"
+  },
+  "sequence": 2,
+  "event": {
+    "type": "agent.checklist.updated",
+    "checklist": {
+      "turnID": "01a11332-1ad5-7cc0-a881-95c727fa9c45",
+      "steps": [
+        {
+          "step": "Read the config",
+          "status": "completed"
+        },
+        {
+          "step": "Change the port",
+          "status": "inProgress"
+        },
+        {
+          "step": "Run the tests",
+          "status": "pending"
+        }
+      ]
+    }
+  }
+}

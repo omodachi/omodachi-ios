@@ -94,26 +94,19 @@ private actor HandoffFixture: AgentChatTransport {
     }
 }
 
-private actor SlashFixture: AgentChatTransport {
-    var commandCalls = 0
-    var chatCalls = 0
-    var lastArguments = ""
+/// AGENT-PLAN-1 (Leo: what is typed goes through): records what reached the
+/// chat route, words and all.
+private actor PassthroughFixture: AgentChatTransport {
+    var sent: [String] = []
     let identity = AgentChatIdentity(hostID: "host", agentID: "default", provider: "codex", providerSessionID: "original-thread")
     func ensureDefault() async throws -> AgentChatSnapshot { .init(identity: identity, rows: [], activeTurn: nil, sequence: 0) }
     func snapshot(for identity: AgentChatIdentity) async throws -> AgentChatSnapshot { try await ensureDefault() }
     func events(for identity: AgentChatIdentity, after sequence: Int) async throws -> AsyncThrowingStream<AgentChatEnvelope, Error> { AsyncThrowingStream { _ in } }
-    func send(_ text: String, requestID: UUID, to identity: AgentChatIdentity) async throws { chatCalls += 1 }
+    func send(_ text: String, requestID: UUID, to identity: AgentChatIdentity) async throws { sent.append(text) }
     func interrupt(turnID: String, in identity: AgentChatIdentity) async throws {}
-    func slashCommands() async throws -> AgentSlashCatalog { .init(revision: "r1", provider: "codex", providerVersion: "fixture", commands: [
-        .init(id: "rename", name: "rename", description: "Rename", argumentHint: "name", execution: "rpc", available: true, reason: nil, turnPolicy: "idle_required"),
-        .init(id: "reset", name: "reset", description: "Unsupported", argumentHint: nil, execution: "unsupported", available: false, reason: "Not available", turnPolicy: "idle_required")]) }
-    func executeSlash(commandID: String, revision: String, arguments: String, requestID: UUID) async throws -> AgentSlashResult {
-        commandCalls += 1; lastArguments = arguments
-        return .init(status: "completed", commandID: commandID, message: "Renamed")
-    }
 }
 
-/// Typed chat state machine and slash parsing. Synthetic; no provider/host IO.
+/// Typed chat state machine. Synthetic; no provider/host IO.
 final class AgentChatModelTests: XCTestCase {
     func testTypedChatStateTransitions() {
         let identity = AgentChatIdentity(hostID: "fixture-host", agentID: "default", provider: "codex", providerSessionID: "fixture-existing-thread")
@@ -146,14 +139,6 @@ final class AgentChatModelTests: XCTestCase {
         XCTAssertFalse(model.restore(identity: identity, rows: [], activeTurn: nil, sequence: 1), "stale snapshot cannot erase current history")
         var startup = AgentChatModel(); _ = startup.beginEnsure(); startup.connectionLost()
         XCTAssertNotNil(startup.beginEnsure(), "interrupted first attach can retry")
-    }
-
-    func testSlashIntentAndLiteralArgumentParsing() {
-        XCTAssertEqual(AgentSlashInvocation.parse("/rename  keep  spaces\nnext")?.arguments, "  keep  spaces\nnext", "slash arguments preserved")
-        XCTAssertNil(AgentSlashInvocation.parse("```\n/status\n```"), "code block not command")
-        XCTAssertNil(AgentSlashInvocation.parse("> /status"), "quote not command")
-        XCTAssertNil(AgentSlashInvocation.parse("Explain /status"), "embedded slash is normal text")
-        XCTAssertEqual(AgentSlashInvocation.parse("/")?.name, "", "bare slash opens commands")
     }
 }
 
@@ -222,25 +207,21 @@ final class AgentChatStoreTests: XCTestCase {
         migrationStore.leave()
     }
 
-    func testSlashExecutionPreservesArgumentsAndNeverBecomesModelPrompt() async {
-        let slash = SlashFixture()
-        let commands = AgentChatStore(transport: slash)
-        await commands.open()
-        commands.model.draft = "/rename  exact  arguments"
-        await commands.send()
-        let arguments = await slash.lastArguments
-        XCTAssertEqual(arguments, "  exact  arguments")
-        XCTAssertTrue(commands.model.draft.isEmpty)
-        XCTAssertEqual(commands.model.slash.notice, "Renamed", "command result survives cleared slash draft without becoming an assistant message")
-        commands.model.draft = "/unknown keep this"; await commands.send()
-        XCTAssertEqual(commands.model.draft, "/unknown keep this")
-        commands.model.draft = "/reset"; await commands.send()
-        let commandCalls = await slash.commandCalls, chatCalls = await slash.chatCalls
-        XCTAssertEqual(commandCalls, 1, "unknown/unsupported slash never goes to model")
-        XCTAssertEqual(chatCalls, 0, "unknown/unsupported slash never goes to model")
-        commands.model.slash.literalText = true; await commands.send()
-        let explicitText = await slash.chatCalls
-        XCTAssertEqual(explicitText, 1, "explicit literal choice preserves text send")
-        commands.leave()
+    func testASlashCommandIsSentAsTypedLikeAnyOtherWords() async {
+        let fixture = PassthroughFixture()
+        let store = AgentChatStore(transport: fixture)
+        await store.open()
+        for words in ["/rename  exact  arguments", "/unknown keep this", "/model gpt-6-sol high"] {
+            store.model.draft = words
+            await store.send()
+            XCTAssertTrue(store.model.draft.isEmpty, words)
+            // No turn comes from this fixture; let the next send through.
+            _ = store.model.restore(identity: store.model.identity!, rows: [], activeTurn: nil,
+                                    sequence: store.model.lastSequence)
+        }
+        let sent = await fixture.sent
+        XCTAssertEqual(sent, ["/rename  exact  arguments", "/unknown keep this", "/model gpt-6-sol high"],
+                       "exactly what was typed, arguments and spaces included")
+        store.leave()
     }
 }

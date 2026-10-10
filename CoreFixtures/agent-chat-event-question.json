@@ -1,0 +1,61 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-01"
+  },
+  "sequence": 1,
+  "event": {
+    "type": "agent.approval.requested",
+    "request_id": "0",
+    "kind": "userInput",
+    "summary": "Branch",
+    "details": {
+      "item_id": "call-q-11",
+      "turn_id": "01a10e79-fe81-78f3-87a9-1c13efae0fc3",
+      "blocking": false,
+      "questions": [
+        {
+          "id": "branch",
+          "header": "Branch",
+          "question": "Which branch should I push to?",
+          "secret": false,
+          "options": [
+            "main (Recommended)",
+            "release"
+          ],
+          "choices": [
+            {
+              "label": "main (Recommended)",
+              "description": "The default branch everyone pulls from."
+            },
+            {
+              "label": "release",
+              "description": "Only for tagged builds."
+            }
+          ],
+          "other": true
+        },
+        {
+          "id": "token",
+          "header": "Token",
+          "question": "Paste the deploy token.",
+          "secret": true,
+          "options": [
+            "Use the saved one"
+          ],
+          "choices": [
+            {
+              "label": "Use the saved one",
+              "description": "The token already in the keychain."
+            }
+          ],
+          "other": true
+        }
+      ]
+    },
+    "decisions": [],
+    "fingerprint": "ac801d0e9dbdcc9e"
+  }
+}

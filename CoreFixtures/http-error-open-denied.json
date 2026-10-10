@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "open_denied",
+    "message": "open_denied"
+  },
+  "contract_revision": "omodachi.v1"
+}

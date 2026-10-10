@@ -1,0 +1,398 @@
+{
+  "contract_revision": "omodachi.v1",
+  "notes": "LINKS-1. Shared link-detection and host-local rewrite vectors; omodachi-ios (LinkDetector) and Odomo (lib/links.js) must produce exactly these. Matching, left to right, first alternative wins: a link starts at the beginning of the text or right after whitespace or one of ( [ { < \" ' ` = ; URL = https?:// then [^\\s<>\"'`]+ ; PATH = either (~|.|..) then / (not followed by / or whitespace) then [A-Za-z0-9._~@%+=,/:#-]+, or a bare / (not followed by / or whitespace) then the same characters, at least one of which is another / or a . (so </b> and </script> are not paths) ; BARE (mirror only) = [A-Za-z0-9_][A-Za-z0-9._-]*\\.<known extension, any case> not followed by [A-Za-z0-9_/-]. Then trailing . , ; : ! ? are dropped, and so is a trailing ) ] } that has no opener inside the link, repeatedly. `mirror` = plain terminal text (Herdr mirror): URL, PATH, BARE. `prose` = an agent message's plain text: URL and PATH only. `host_local` and `rewrite` use `roads` = host-roads.json plus the short name (first label of the .local / MagicDNS name). A rewrite keeps scheme, port, path, query and fragment; for http it prefers an IP road (no name lookup, nothing for a browser to try upgrading to https first; measured on iOS 27 both http://<name>.ts.net:port and the IP load in the Safari view): the current road if it is an IP, else the first tailnet IPv4 on a tailnet road, else the first LAN IPv4; for https the current road as it is.",
+  "known_extensions": [
+    "md",
+    "markdown",
+    "txt",
+    "rst",
+    "org",
+    "py",
+    "js",
+    "mjs",
+    "cjs",
+    "ts",
+    "tsx",
+    "jsx",
+    "json",
+    "jsonl",
+    "yaml",
+    "yml",
+    "toml",
+    "ini",
+    "cfg",
+    "conf",
+    "csv",
+    "tsv",
+    "log",
+    "html",
+    "htm",
+    "css",
+    "scss",
+    "swift",
+    "kt",
+    "java",
+    "c",
+    "h",
+    "cc",
+    "cpp",
+    "hpp",
+    "rs",
+    "go",
+    "rb",
+    "php",
+    "lua",
+    "sql",
+    "sh",
+    "zsh",
+    "xml",
+    "svg",
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "heic",
+    "pdf",
+    "mp4",
+    "mov",
+    "mp3",
+    "wav",
+    "zip",
+    "gz",
+    "ipynb",
+    "lock",
+    "diff",
+    "patch"
+  ],
+  "mirror": [
+    {
+      "text": "Open http://localhost:5173/ in your browser.",
+      "links": [
+        {
+          "kind": "url",
+          "text": "http://localhost:5173/"
+        }
+      ]
+    },
+    {
+      "text": "Docs (https://developers.openai.com/codex).",
+      "links": [
+        {
+          "kind": "url",
+          "text": "https://developers.openai.com/codex"
+        }
+      ]
+    },
+    {
+      "text": "see https://en.wikipedia.org/wiki/Foo_(bar) now",
+      "links": [
+        {
+          "kind": "url",
+          "text": "https://en.wikipedia.org/wiki/Foo_(bar)"
+        }
+      ]
+    },
+    {
+      "text": "url https://example.com/a.b.",
+      "links": [
+        {
+          "kind": "url",
+          "text": "https://example.com/a.b"
+        }
+      ]
+    },
+    {
+      "text": "Wrote /home/user/l1test/report.md:12 and ~/l1test/chart.png",
+      "links": [
+        {
+          "kind": "path",
+          "text": "/home/user/l1test/report.md:12"
+        },
+        {
+          "kind": "path",
+          "text": "~/l1test/chart.png"
+        }
+      ]
+    },
+    {
+      "text": "• Edited ./src/app.py (+3 -1)",
+      "links": [
+        {
+          "kind": "path",
+          "text": "./src/app.py"
+        }
+      ]
+    },
+    {
+      "text": "Download tui-out.csv (tui-out.csv)",
+      "links": [
+        {
+          "kind": "path",
+          "text": "tui-out.csv"
+        },
+        {
+          "kind": "path",
+          "text": "tui-out.csv"
+        }
+      ]
+    },
+    {
+      "text": "version 1.2.3 and e.g. example.com",
+      "links": []
+    },
+    {
+      "text": "path: /tmp/x.txt#L4,",
+      "links": [
+        {
+          "kind": "path",
+          "text": "/tmp/x.txt#L4"
+        }
+      ]
+    },
+    {
+      "text": "and/or 50/50 //comment",
+      "links": []
+    },
+    {
+      "text": "`/home/user/x.py:3:7`",
+      "links": [
+        {
+          "kind": "path",
+          "text": "/home/user/x.py:3:7"
+        }
+      ]
+    },
+    {
+      "text": "See README.md, then ../notes/plan.txt.",
+      "links": [
+        {
+          "kind": "path",
+          "text": "README.md"
+        },
+        {
+          "kind": "path",
+          "text": "../notes/plan.txt"
+        }
+      ]
+    },
+    {
+      "text": "\"~/l1test/serve log.txt\" is quoted",
+      "links": [
+        {
+          "kind": "path",
+          "text": "~/l1test/serve"
+        },
+        {
+          "kind": "path",
+          "text": "log.txt"
+        }
+      ]
+    },
+    {
+      "text": "path=/tmp/x and (/home/user/a.md)",
+      "links": [
+        {
+          "kind": "path",
+          "text": "/tmp/x"
+        },
+        {
+          "kind": "path",
+          "text": "/home/user/a.md"
+        }
+      ]
+    },
+    {
+      "text": "Released v1.2.3 to https://github.com/o/r/releases/latest.",
+      "links": [
+        {
+          "kind": "url",
+          "text": "https://github.com/o/r/releases/latest"
+        }
+      ]
+    },
+    {
+      "text": "<b>x</b> and </script> but /etc/hosts",
+      "links": [
+        {
+          "kind": "path",
+          "text": "/etc/hosts"
+        }
+      ]
+    }
+  ],
+  "prose": [
+    {
+      "text": "Open http://localhost:5173/ in your browser.",
+      "links": [
+        {
+          "kind": "url",
+          "text": "http://localhost:5173/"
+        }
+      ]
+    },
+    {
+      "text": "Saved to /home/user/l1test/out.csv.",
+      "links": [
+        {
+          "kind": "path",
+          "text": "/home/user/l1test/out.csv"
+        }
+      ]
+    },
+    {
+      "text": "Download tui-out.csv (tui-out.csv)",
+      "links": []
+    },
+    {
+      "text": "Edited ./src/app.py and ~/l1test/a.md:3",
+      "links": [
+        {
+          "kind": "path",
+          "text": "./src/app.py"
+        },
+        {
+          "kind": "path",
+          "text": "~/l1test/a.md:3"
+        }
+      ]
+    },
+    {
+      "text": "and/or 50/50",
+      "links": []
+    },
+    {
+      "text": "<b>x</b> and </script> but ~/notes",
+      "links": [
+        {
+          "kind": "path",
+          "text": "~/notes"
+        }
+      ]
+    }
+  ],
+  "host_local": [
+    {
+      "url": "http://localhost:5173/",
+      "host_local": true
+    },
+    {
+      "url": "http://127.0.0.1:8000/",
+      "host_local": true
+    },
+    {
+      "url": "http://127.1.2.3:8000/",
+      "host_local": true
+    },
+    {
+      "url": "http://0.0.0.0:8000/",
+      "host_local": true
+    },
+    {
+      "url": "http://[::1]:8080/",
+      "host_local": true
+    },
+    {
+      "url": "http://app.localhost:3000/",
+      "host_local": true
+    },
+    {
+      "url": "http://omarchy-fixture.local:9000/",
+      "host_local": true
+    },
+    {
+      "url": "http://omarchy-fixture:4000/",
+      "host_local": true
+    },
+    {
+      "url": "http://192.168.1.10:8000/",
+      "host_local": true
+    },
+    {
+      "url": "https://omarchy-fixture.tail0000.ts.net/",
+      "host_local": true
+    },
+    {
+      "url": "http://100.64.0.35:8000/",
+      "host_local": true
+    },
+    {
+      "url": "https://example.com/",
+      "host_local": false
+    },
+    {
+      "url": "http://192.168.1.26:8000/",
+      "host_local": false
+    },
+    {
+      "url": "https://localhost.example.com/",
+      "host_local": false
+    }
+  ],
+  "rewrite": [
+    {
+      "url": "http://localhost:8000/docs?x=1#top",
+      "road": {
+        "host": "omarchy-fixture.tail0000.ts.net",
+        "kind": "tailnet"
+      },
+      "expected": "http://100.64.0.35:8000/docs?x=1#top"
+    },
+    {
+      "url": "https://localhost:8443/",
+      "road": {
+        "host": "omarchy-fixture.tail0000.ts.net",
+        "kind": "tailnet"
+      },
+      "expected": "https://omarchy-fixture.tail0000.ts.net:8443/"
+    },
+    {
+      "url": "http://127.0.0.1:3000/",
+      "road": {
+        "host": "192.168.1.10",
+        "kind": "lan"
+      },
+      "expected": "http://192.168.1.10:3000/"
+    },
+    {
+      "url": "http://0.0.0.0:5173/a",
+      "road": {
+        "host": "omarchy-fixture.local",
+        "kind": "mdns"
+      },
+      "expected": "http://192.168.1.10:5173/a"
+    },
+    {
+      "url": "http://[::1]:8080/",
+      "road": {
+        "host": "192.168.1.10",
+        "kind": "lan"
+      },
+      "expected": "http://192.168.1.10:8080/"
+    },
+    {
+      "url": "http://omarchy-fixture.local:9000/",
+      "road": {
+        "host": "100.64.0.35",
+        "kind": "tailnet"
+      },
+      "expected": "http://100.64.0.35:9000/"
+    },
+    {
+      "url": "http://localhost/",
+      "road": {
+        "host": "omarchy-fixture.tail0000.ts.net",
+        "kind": "tailnet"
+      },
+      "expected": "http://100.64.0.35/"
+    },
+    {
+      "url": "https://example.com/x",
+      "road": {
+        "host": "192.168.1.10",
+        "kind": "lan"
+      },
+      "expected": "https://example.com/x"
+    }
+  ]
+}

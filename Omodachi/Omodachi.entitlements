@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- TAIL-3b I1: links from Odomo open the app (LITE-0 §2). The
+	     site serves /.well-known/apple-app-site-association with appIDs
+	     QTJVT79R99.app.omodachi and components /open/* only. The App ID needs
+	     the Associated Domains capability before a signed build carries this. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:omodachi.app</string>
+	</array>
+</dict>
+</plist>

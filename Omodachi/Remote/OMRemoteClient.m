@@ -187,18 +187,99 @@ static void OMInputTrace(NSString *format, ...) {}
     NSData *data=[NSJSONSerialization dataWithJSONObject:event options:0 error:nil];
     if (_eventHandler && data) _eventHandler([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
 }
+/// TAIL-2 P2-2. Where the stream is dialled: the address core named for the
+/// road in use, when it named one. The certificate account and the audio
+/// preference stay keyed by the host's own name, so a road change is not a new
+/// Moonlight pairing.
+- (NSString *)networkHost {
+    NSString *dial=self.dialHost;
+    return dial.length>0 ? dial : _host;
+}
 - (HttpManager *)newHTTP {
     [CryptoManager generateKeyPairUsingSSL];
-    return [[HttpManager alloc] initWithAddress:_host httpsPort:_httpsPort serverCert:[CryptoManager readCryptoObject:_certAccount]];
+    return [[HttpManager alloc] initWithAddress:[self networkHost] httpsPort:_httpsPort serverCert:[CryptoManager readCryptoObject:_certAccount]];
+}
+/// REMOTE-FIX-2 §4. Why one Moonlight request did not come back OK, in a few
+/// words that are safe to show anywhere: the step, the port and the transport's
+/// own error code. Never a URL query (it carries the client's unique id), a
+/// certificate or a key.
+static NSString *OMSunshineFailureReasonForCode(NSInteger code);
+/// Tailscale's 100.64.0.0/10 and fd7a:115c:a1e0::/48, as literals.
+static BOOL OMIsTailnetLiteral(NSString *host) {
+    NSString *bare=[[host lowercaseString] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"[]"]];
+    if ([bare hasPrefix:@"fd7a:115c:a1e0:"]) return YES;
+    NSArray<NSString *> *parts=[bare componentsSeparatedByString:@"."];
+    if (parts.count!=4) return NO;
+    for (NSString *part in parts) if (part.length==0 || part.length>3 || [part rangeOfCharacterFromSet:NSCharacterSet.decimalDigitCharacterSet.invertedSet].location!=NSNotFound) return NO;
+    int a=parts[0].intValue, b=parts[1].intValue;
+    return a==100 && b>=64 && b<=127;
+}
+static NSString *OMSunshineFailureReason(HttpResponse *response, NSString *host) {
+    // REMOTE-FIX-2. The one -1200 that has a known cause: ATS treats a
+    // tailnet literal as neither local networking nor `*.ts.net`, so it
+    // demands system trust for the fork's self-signed certificate and refuses
+    // the load whatever the pinning delegate answers (-9802 underneath).
+    if (response.statusCode==NSURLErrorSecureConnectionFailed && OMIsTailnetLiteral(host))
+        return @"TLS refused by iOS on a Tailscale address, which needs the computer's MagicDNS name (-1200)";
+    return OMSunshineFailureReasonForCode(response.statusCode);
+}
+
+static NSString *OMSunshineFailureReasonForCode(NSInteger code) {
+    if (code==200) return nil;
+    switch (code) {
+        case 0: return @"no answer";
+        case NSURLErrorSecureConnectionFailed: return @"TLS handshake failed (-1200)";
+        case NSURLErrorServerCertificateHasBadDate:
+        case NSURLErrorServerCertificateUntrusted:
+        case NSURLErrorServerCertificateHasUnknownRoot:
+        case NSURLErrorServerCertificateNotYetValid: return [NSString stringWithFormat:@"TLS certificate refused (%ld)", (long)code];
+        case NSURLErrorClientCertificateRejected:
+        case NSURLErrorClientCertificateRequired: return [NSString stringWithFormat:@"client certificate refused (%ld)", (long)code];
+        case NSURLErrorCancelled: return @"server certificate is not the paired one (-999)";
+        case NSURLErrorTimedOut: return @"timed out (-1001)";
+        case NSURLErrorCannotConnectToHost: return @"connection refused (-1004)";
+        case NSURLErrorCannotFindHost:
+        case NSURLErrorDNSLookupFailed: return [NSString stringWithFormat:@"host name not found (%ld)", (long)code];
+        case NSURLErrorNetworkConnectionLost: return @"connection lost (-1005)";
+        case NSURLErrorNotConnectedToInternet: return @"no network (-1009)";
+        case NSURLErrorAppTransportSecurityRequiresSecureConnection: return @"blocked by App Transport Security (-1022)";
+        case ECANCELED: return @"cancelled";
+        case EHOSTDOWN: return @"HTTPS port unknown";
+        default: break;
+    }
+    if (code>=100 && code<600) return [NSString stringWithFormat:@"HTTP %ld", (long)code];
+    return [NSString stringWithFormat:@"network error %ld", (long)code];
+}
++ (NSString *)sunshineFailureReasonForStatusCode:(NSInteger)code host:(NSString *)host {
+    HttpResponse *response=[HttpResponse new]; response.statusCode=code;
+    return OMSunshineFailureReason(response, host ?: @"");
+}
+/// One Moonlight request's outcome, for the trace and for Settings ⑥. The
+/// host is an address or the name this device already dials; both are on the
+/// diagnostics page's list of things it may print.
+- (void)reportStep:(NSString *)step response:(HttpResponse *)response port:(int)port {
+    NSString *host=[self networkHost];
+    NSString *reason=OMSunshineFailureReason(response, host);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self event:@"control" values:@{@"step":step, @"host":host ?: @"", @"port":@(port),
+                                        @"ok":@(reason==nil), @"reason":reason ?: @""}];
+    });
 }
 - (HttpResponse *)serverInfo:(HttpManager *)http {
     HttpResponse *info=[HttpResponse new];
     [http executeRequestSynchronously:[HttpRequest requestForResponse:info withUrlRequest:[http newServerInfoRequest:false] fallbackError:401 fallbackRequest:[http newHttpServerInfoRequest]]];
     OMPairTrace(@"serverinfo host=%@ https_port=%d ok=%d status=%ld message=%@ PairStatus=%@ state=%@ appversion=%@ HttpsPort=%@",
-                _host, (int)_httpsPort, (int)[info isStatusOk], (long)info.statusCode, info.statusMessage,
+                [self networkHost], (int)_httpsPort, (int)[info isStatusOk], (long)info.statusCode, info.statusMessage,
                 [info getStringTag:@"PairStatus"], [info getStringTag:@"state"],
                 [info getStringTag:@"appversion"], [info getStringTag:@"HttpsPort"]);
+    [self reportStep:@"serverinfo" response:info port:_httpsPort>0 ? _httpsPort : 47984];
     return info;
+}
+/// REMOTE-FIX-2 §4. The words the person sees when Sunshine did not answer:
+/// the same sentence as before, with the reason in it.
+static NSString *OMUnansweredMessage(HttpResponse *response, NSString *host) {
+    NSString *reason=OMSunshineFailureReason(response, host) ?: @"no answer";
+    return [NSString stringWithFormat:@"电脑端串流服务未响应：%@。", reason];
 }
 - (void)inspectHost {
     if (_media || _stopping) return;
@@ -210,7 +291,7 @@ static void OMInputTrace(NSString *format, ...) {}
             BOOL paired=[info isStatusOk] && [[info getStringTag:@"PairStatus"] isEqualToString:@"1"] && [CryptoManager readCryptoObject:self->_certAccount]!=nil;
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (revision!=self->_requestRevision) return;
-                if (![info isStatusOk]) [self event:@"error" values:@{@"message":@"无法连接电脑端串流服务，请检查电脑地址及局域网访问。"}];
+                if (![info isStatusOk]) [self event:@"error" values:@{@"message":[NSString stringWithFormat:@"无法连接电脑端串流服务：%@。", OMSunshineFailureReason(info, [self networkHost]) ?: @"no answer"]}];
                 else [self event:paired?@"paired":@"unpaired" values:@{@"busy":@([[info getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"])}];
             });
         } @catch (NSException *exception) {
@@ -259,9 +340,11 @@ static void OMInputTrace(NSString *format, ...) {}
         }
     }];
 }
-- (NSString *)desktopID:(HttpManager *)http {
+- (NSString *)desktopID:(HttpManager *)http response:(HttpResponse **)out {
     HttpResponse *apps=[HttpResponse new];
+    if (out) *out=apps;
     [http executeRequestSynchronously:[HttpRequest requestForResponse:apps withUrlRequest:[http newAppListRequest]]];
+    [self reportStep:@"applist" response:apps port:_httpsPort>0 ? _httpsPort : 47984];
     if (![apps isStatusOk] || apps.data.length>1048576) return nil;
     xmlDocPtr doc=xmlReadMemory(apps.data.bytes,(int)apps.data.length,NULL,NULL,XML_PARSE_NONET|XML_PARSE_NOERROR|XML_PARSE_NOWARNING);
     if (!doc) return nil; NSString *result=nil;
@@ -294,25 +377,30 @@ static void OMInputTrace(NSString *format, ...) {}
     [_network addOperationWithBlock:^{
         HttpManager *http=[self newHTTP]; [self setActiveHTTP:http]; HttpResponse *info=[self serverInfo:http]; NSString *failure=nil;
         StreamConfiguration *config=[StreamConfiguration new];
-        if (![info isStatusOk]) failure=@"电脑端串流服务未响应，请确认服务正在运行。";
+        if (![info isStatusOk]) failure=OMUnansweredMessage(info, [self networkHost]);
         else if (![[info getStringTag:@"PairStatus"] isEqualToString:@"1"] || ![CryptoManager readCryptoObject:self->_certAccount]) failure=@"请先在电脑端批准此设备，再连接 Omodachi Remote。";
         else {
-            config.host=self->_host; config.serverCert=[CryptoManager readCryptoObject:self->_certAccount];
+            config.host=[self networkHost]; config.serverCert=[CryptoManager readCryptoObject:self->_certAccount];
             config.appVersion=[info getStringTag:@"appversion"]; config.gfeVersion=[info getStringTag:@"GfeVersion"];
             config.serverCodecModeSupport=[[info getStringTag:@"ServerCodecModeSupport"] intValue];
             config.width=width; config.height=height; config.frameRate=MIN(60,MAX(30,fps)); config.bitRate=MIN(40000,MAX(1000,bitrate));
             config.supportedVideoFormats=[self->_codec isEqualToString:@"hevc"]?VIDEO_FORMAT_H265:VIDEO_FORMAT_H264; config.audioConfiguration=AUDIO_CONFIGURATION_STEREO;
             config.riKey=[Utils randomBytes:16]; config.riKeyId=arc4random(); config.useFramePacing=YES; config.optimizeGameSettings=NO; config.playAudioOnPC=[[OMAudioController shared] hostPlaybackForHost:self->_host];
             BOOL resume=[[info getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"];
-            NSString *desktopID=[self desktopID:http];
+            HttpResponse *apps=nil;
+            NSString *desktopID=[self desktopID:http response:&apps];
             config.appID=desktopID;
             if (resume && ![desktopID isEqualToString:[info getStringTag:@"currentgame"]]) failure=@"电脑端正在串流其他应用，请先结束该串流再连接 Remote。";
-            if (!config.appID.length) failure=@"电脑端串流服务尚未配置桌面入口。";
+            // An app list that never came back is not a fork without the
+            // desktop entry; saying so sent the last person to the wrong place.
+            if (!config.appID.length) failure=(apps && ![apps isStatusOk]) ? OMUnansweredMessage(apps, [self networkHost]) : @"电脑端串流服务尚未配置桌面入口。";
             else if (!failure && [self requestCurrent:revision]) {
                 HttpResponse *launch=[HttpResponse new];
                 [http executeRequestSynchronously:[HttpRequest requestForResponse:launch withUrlRequest:[http newLaunchOrResumeRequest:resume?@"resume":@"launch" config:config]]];
+                [self reportStep:resume?@"resume":@"launch" response:launch port:self->_httpsPort>0 ? self->_httpsPort : 47984];
                 NSString *ok=[launch getStringTag:resume?@"resume":@"gamesession"];
-                if (![launch isStatusOk] || !ok.length || [ok isEqualToString:@"0"]) failure=@"电脑端未能启动串流，请断开其他串流客户端后重试。";
+                if (![launch isStatusOk] && launch.statusCode<100) failure=OMUnansweredMessage(launch, [self networkHost]);
+                else if (![launch isStatusOk] || !ok.length || [ok isEqualToString:@"0"]) failure=@"电脑端未能启动串流，请断开其他串流客户端后重试。";
                 else config.rtspSessionUrl=[launch getStringTag:@"sessionUrl0"];
             }
         }
@@ -369,7 +457,48 @@ static void OMInputTrace(NSString *format, ...) {}
     // The first reading has no previous count to difference against.
     if (!first) values[@"rendered_frames"]=@(enqueued);
     if (stats.rttKnown) { values[@"rtt_ms"]=@(stats.rttMs); values[@"rtt_variance_ms"]=@(stats.rttVarianceMs); }
+    // POLISH-R item 6. A window closes only when a frame arrives, so a window
+    // closed more than 1.5 s ago means no frame has arrived since: report the
+    // gap instead of replaying the last healthy second as if it were now.
+    if (stats.windowAgeSeconds>1.5) values[@"stalled_s"]=@(stats.windowAgeSeconds);
     [self event:@"stats" values:values];
+}
+/// POLISH-R item 4. Core's `desktop.stop` ends only the stream it reserved
+/// and never terminates the fork's app (by design: it must not end anybody
+/// else's), so after every Remote the fork still answered
+/// `SUNSHINE_SERVER_BUSY` with our desktop as `currentgame`, and the next
+/// session had to `resume` an app nobody was running (REMOTE-FIX-2 §6.3).
+/// This client holds the paired certificate that `/cancel` needs, so it ends
+/// its own desktop app on the way out. The core session still exists at this
+/// point, so the fork's lease is ours and no other device can be streaming.
+- (void)quitDesktopWithCompletion:(void (^)(NSString *))completion {
+    if (!_host.length) { completion(@"skipped:no-host"); return; }
+    [_network addOperationWithBlock:^{
+        NSString *outcome;
+        @try {
+            HttpManager *http=[self newHTTP];
+            HttpResponse *info=[self serverInfo:http];
+            if (![info isStatusOk]) outcome=@"skipped:serverinfo";
+            else if (![[info getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"]) outcome=@"skipped:not-running";
+            else if (![[info getStringTag:@"PairStatus"] isEqualToString:@"1"]) outcome=@"skipped:unpaired";
+            else {
+                HttpResponse *apps=nil;
+                NSString *desktopID=[self desktopID:http response:&apps];
+                if (!desktopID.length || ![desktopID isEqualToString:[info getStringTag:@"currentgame"]]) outcome=@"skipped:other-app";
+                else {
+                    NSMutableURLRequest *request=[[http newQuitAppRequest] mutableCopy];
+                    request.timeoutInterval=3;
+                    HttpResponse *quit=[HttpResponse new];
+                    [http executeRequestSynchronously:[HttpRequest requestForResponse:quit withUrlRequest:request]];
+                    [self reportStep:@"cancel" response:quit port:self->_httpsPort>0 ? self->_httpsPort : 47984];
+                    outcome=[quit isStatusOk] ? @"cancelled" : @"failed";
+                }
+            }
+        } @catch (NSException *exception) {
+            outcome=@"failed:exception";
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{ completion(outcome); });
+    }];
 }
 - (void)stopWithCompletion:(void (^)(BOOL))completion {
     [self stopStats];
@@ -468,7 +597,8 @@ static void OMInputTrace(NSString *format, ...) {}
         OMInputTrace(@"enabled video_rect=%@ stream_pixels=%@ %@", NSStringFromCGRect(_renderView.videoRect), NSStringFromCGSize(_renderView.streamPixels), [self gateState]);
     }
     _renderView.inputEnabled=YES;
-    [_renderView becomeFirstResponder];
+    // REMOTE-INPUT-2: not while the compose field holds the keyboard.
+    if (!_composeOwnsKeyboard) [_renderView becomeFirstResponder];
 }
 /// Bounded, because a view that is legitimately off screen must not hold the
 /// display tick open for the rest of the session (PERF-1).
@@ -540,6 +670,14 @@ static void OMInputTrace(NSString *format, ...) {}
     if (!_renderView.inputEnabled) return;
     [_inputReceiver latchModifiers:mask generation:_generation geometryEpoch:_geometryEpoch leaseSerial:_leaseSerial];
 }
+- (void)reclaimFirstResponder {
+    if (_composeOwnsKeyboard || !_renderView.inputEnabled) return;
+    if (!_renderView.isFirstResponder) [_renderView becomeFirstResponder];
+}
+- (void)sendKeyUsage:(unsigned short)usage down:(BOOL)down {
+    if (down && !_renderView.inputEnabled) return;
+    [_inputReceiver keyUsage:usage down:down generation:_generation geometryEpoch:_geometryEpoch leaseSerial:_leaseSerial];
+}
 - (void)sendShortcutUsage:(unsigned short)usage {
     if (!_renderView.inputEnabled) return;
     [_inputReceiver keyUsage:usage down:YES generation:_generation geometryEpoch:_geometryEpoch leaseSerial:_leaseSerial];
@@ -567,6 +705,7 @@ static void OMInputTrace(NSString *format, ...) {}
     [self event:@"panel_request" values:@{@"source":source}];
     if (_panelHandler) _panelHandler(source);
 }
+- (void)typeTextForOperator:(NSString *)text { [_renderView insertText:text]; }
 - (void)showKeyboard { [_renderView presentSoftwareKeyboard:YES]; }
 - (void)hideKeyboard { [_renderView presentSoftwareKeyboard:NO]; }
 // A-43. Moonlight's own convention is a three-finger tap, and the convention is
@@ -701,6 +840,20 @@ static void OMInputTrace(NSString *format, ...) {}
     } return self;
 }
 - (BOOL)canBecomeFirstResponder { return YES; }
+/// POLISH-R item 7. The keyboard can also go away without us: the iPad's own
+/// dismiss key, the shortcuts bar, another field taking the responder. The
+/// controller must hear that, or it keeps believing a keyboard is up and keeps
+/// refusing real geometry changes (a turn of the device) as if they were the
+/// keyboard's.
+- (BOOL)resignFirstResponder {
+    BOOL resigned=[super resignFirstResponder];
+    if (resigned && _softwareKeyboard) {
+        _softwareKeyboard=NO;
+        OMInputTrace(@"keyboard dismissed by the system %@", [self.client gateState]);
+        if (self.client.keyboardHandler) self.client.keyboardHandler(NO);
+    }
+    return resigned;
+}
 - (BOOL)hasText { return YES; }
 - (UIView *)inputView { return _softwareKeyboard ? nil : _hardwareInputView; }
 - (NSArray<UIKeyCommand *> *)keyCommands {
@@ -768,6 +921,8 @@ static void OMInputTrace(NSString *format, ...) {}
     // UX-2 §2. A-62: three fingers are the keyboard and **only** the keyboard.
     // Nothing here asks for a panel, and the press this cycle would otherwise
     // have sent to the host is already withheld by `multiTouchSeen`.
+    // REMOTE-INPUT-2: which keyboard is the session's call.
+    if (self.client.keyboardTapHandler) { self.client.keyboardTapHandler(); return; }
     BOOL up=[self presentSoftwareKeyboard:!_softwareKeyboard];
     if (self.client.keyboardHandler) self.client.keyboardHandler(up);
 }
@@ -810,6 +965,17 @@ static void OMInputTrace(NSString *format, ...) {}
     }
     return _softwareKeyboard;
 }
+// REMOTE-INPUT-1. The iOS keyboard must not rewrite what is typed into a
+// remote desktop: no autocorrect, no capitals it decided on, no smart quotes.
+// Key repeat is not a client concern: each character is one down and one up,
+// so the fork's own repeat timer never runs.
+- (UITextAutocorrectionType)autocorrectionType { return UITextAutocorrectionTypeNo; }
+- (UITextAutocapitalizationType)autocapitalizationType { return UITextAutocapitalizationTypeNone; }
+- (UITextSpellCheckingType)spellCheckingType { return UITextSpellCheckingTypeNo; }
+- (UITextSmartQuotesType)smartQuotesType { return UITextSmartQuotesTypeNo; }
+- (UITextSmartDashesType)smartDashesType { return UITextSmartDashesTypeNo; }
+- (UITextSmartInsertDeleteType)smartInsertDeleteType { return UITextSmartInsertDeleteTypeNo; }
+- (UITextInlinePredictionType)inlinePredictionType API_AVAILABLE(ios(17.0)) { return UITextInlinePredictionTypeNo; }
 - (void)insertText:(NSString *)text {
     if (_inputEnabled) [self.client.inputReceiver insertText:text generation:self.client.generation geometryEpoch:self.client.geometryEpoch leaseSerial:self.client.leaseSerial];
 }

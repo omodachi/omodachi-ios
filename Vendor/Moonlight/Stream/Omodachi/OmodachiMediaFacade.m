@@ -6,6 +6,7 @@
 //
 
 #import "OmodachiMediaFacade.h"
+#import <QuartzCore/QuartzCore.h>
 
 #import "Connection.h"
 #import "ConnectionCallbacks.h"
@@ -259,6 +260,7 @@ static void OmodachiEnsureOwnerLock(void)
     if (![_connection getVideoStats:&window]) return NO;
     memset(stats, 0, sizeof(*stats));
     stats->windowSeconds = window.endTime - window.startTime;
+    stats->windowAgeSeconds = MAX(0, CACurrentMediaTime() - window.endTime);
     stats->totalFrames = window.totalFrames;
     stats->receivedFrames = window.receivedFrames;
     stats->networkDroppedFrames = window.networkDroppedFrames;

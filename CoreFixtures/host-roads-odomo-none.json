@@ -1,0 +1,43 @@
+{
+  "contract_revision": "omodachi.v1",
+  "host_id": "00000000000000000000000000000000",
+  "tls_fingerprint_sha256": "abababababababababababababababababababababababababababababababab",
+  "endpoints": [
+    {
+      "host": "192.168.1.10",
+      "port": 8099,
+      "kind": "lan"
+    },
+    {
+      "host": "omarchy-fixture.local",
+      "port": 8099,
+      "kind": "mdns"
+    },
+    {
+      "host": "omarchy-fixture.tail0000.ts.net",
+      "port": 8099,
+      "kind": "tailnet"
+    },
+    {
+      "host": "100.64.0.35",
+      "port": 8099,
+      "kind": "tailnet"
+    },
+    {
+      "host": "fd7a:115c:a1e0::35",
+      "port": 8099,
+      "kind": "tailnet"
+    }
+  ],
+  "tailnet": {
+    "dns_name": "omarchy-fixture.tail0000.ts.net",
+    "ips": [
+      "100.64.0.35",
+      "fd7a:115c:a1e0::35"
+    ]
+  },
+  "odomo": {
+    "url": null,
+    "push_devices": 0
+  }
+}

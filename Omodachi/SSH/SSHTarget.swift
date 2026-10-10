@@ -39,11 +39,15 @@ struct SSHTarget: Equatable, Sendable {
 enum SSHTargetResolver {
     /// `nil` means there is nothing to dial and the surface says so rather than
     /// opening a terminal that cannot connect.
-    static func resolve(profile: HostProfile, pin: HostPin?) -> SSHTarget? {
+    static func resolve(profile: HostProfile, pin: HostPin?, road: HostRoad? = nil) -> SSHTarget? {
         // What pairing handed over, whole. Nothing here was typed by anyone.
         if let target = pin?.ssh, isValidAccount(target.user), isValidHost(target.host),
            (1...65535).contains(target.port) {
-            return SSHTarget(username: target.user, host: target.host, port: target.port, source: .pairedTarget)
+            // TAIL-2 P0-4: the terminal takes the same road as the companion
+            // connection. The claim's `ssh.host` is the LAN address, which is
+            // unreachable away from home (TAIL-1 §5.3).
+            let host = roadHost(target, pin: pin, road: road) ?? target.host
+            return SSHTarget(username: target.user, host: host, port: target.port, source: .pairedTarget)
         }
         let username = profile.username.trimmingCharacters(in: .whitespacesAndNewlines)
         guard isValidAccount(username) else { return nil }
@@ -59,6 +63,22 @@ enum SSHTargetResolver {
             return SSHTarget(username: username, host: host, port: port, source: source)
         }
         return nil
+    }
+
+    /// TAIL-2 P0-4 / TAIL-3b. The SSH address on the host's one road, or
+    /// `nil` to keep the claim's `ssh.host`.
+    ///
+    /// A Wi-Fi host's terminal is `ssh.host`, the LAN address the claim named.
+    /// A Tailscale host's is its MagicDNS name — the one the host published
+    /// for SSH, else the one its pin knows, else the name the companion road
+    /// itself is (SSH is not subject to ATS, but the name survives the host's
+    /// tailnet address changing). A tailnet address literal is never used.
+    static func roadHost(_ target: HostPin.SSHEndpoint, pin: HostPin?, road: HostRoad?) -> String? {
+        guard let road, road.kind.isTailscale else { return nil }
+        let typed = (target.hosts ?? []).filter { $0.kind == .tailnet && isValidHost($0.host) }
+        if let name = typed.first(where: { HostRoads.isMagicDNSName($0.host) }) { return name.host }
+        if let name = pin?.tailnetName, isValidHost(name) { return name }
+        return HostRoads.isMagicDNSName(road.host) && isValidHost(road.host) ? road.host : nil
     }
 
     /// A host has to survive being put in a `URL` and in an OpenSSH pin key, so

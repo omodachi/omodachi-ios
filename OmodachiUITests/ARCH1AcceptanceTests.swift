@@ -72,7 +72,7 @@ import XCTest
             capture("arch1-00-already-paired", app)
             return
         }
-        let manual = app.buttons["connect-add-manual"]
+        let manual = OnboardingNavigation.manualAdd(app)
         if manual.waitForExistence(timeout: 10) {
             manual.tap()
             let field = app.textFields["connect-manual-field"]

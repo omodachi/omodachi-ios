@@ -42,6 +42,19 @@ enum PanelMeasure {
         landscape && width >= sideBySide
     }
 
+    /// SHELL-FIX-1. Which way up the *window* is. A panel's own rectangle is
+    /// not an orientation: the soft keyboard takes a third of an iPad's
+    /// height off it, and on an 11" or 13" iPad held upright what is left is
+    /// wider than tall — ① rebuilt itself side by side under the keyboard,
+    /// the search field it was typing into went with the old layout, and the
+    /// keyboard went down again (Leo, iPad portrait). `window` is the Shell's
+    /// window size (`EnvironmentValues.windowSize`); `area` is only the
+    /// fallback for a view drawn outside the Shell (a preview, a test).
+    static func isLandscape(window: CGSize, area: CGSize) -> Bool {
+        let size = window.width > 0 && window.height > 0 ? window : area
+        return size.width >= size.height
+    }
+
     static func isNarrow(_ width: CGFloat) -> Bool { width > 0 && width < narrowColumn }
 }
 
@@ -124,4 +137,10 @@ struct PanelTitle: View {
             .lineLimit(1).truncationMode(.tail)
             .accessibilityAddTraits(.isHeader)
     }
+}
+
+extension EnvironmentValues {
+    /// SHELL-FIX-1: the window's size, from the Shell's window reader. Never
+    /// keyboard-avoided: the keyboard is a layer over the window, not a turn.
+    @Entry var windowSize: CGSize = .zero
 }

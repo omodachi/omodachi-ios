@@ -31,9 +31,10 @@ struct DiagnosticBlock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: OmodachiTheme.space("md")) {
             HStack(spacing: OmodachiTheme.space("lg")) {
+                // SETTINGS-LAYOUT-1: a title like every other Settings row's.
                 Text(title)
-                    .font(OmodachiTheme.font("body-small"))
-                    .foregroundStyle(OmodachiTheme.secondaryText)
+                    .font(SettingMetrics.titleFont)
+                    .foregroundStyle(OmodachiTheme.text)
                 Spacer(minLength: OmodachiTheme.space("lg"))
                 if !isEmpty {
                     TextTap(copied ? copiedTitle : copyTitle, bordered: true, minimumHeight: 32) {
@@ -67,7 +68,7 @@ struct DiagnosticBlock: View {
             }
         }
         .padding(.horizontal, OmodachiTheme.rowPaddingX)
-        .padding(.vertical, OmodachiTheme.space("xl"))
+        .padding(.vertical, SettingMetrics.verticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

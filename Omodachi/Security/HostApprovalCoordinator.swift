@@ -340,7 +340,7 @@ final class HostApprovalNotifier: @unchecked Sendable {
     private var requested = false
 
     init(center: UNUserNotificationCenter? = nil) {
-        // Nil-bundle safe, like `AgentApprovalNotifier`: a unit test host has
+        // Nil-bundle safe, like `AttentionNotifier`: a unit test host has
         // no bundle identifier and `UNUserNotificationCenter.current()` traps.
         self.center = center ?? (Bundle.main.bundleIdentifier == nil ? nil : .current())
     }

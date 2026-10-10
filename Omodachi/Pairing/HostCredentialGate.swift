@@ -16,8 +16,9 @@ import Foundation
 /// with gets exactly one authenticated, side-effect-free GET (`CredentialProbe`,
 /// over the pinned certificate) before the Panel is allowed to be about it:
 ///
-/// * **401/403** — the credential, the pin, that pin's SSH host key and the
-///   directory record all go, the profile lets the host go, and the Shell falls
+/// * **401** — the credential, the pin, that pin's SSH host key and the
+///   directory record all go (REMOTE-PAIR-1: a 401 that gives no reason only
+///   after a second read agrees, and a 403 is never one), the profile lets the host go, and the Shell falls
 ///   back to the list with the row reading 未配对 and one line saying why.
 /// * **no credential, or a credential with no pin** — there is nothing that can
 ///   be checked (a token is only ever put on a certificate this device pinned),
@@ -75,10 +76,15 @@ import Foundation
     private let hostKeys: HostKeyStore
     private let makeProbe: (URL, String) -> CredentialProbe
     private let makeRenewer: (URL, String) -> CredentialRenewer
+    /// REMOTE-PAIR-1: how long a refusal with no reason waits before it is
+    /// asked about again (`CredentialProbe.checkConfirmed`). Tests pass zero.
+    private let confirmationDelay: Duration
     /// UI-test seam, DEBUG + Simulator only: a hermetic run has no host that
     /// could answer 401, and a fixture that pretends to be one would be a
     /// second implementation of `CredentialProbe`. See `DevelopmentLaunch`.
     private let forcedVerdict: CredentialVerdict?
+    /// REMOTE-PAIR-1: where the device id is kept; tests hand in memory.
+    private let identityKeychain: (any KeychainRecordStore)?
 
     init(pins: HostPinStore = HostPinStore(),
          credentials: CompanionCredentialStore = CompanionCredentialStore(),
@@ -89,13 +95,17 @@ import Foundation
          },
          makeRenewer: @escaping (URL, String) -> CredentialRenewer = {
              CredentialRenewer(endpoint: $0, pinnedFingerprint: $1)
-         }) {
+         },
+         confirmationDelay: Duration = .seconds(2),
+         identityKeychain: (any KeychainRecordStore)? = CompanionDeviceIdentity.systemKeychain()) {
         self.pins = pins
         self.credentials = credentials
         self.hostKeys = hostKeys
         self.forcedVerdict = forcedVerdict
         self.makeProbe = makeProbe
         self.makeRenewer = makeRenewer
+        self.confirmationDelay = confirmationDelay
+        self.identityKeychain = identityKeychain
     }
 
     /// Whether the host this app is about is the one that did not answer.
@@ -143,9 +153,14 @@ import Foundation
         }
         let verdict: CredentialVerdict
         if let forcedVerdict { verdict = forcedVerdict }
-        else { verdict = await makeProbe(url, pin.fingerprintSHA256).check(token: token) }
+        else {
+            verdict = await makeProbe(Self.road(url, account: account, pins: pins), pin.fingerprintSHA256)
+                .checkConfirmed(token: token, retryAfter: confirmationDelay)
+        }
         switch verdict {
-        case .live: standing[account] = .live
+        case .live:
+            standing[account] = .live
+            adoptIdentity(token: token, account: account, home: home)
         case let .rejected(reason): discard(account: account, directory: directory, home: home, reason: reason)
         case .unreachable: standing[account] = .offline
         }
@@ -170,10 +185,14 @@ import Foundation
         }
         let verdict: CredentialVerdict
         if let forcedVerdict { verdict = forcedVerdict }
-        else { verdict = await makeProbe(url, pin.fingerprintSHA256).check(token: token) }
+        else {
+            verdict = await makeProbe(Self.road(url, account: account, pins: pins), pin.fingerprintSHA256)
+                .checkConfirmed(token: token, retryAfter: confirmationDelay)
+        }
         switch verdict {
         case .live:
             standing[account] = .live
+            adoptIdentity(token: token, account: account, home: home)
             if HostAccount.canonical(home.profile.companionURL) == account { await home.connectCompanion() }
         case let .rejected(reason):
             discard(account: account, directory: directory, home: home, reason: reason)
@@ -181,6 +200,13 @@ import Foundation
             standing[account] = .offline
             if HostAccount.canonical(home.profile.companionURL) == account { await home.connectCompanion() }
         }
+    }
+
+    /// TAIL-2 P0-3 / TAIL-3b. The account is where the credential is stored,
+    /// not necessarily where the host is: a Wi-Fi host moved to Tailscale is
+    /// checked and renewed over its MagicDNS name.
+    static func road(_ account: URL, account key: String, pins: HostPinStore = HostPinStore()) -> URL {
+        HostRoads.dialURL(account: key, pins: pins) ?? account
     }
 
     // MARK: - CORE-2 §1: keeping a credential alive
@@ -200,7 +226,7 @@ import Foundation
         for account in Self.accounts(directory: directory, home: home) {
             guard let url = URL(string: account), url.host != nil,
                   let token = token(account: account), let pin = pins.load(account: account) else { continue }
-            let outcome = await makeRenewer(url, pin.fingerprintSHA256).run(token: token)
+            let outcome = await makeRenewer(Self.road(url, account: account, pins: pins), pin.fingerprintSHA256).run(token: token)
             lastRenewal[account] = outcome
             switch outcome {
             case let .renewed(fresh, _):
@@ -211,11 +237,33 @@ import Foundation
                 standing[account] = .live
             case let .rejected(reason):
                 guard self.token(account: account) == token else { continue }
-                discard(account: account, directory: directory, home: home, reason: reason)
+                // REMOTE-PAIR-1: a refusal with no reason is asked about again
+                // over the same authenticated read the launch check uses.
+                var final = CredentialVerdict.rejected(reason)
+                if reason == .unknown {
+                    final = await makeProbe(Self.road(url, account: account, pins: pins), pin.fingerprintSHA256)
+                        .checkConfirmed(token: token, retryAfter: confirmationDelay)
+                }
+                guard self.token(account: account) == token else { continue }
+                switch final {
+                case let .rejected(confirmed):
+                    discard(account: account, directory: directory, home: home, reason: confirmed)
+                case .live: standing[account] = .live
+                case .unreachable: break
+                }
             case .notDue: standing[account] = .live
             case .unreachable, .refused, .unsupported: break
             }
         }
+    }
+
+    /// REMOTE-PAIR-1. A live credential for the host this app is about names
+    /// the id the host knows this device by; that is the id it pairs under
+    /// from now on (`CompanionDeviceIdentity`).
+    private func adoptIdentity(token: String, account: String, home: HomeStore) {
+        guard HostAccount.canonical(home.profile.companionURL) == account else { return }
+        CompanionDeviceIdentity.adopt(credential: token, defaults: home.defaults,
+                                      keychain: identityKeychain)
     }
 
     private func discard(account: String, directory: PairedHostDirectory, home: HomeStore,

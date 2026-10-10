@@ -19,10 +19,19 @@ NS_ASSUME_NONNULL_BEGIN
 /// Call before a host resize. Retains the old image but disables inputs.
 - (void)expectPixels:(CGSize)pixels;
 - (void)sendKeysym:(uint32_t)keysym down:(BOOL)down;
+/// REMOTE-INPUT-1. One press and release, in order on the RFB queue.
+- (void)tapKeysym:(uint32_t)keysym;
+/// REMOTE-INPUT-1. When set, the soft keyboard's text goes here instead of
+/// being sent as keysyms by this view: the driver splits it into keysyms and
+/// text the host types itself (WayVNC drops keysyms its keymap lacks).
+@property(nonatomic,copy,nullable) void (^textHandler)(NSString *text);
 /// A-43. The same soft keyboard as the Sunshine backend: a three-finger tap
 /// toggles it, and so does the overlay button. Answers whether it is up.
 - (BOOL)toggleKeyboard;
 - (void)hideKeyboard;
+/// REMOTE-INPUT-2. When set, the three-finger tap asks the session which
+/// keyboard to show (the compose bar or this view's per-key one).
+@property(nonatomic,copy,nullable) void (^keyboardTapHandler)(void);
 @property(nonatomic,readonly) BOOL softwareKeyboardVisible;
 /// GEST-1 §2. The same arbiter the Sunshine picture uses, so the two backends
 /// cannot drift: one state machine, one set of thresholds, one alias table.

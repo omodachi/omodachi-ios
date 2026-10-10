@@ -10,7 +10,7 @@ import SwiftUI
 /// * **left** — the Omodachi logo (panel ①), the 6px connection dot (A-37) and
 ///   the workspaces. The workspaces stay here in portrait too; Leo: "侧边反而比
 ///   横向控件更充足".
-/// * **centre** — empty, except under Remote, where it is A-60's five quick
+/// * **centre** — empty, except under Remote, where it is A-60's four quick
 ///   actions. It is the only segment whose contents depend on context.
 /// * **right** — the panel entries the registry has enabled (A-50). This is the
 ///   only place in the app they appear.
@@ -36,13 +36,16 @@ struct BarView: View {
     var contentInsets = EdgeInsets()
     /// The bar's own long edge, already minus what the window reserves.
     let available: CGFloat
-    /// A-60. Empty off Remote; five while a session is up.
+    /// A-60. Empty off Remote; four while a session is up.
     var quickActions: [QuickActionState] = []
     let onQuickAction: (QuickAction) -> Void
     /// The badge style (Study 04 §7 open question 1), read from Settings.
     var badgeStyle: BarBadgeStyle = .dot
     /// What each entry has to say for itself: a badge and a dot.
     var status: (PanelID) -> (badge: BarBadge, dot: ThemeColorRole?, value: String?) = { _ in (.none, nil, nil) }
+    /// Which edge the bar sits on, offered by a hold on the bar's empty
+    /// stretch (a hold on a slot names the slot, LITE-1c).
+    var edgeMenu: AnyView?
 
     @State private var overflowOpen = false
 
@@ -59,7 +62,7 @@ struct BarView: View {
 
     var body: some View {
         let plan = plan
-        BarSurface(edge: edge, contentInsets: contentInsets) {
+        BarSurface(edge: edge, contentInsets: contentInsets, menu: edgeMenu) {
             leading(plan)
         } centre: {
             centre(plan)
@@ -114,6 +117,13 @@ struct BarView: View {
     }
 
     private var connectionRole: ThemeColorRole {
+        // HERDR-11 §3: the one clock first - amber after 4 s without a word
+        // from the computer, red after 15 s - whatever the socket's state says.
+        switch home.health {
+        case .trouble: return .yellow
+        case .lost: return .red
+        case .live: break
+        }
         // PAIR-5 §2: a host that is not answering is grey for as long as that
         // is true, including while the bounded reconnect is between tries.
         if home.hostOffline { return .muted }
@@ -128,7 +138,10 @@ struct BarView: View {
     }
 
     private var connectionLabel: String {
-        switch home.connectionState {
+        if home.health != .live, let message = home.healthMessage { return message }
+        return switch home.connectionState {
+        // TAIL-3b: the bar says only "Connected"; the road is said once, under
+        // the host name (H-A).
         case .connected: Strings.barConnectionConnected
         case .connecting: Strings.barConnectionConnecting
         case .reconnecting: Strings.barConnectionReconnecting
@@ -190,18 +203,33 @@ struct BarView: View {
     @ViewBuilder private var trailing: some View {
         ForEach(registry.barEntries) { entry in
             let reading = status(entry.id)
-            BarSlot(state: router.panel == entry.id && router.panelAreaVisible ? .selected : .idle,
+            let selected = router.panel == entry.id && router.panelAreaVisible
+            // MOTION-1: the Agent entry is the vendor's mark while nothing is
+            // happening, and our animated o while the agent thinks, works,
+            // waits, or has finished or failed a turn nobody has looked at.
+            let face = entry.id == .agent ? home.agentFace(unseenOnly: true) : nil
+            let words = [face.map { AgentFaceWords.word($0.state, tool: $0.tool) }, reading.value].compactMap { $0 }
+            BarSlot(state: selected ? .selected : .idle,
                     badge: reading.badge, dot: reading.dot,
-                    label: entry.title, value: reading.value,
+                    label: entry.title,
+                    value: words.isEmpty ? nil : words.joined(separator: ", "),
                     identifier: identifier(for: entry.id),
                     vertical: vertical,
                     action: { router.tapEntry(entry.id) }) {
-                // ③ and ④ are windows onto somebody else's product, so they
-                // carry that vendor's own mark, monochromed to the bar's
-                // foreground like every other glyph in this row.
-                BrandGlyph(mark: entry.brand(provider: home.state.defaultAgentKind),
-                           fallback: entry.icon, points: NativeBarMetrics.glyph)
+                if let face, AgentFaceSurface.bar.code(face.state).hasPrefix("A") {
+                    AgentFace(state: face.state, tool: face.tool, surface: .bar, size: NativeBarMetrics.faceGlyph,
+                              ground: selected ? .selected : .bar)
+                } else {
+                    // ③ and ④ are windows onto somebody else's product, so they
+                    // carry that vendor's own mark, monochromed to the bar's
+                    // foreground like every other glyph in this row.
+                    BrandGlyph(mark: entry.brand(provider: home.state.defaultAgentKind),
+                               fallback: entry.icon, points: NativeBarMetrics.glyph)
+                        .opacity(face?.state == .offline ? AgentFaceDim.offline : 1)
+                }
             }
+            // TUTORIAL-1: a tour stop points at this entry by its panel id.
+            .tourAnchor(entry.id.rawValue)
         }
     }
 
@@ -229,11 +257,13 @@ struct BarEdgeLayout<Bar: View, Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
+        // LITE-1c: the bar is drawn above the content so a slot's name
+        // bubble, which hangs over the content side, is not covered by it.
         switch edge {
-        case .top: VStack(spacing: 0) { bar(); content() }
-        case .bottom: VStack(spacing: 0) { content(); bar() }
-        case .left: HStack(spacing: 0) { bar(); content() }
-        case .right: HStack(spacing: 0) { content(); bar() }
+        case .top: VStack(spacing: 0) { bar().zIndex(1); content() }
+        case .bottom: VStack(spacing: 0) { content(); bar().zIndex(1) }
+        case .left: HStack(spacing: 0) { bar().zIndex(1); content() }
+        case .right: HStack(spacing: 0) { content(); bar().zIndex(1) }
         }
     }
 }

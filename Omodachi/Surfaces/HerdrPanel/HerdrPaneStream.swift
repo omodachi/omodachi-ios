@@ -14,6 +14,9 @@ import Foundation
         /// The caller stays on `observe`; it never escalates on its own.
         case controlInUse
         case message(HerdrStreamMessage)
+        /// HERDR-11 §3: the socket answered a beat ping. An idle pane sends no
+        /// frames, so silence proves nothing; a pong does.
+        case alive
         /// The socket ended. `reason` is the bridge's own close code when it
         /// sent one, never peer terminal output.
         case ended(reason: String?)
@@ -22,26 +25,32 @@ import Foundation
     let mode: HerdrStreamMode
     private let client: CompanionHostClient
     private let pane: String
+    /// HERDR-3: "Take over" — Herdr's own `--takeover`, and core ends another
+    /// device's stream on the same pane.
+    private let takeover: Bool
     private var task: URLSessionWebSocketTask?
     private var reader: Task<Void, Never>?
+    private var beat: Task<Void, Never>?
     private var pending: [HerdrControlCommand] = []
     private(set) var isOpen = false
 
-    init(client: CompanionHostClient, pane: String, mode: HerdrStreamMode) {
+    init(client: CompanionHostClient, pane: String, mode: HerdrStreamMode, takeover: Bool = false) {
         self.client = client
         self.pane = pane
         self.mode = mode
+        self.takeover = takeover
     }
 
     func start(cols: Int, rows: Int, handler: @escaping @MainActor (Event) -> Void) {
         stop()
-        let client = self.client, pane = self.pane, mode = self.mode
+        let client = self.client, pane = self.pane, mode = self.mode, takeover = self.takeover
         let geometry = HerdrGeometry.clamp(cols: cols, rows: rows)
         reader = Task { [weak self] in
             let socket: URLSessionWebSocketTask
             do {
                 socket = try await client.makeHerdrSocket(pane: pane, mode: mode,
-                                                          cols: geometry.cols, rows: geometry.rows)
+                                                          cols: geometry.cols, rows: geometry.rows,
+                                                          takeover: takeover)
             } catch {
                 guard !Task.isCancelled else { return }
                 handler(.ended(reason: nil))
@@ -53,6 +62,16 @@ import Foundation
             }
             self.task = socket
             socket.resume()
+            // HERDR-11 §3: the watching socket's heartbeat. Core pings it too
+            // (aiohttp `heartbeat=20`), but only to protect itself; this side
+            // learns a path died without a goodbye only by asking.
+            self.beat = Task { [weak socket] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: EventLiveness.beat)
+                    guard let socket, !Task.isCancelled else { return }
+                    if await EventLiveness.ping(socket, deadline: .seconds(3)) { handler(.alive) }
+                }
+            }
             var announced = false
             while !Task.isCancelled {
                 do {
@@ -102,14 +121,38 @@ import Foundation
 
     /// `terminal.release` first, then the socket. Leaving a pane must not look
     /// to Herdr like a client that vanished mid-session.
-    func release() {
-        if mode == .control, isOpen { send(.release) }
+    ///
+    /// HERDR-3: the socket is cancelled only after the release frame has been
+    /// handed to the network (or a short timeout), because cancelling at once
+    /// is how the frame used to be lost. `restoring` is the pane's own size on
+    /// the computer: `control` resized the shared PTY to this screen, so it is
+    /// put back before the release rather than left at the phone's size.
+    func release(restoring size: (cols: Int, rows: Int)? = nil) async {
+        guard mode == .control, isOpen, let task else { stop(); return }
+        if let size {
+            let geometry = HerdrGeometry.clamp(cols: size.cols, rows: size.rows)
+            await Self.deliver(.resize(cols: geometry.cols, rows: geometry.rows), on: task)
+        }
+        await Self.deliver(.release, on: task)
         stop()
+    }
+
+    /// Sends one command and waits for URLSession to say it went (or failed),
+    /// at most one second.
+    private static func deliver(_ command: HerdrControlCommand, on task: URLSessionWebSocketTask) async {
+        let once = ResumeOnce()
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            once.arm(continuation)
+            task.send(.string(command.json)) { _ in once.resume() }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 1) { once.resume() }
+        }
     }
 
     func stop() {
         reader?.cancel()
         reader = nil
+        beat?.cancel()
+        beat = nil
         isOpen = false
         pending = []
         task?.cancel(with: .goingAway, reason: nil)
@@ -166,5 +209,23 @@ struct HerdrInputEncoder {
         }
         guard !buffer.isEmpty else { return nil }
         return String(decoding: buffer, as: UTF8.self)
+    }
+}
+
+/// A continuation resumed by whichever of two callbacks comes first, once.
+private final class ResumeOnce: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    func arm(_ continuation: CheckedContinuation<Void, Never>) {
+        lock.lock(); self.continuation = continuation; lock.unlock()
+    }
+
+    func resume() {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume()
     }
 }

@@ -1,0 +1,56 @@
+{
+  "contract_revision": "omodachi.v1",
+  "home": "/home/user",
+  "recent": [
+    {
+      "path": "/home/user/Work/omodachi",
+      "display": "~/Work/omodachi",
+      "name": "omodachi"
+    },
+    {
+      "path": "/home/user/code",
+      "display": "~/code",
+      "name": "code"
+    }
+  ],
+  "common": [
+    {
+      "path": "/home/user",
+      "display": "~",
+      "name": "~"
+    },
+    {
+      "path": "/home/user/Work",
+      "display": "~/Work",
+      "name": "Work"
+    },
+    {
+      "path": "/home/user/Projects",
+      "display": "~/Projects",
+      "name": "Projects"
+    },
+    {
+      "path": "/home/user/code",
+      "display": "~/code",
+      "name": "code"
+    }
+  ],
+  "browse": null,
+  "favourites": [
+    {
+      "path": "/home/user/Work/notes",
+      "display": "~/Work/notes",
+      "name": "notes"
+    }
+  ],
+  "launchers": [
+    {
+      "command": "codex",
+      "label": "codex"
+    },
+    {
+      "command": "claude",
+      "label": "claude"
+    }
+  ]
+}

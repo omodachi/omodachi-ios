@@ -26,6 +26,10 @@ struct AgentChatHandoffResult: Decodable, Sendable {
         case sameThread = "same_thread", herdrPaneRegistered = "herdr_pane_registered"
     }
 }
+/// AGENT-NEW-1: the New conversation card. `problem` carries the sentence.
+enum AgentNewConversationState: Equatable, Sendable {
+    case none, confirming, starting, problem(String)
+}
 enum AgentChatHandoffState: Equatable, Sendable {
     case none, required, preparing, prepared(AgentChatHandoffPlan), confirming(AgentChatHandoffPlan)
     case problem(String)
@@ -41,7 +45,19 @@ struct AgentChatHostError: LocalizedError, Sendable {
             "handoff_rolled_back", "handoff_plan_expired", "handoff_target_changed", "handoff_stop_unconfirmed",
             "handoff_attach_unconfirmed", "handoff_thread_unconfirmed", "agent_owner_start_failed",
             "agent_owner_start_timeout", "agent_owner_socket_unavailable", "thread_creation_unconfirmed",
-            "provider_request_rejected", "structured_agent_kind_unsupported", "agent_state_unknown"]
+            "provider_request_rejected", "structured_agent_kind_unsupported", "agent_state_unknown",
+            // ATTACH-1: a chip whose file is no longer on the computer
+            "attachment_gone",
+            // AGENT-NEW-1
+            "agent_turn_active", "agent_approval_pending", "agent_identity_changed", "agent_conversation_changing",
+            "new_conversation_confirmation_required", "agent_thread_creation_unconfirmed",
+            // NOTIFY-1: a decision (from an alert) that found that request
+            // answered already, or reading differently now. Nothing was sent.
+            "agent_approval_unknown", "agent_approval_changed",
+            // AGENT-PLAN-1
+            "agent_mode_unavailable", "invalid_agent_mode", "agent_command_while_working",
+            // AGENT-QUEUE-1: handled where they happen, never shown as such
+            "agent_queue_unavailable", "agent_queue_item_gone", "agent_history_row_unknown"]
         guard let candidate, known.contains(candidate) else { return "agent_chat_unavailable" }
         return candidate
     }

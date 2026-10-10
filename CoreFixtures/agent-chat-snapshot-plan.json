@@ -1,0 +1,83 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a111c7-37fd-7c51-b91e-e01c6068075d"
+  },
+  "rows": [
+    {
+      "kind": "message",
+      "id": "01a111c7-3c82-7133-bf25-95b38e8ac58a",
+      "turnID": "01a111c7-3c34-7b31-8f19-5acdd1b81487",
+      "role": "user",
+      "text": "hello"
+    },
+    {
+      "kind": "message",
+      "id": "m-d1",
+      "turnID": "01a111c7-3c34-7b31-8f19-5acdd1b81487",
+      "role": "assistant",
+      "text": "Done in none mode, turn 1."
+    },
+    {
+      "kind": "message",
+      "id": "01a111c7-3cca-76a3-943d-a1280a0ecc89",
+      "turnID": "01a111c7-3ca1-7352-91f4-d9a9fd25c744",
+      "role": "user",
+      "text": "plan the port change"
+    },
+    {
+      "kind": "message",
+      "id": "m-p3",
+      "turnID": "01a111c7-3ca1-7352-91f4-d9a9fd25c744",
+      "role": "assistant",
+      "text": "Here is what I would do.\n\n"
+    },
+    {
+      "kind": "message",
+      "id": "01a111c7-3ca1-7352-91f4-d9a9fd25c744-plan",
+      "turnID": "01a111c7-3ca1-7352-91f4-d9a9fd25c744",
+      "role": "assistant",
+      "text": "# Read the port from the environment\n\n1. Add a `PORT` setting with 9090 as the default.\n2. Use it in `main()` instead of 8080.\n3. Run the tests on SQLite.\n",
+      "plan": true
+    }
+  ],
+  "activeTurn": null,
+  "sequence": 32,
+  "acceptedRequestIDs": [],
+  "pendingApprovals": [],
+  "status": {
+    "type": "idle",
+    "activeFlags": [],
+    "waiting": null
+  },
+  "usage": {
+    "tokens": {
+      "last": {
+        "inputTokens": 10,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 5,
+        "reasoningOutputTokens": 0,
+        "totalTokens": 15
+      },
+      "total": {
+        "inputTokens": 30,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 15,
+        "reasoningOutputTokens": 0,
+        "totalTokens": 45
+      },
+      "modelContextWindow": 258400
+    },
+    "rate_limits": {},
+    "model": "gpt-fixture",
+    "effort": "high",
+    "mode": "plan"
+  },
+  "earlier": false,
+  "queue": null,
+  "checklist": null
+}

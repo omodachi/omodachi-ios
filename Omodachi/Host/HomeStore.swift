@@ -44,7 +44,14 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
             reportToast(PanelToast(stage: panelToast?.stage ?? .message, label: notice))
         }
     }
-    @Published var profile: HostProfile { didSet { if oldValue != profile { saveProfile() } } }
+    @Published var profile: HostProfile {
+        didSet {
+            guard oldValue != profile else { return }
+            saveProfile()
+            // TAIL-3b I2: an Odomo address belongs to the host it came from.
+            if oldValue.companionURL != profile.companionURL { odomo = nil }
+        }
+    }
     /// STORE-1 §1. The demo is on (`Host/DemoHost.swift`). It is never stored:
     /// a relaunch is back at the host list.
     @Published var demoActive = false
@@ -69,6 +76,37 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     /// and .offline every few seconds — so the one row ① draws about it does
     /// not blink, and the dot stays grey rather than strobing.
     @Published var hostOffline = false
+    /// MOTION-1: the last turn whose done / error the Agent panel has shown.
+    /// The bar keeps our animated o for a finished or failed turn until then.
+    @Published private(set) var agentSeenTurn: String?
+    /// The address the live connection reached, and `nil` while there is no
+    /// connection. TAIL-3b: always the host's one road (or its `.local`
+    /// spelling); the Remote entry re-reads its capabilities when it changes.
+    @Published var road: HostRoad?
+    /// TAIL-3b I2 / LITE-1d: what the host said about Odomo on the
+    /// authenticated `GET /v1/host/roads` — its address (none without
+    /// Tailscale there) and how many devices get its pushes. `nil` until the
+    /// roads of this host have been read.
+    @Published var odomo: OdomoReading?
+    var odomoURL: URL? { odomo?.url }
+    /// LITE-1d: the card on Notifications and the row in Settings.
+    var odomoState: OdomoOffer.State {
+        guard !profile.mock, !demoActive, !profile.companionURL.isEmpty else { return .unknown }
+        return OdomoOffer.state(odomo)
+    }
+    /// LITE-1d: what "Not now" is remembered under — this computer.
+    var odomoHostKey: String {
+        hostPin?.hostID ?? HostAccount.canonical(profile.companionURL)
+    }
+    /// Bumped by "Hide", the Settings switch and a link from Odomo, so the
+    /// views that read the memories redraw.
+    @Published var odomoNotNowRevision = 0
+    /// TAIL-3b: "Use Tailscale for <host>…" from ①'s offline row opens ⑥ on
+    /// this host's move. Settings reads it once and clears it.
+    @Published var pendingMoveAccount: String?
+    /// TAIL-3b I1: a link named a host this device is not paired with. The
+    /// first screen shows it too, where there is no Panel for a toast.
+    @Published var linkMessage: String?
     /// Exact host-prepared Agent target retained for Ask-agent navigation.
     /// This is metadata only; it never contains prompt text or terminal output.
     @Published var preparedAgentDescriptor: SessionDescriptor?
@@ -84,9 +122,42 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     /// snapshot is the reading that cannot be wrong, so the surface re-reads
     /// `GET /v1/herdr/layout` when this moves.
     @Published private(set) var herdrLayoutRevision = 0
-    func noteHerdrLayoutChanged() { herdrLayoutRevision &+= 1 }
+    /// HERDR-11 §4: which session the last `herdr.layout.changed` was about,
+    /// so the Herdr panel re-reads only for its own (nil: a core that did not say).
+    private(set) var herdrLayoutSession: String?
+    func noteHerdrLayoutChanged(session: String? = nil) {
+        herdrLayoutSession = session
+        herdrLayoutRevision &+= 1
+    }
+    /// HERDR-11 §3: the one connection clock, read by the bar, every panel and
+    /// the Herdr mirror (`ConnectionHealth`, `HomeHealth.swift`).
+    @Published var health: ConnectionHealth = .live
+    /// OVERVIEW-1: everything on the computer that wants Leo, one list
+    /// (`HomeStore+Overview.swift`). Read through `overviewShown`.
+    @Published var overview: OverviewReading = .empty
+    /// OVERVIEW-1: an older core's own fields, for `OverviewReading.fallback`.
+    var overviewLegacy = OverviewLegacyInputs()
+    /// When the host last proved it is there; nil until it has, this time.
+    var lastLiveAt: Date?
+    /// When the connection was last wanted from cold (launch, foreground).
+    var wantedSince = Date()
+    var healthTask: Task<Void, Never>?
+    let networkPath = NetworkPathWatcher()
+    /// HERDR-11 §3: bumped when the network came back or moved, so the Herdr
+    /// mirror reconnects at once instead of after its backoff.
+    @Published private(set) var networkReturns = 0
+    func noteNetworkReturned() { networkReturns &+= 1 }
+    /// NOTIFY-2: the app's own alerts read this connection's events, whatever
+    /// panel is on screen. Set by the app at launch; `nil` in a unit test that
+    /// does not ask for it.
+    var attention: AttentionNotifier?
 
     let defaults: UserDefaults
+    /// HERDR-4: the one-time hints, remembered on this device.
+    let hints: OnceHints
+    /// TUTORIAL-1: the first-steps tour, kept with the hints it shares a
+    /// registry with.
+    let tour: FirstStepsTour
     let clientFactory: @MainActor (CompanionHostConfiguration, String?) -> any CompanionServing
     let pinStore: HostPinStore
     var client: (any CompanionServing)?
@@ -161,12 +232,11 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     /// Sunshine grant and — since AUTH-1 — its approval key are all keyed on.
     /// It is also one of the signed fields, so reading it from anywhere else
     /// would silently break every signature.
+    ///
+    /// REMOTE-PAIR-1: it lives in the Keychain now, beside the credential it
+    /// names, so a reinstall cannot split the two (`CompanionDeviceIdentity`).
     static func companionDeviceID(defaults: UserDefaults = AppDefaults.shared) -> String {
-        let key = "omodachi.deviceID.v1"
-        if let value = defaults.string(forKey: key), PairingClient.validDeviceID(value) { return value }
-        let value = "ios-" + UUID().uuidString.lowercased()
-        defaults.set(value, forKey: key)
-        return value
+        CompanionDeviceIdentity.current(defaults: defaults)
     }
     var searchTask: Task<Void, Never>?
     var toastTask: Task<Void, Never>?
@@ -198,10 +268,17 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
          clientFactory: (@MainActor (CompanionHostConfiguration, String?) -> any CompanionServing)? = nil,
          autoConnect: Bool = true) {
         self.defaults = defaults
+        let hints = OnceHints(defaults: defaults)
+        self.hints = hints
+        self.tour = FirstStepsTour(hints: hints, defaults: defaults)
         self.pinStore = pinStore
         self.clientFactory = clientFactory ?? { CompanionHostClient(configuration: $0, credentials: credentials, pinnedFingerprint: $1) }
         profile = defaults.data(forKey: "omodachi.profile.v1").flatMap { try? JSONDecoder().decode(HostProfile.self, from: $0) } ?? HostProfile()
+        // TAIL-3b: TAIL-2's last-good-road memory is gone with the rotation it
+        // fed; nothing reads the key any more.
+        defaults.removeObject(forKey: "omodachi.lastGoodRoad.v1")
         resetPresentation()
+        startHealth()
         if autoConnect, !profile.mock, !profile.companionURL.isEmpty {
             Task { [weak self] in await self?.connectCompanion() }
         }
@@ -240,14 +317,30 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
         state.streamState = snapshot.remote?.state ?? "Disconnected"
         state.defaultAgentKind = latestDefaultAgent?.configuredKind ?? latestDefaultAgent?.omarchyDefaultAgent
         state.agentStatus = AgentStatus(rawValue: snapshot.agent?.status.rawValue ?? "unknown") ?? .unknown
+        state.agentStatusText = snapshot.agent?.statusText
+        state.agentActivity = snapshot.agent?.chat
+        // NOTIFY-2: the snapshot is where the alerts learn the agent's status
+        // after a (re)connect, and which pane is the default agent's own.
+        if companionConnected, !profile.mock {
+            attention?.stateApplied(agentStatus: snapshot.agent?.statusText, defaultPane: latestDefaultAgent?.paneID,
+                                    hostName: state.hostName, herdrBlocked: snapshot.herdr?.blocked,
+                                    approval: snapshot.agent?.approval, desk: snapshot.desk, unseen: snapshot.unseen)
+        }
+        // OVERVIEW-1: the list, or what an older core says instead.
+        applyOverview(snapshot)
         state.herdrAgentCount = snapshot.herdr?.agentCount
         state.toggles = snapshot.toggles
         // ARCH-1 §5 #17: one reader for Do Not Disturb, and it is the snapshot.
         // A host too old to publish it leaves the last reading alone rather
         // than claiming "off".
         if let dnd = snapshot.notifications?.dnd { notifications.dnd = dnd }
-        if let catalog = snapshot.catalog { applyCatalog(catalog) }
-        else { for item in flattened { if let value = item.checked { state.toggles[item.id] = value } } }
+        if let catalog = snapshot.catalog, !(catalog.unchanged == true && catalog.revision == catalogRevision) {
+            applyCatalog(catalog)
+        } else {
+            // No catalog, or HERDR-11's "the one you hold is current": the rows
+            // on hand stand, and the toggles keep their last reading.
+            for item in flattened { if let value = item.checked { state.toggles[item.id] = value } }
+        }
         rebuildBar()
         onStateApplied?()
         return true
@@ -340,10 +433,33 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
     /// VoiceOver value says `连不上`, which is the whole report — a sentence
     /// under the menu would be the N-33 status line again, and a permanent one,
     /// because nothing clears it.
+    // MARK: MOTION-1 — the agent's face
+
+    private var agentSeenKey: String { "omodachi.agentFace.seenTurn.\(profile.id.uuidString)" }
+
+    /// The Agent panel is on screen: whatever finished there has been seen.
+    func markAgentSeen() {
+        // INTEGRATE-2: a stopped (interrupted) turn is seen the same way.
+        guard let activity = state.agentActivity, ["done", "error", "stopped"].contains(activity.phase),
+              let turn = activity.turnID, turn != (agentSeenTurn ?? defaults.string(forKey: agentSeenKey)) else { return }
+        agentSeenTurn = turn
+        defaults.set(turn, forKey: agentSeenKey)
+    }
+
+    /// The default agent's face. `unseenOnly` is the bar's rule: done, error
+    /// and stopped count only until the panel has shown them.
+    func agentFace(unseenOnly: Bool) -> (state: AgentFaceState, tool: Bool) {
+        AgentFaceMapping.agent(connected: companionConnected || demoActive, activity: state.agentActivity,
+                                      statusText: state.agentStatusText,
+                                      seenTurn: agentSeenTurn ?? defaults.string(forKey: agentSeenKey),
+                                      unseenOnly: unseenOnly)
+    }
+
     func markUnavailable(_ error: Error?) {
         workspaceLayoutOffer = nil; workspaceLayoutRetry = nil; workspaceLayoutBusy = false
         hostWakeState = nil; wakingDesktop = false
         companionConnected = false
+        road = nil
         releaseHostIcons()
         hostOffline = Self.describesAnUnreachableHost(error)
         connectionState = hostOffline ? .offline : .unavailable
@@ -472,6 +588,20 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
         return result
     }
 
+    /// TAIL-3b. The road this host is *set to* — connected or not. It is what
+    /// the header's second line, Settings and the offline row say, and it is
+    /// the only road anything here dials.
+    var hostRoad: HostRoad? {
+        guard !profile.mock, !profile.companionURL.isEmpty else { return nil }
+        let account = HostAccount.canonical(profile.companionURL)
+        return hostPin?.road(account: account) ?? HostRoads.road(forAccount: account)
+    }
+
+    /// H-A: the road in one or two words, under the host name.
+    var roadWord: String? { hostRoad.map(HostRoadWords.word) }
+    /// The road with its address, for VoiceOver and the iPad header.
+    var roadValue: String? { hostRoad.map(HostRoadWords.a11y) }
+
     /// What pairing pinned for this endpoint: the host's own installation
     /// identity, its certificate and the endpoints it answers on.
     var hostPin: HostPin? {
@@ -480,7 +610,28 @@ struct CompanionConnectionDiagnostics: Codable, Sendable {
 
     /// §2: the SSH surface dials the paired address with the account from
     /// Setup. `nil` means there is nothing to dial and the surface says so.
-    var sshTarget: SSHTarget? { SSHTargetResolver.resolve(profile: profile, pin: hostPin) }
+    var sshTarget: SSHTarget? { SSHTargetResolver.resolve(profile: profile, pin: hostPin, road: sshRoad) }
+
+    /// TAIL-2 P0-4 / TAIL-3b. The terminal follows the host's one road:
+    /// a Tailscale host's terminal is its MagicDNS name, a Wi-Fi host's the
+    /// address the claim named.
+    var sshRoad: HostRoad? { hostRoad }
+
+    /// TAIL-2 P0-4. A terminal session restored from before a road change
+    /// stored the address it resolved back then; it dials where this host's
+    /// terminal is *now*. Only this host's own profile is re-resolved.
+    func resolveSSHHost(_ stored: HostProfile) -> HostProfile {
+        guard !stored.mock, stored.id == profile.id, !profile.mock else { return stored }
+        return sshProfile
+    }
+
+    /// TAIL-2 P1-1. Tailscale SSH answers port 22 on the tailnet in sshd's
+    /// place, so over the tailnet this device's key and approval decide
+    /// nothing and the connect can sit on a browser check. Said, not hung on.
+    var sshTailscaleNotice: String? {
+        guard hostPin?.ssh?.tailscaleSSH == true, sshRoad?.kind == .tailnet else { return nil }
+        return Strings.sshTailscaleSSH
+    }
 
     /// The profile one SSH session should carry, with the resolved address
     /// written in. The profile id — and so the Keychain account holding the

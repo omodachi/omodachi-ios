@@ -12,7 +12,8 @@
     "urgency": "critical",
     "timestamp": 1789711988810,
     "has_action": true,
-    "active": true
+    "active": true,
+    "kind": "pairing_request"
   },
   "ts": 1789430400.0,
   "contract_revision": "omodachi.v1"

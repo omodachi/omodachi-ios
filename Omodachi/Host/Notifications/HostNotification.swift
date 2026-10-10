@@ -22,10 +22,18 @@ public struct HostNotification: Identifiable, Equatable, Sendable, Decodable {
     /// `true` while the toast is still on screen on the desktop. A notification
     /// that DND silenced is written straight to history and is never active.
     public var active: Bool
+    /// NOTIFY-3. `pairing_request` / `ssh_request` on Omodachi's own request
+    /// notifications, nil on everything else. Such a row is decided on the
+    /// computer, so a tap explains that instead of firing the desktop's action.
+    public let kind: String?
+    /// NOTIFY-3. Only on `notification.updated`: the request was decided and
+    /// core took the notification down. The row leaves the list; it is not
+    /// history.
+    public let withdrawn: Bool
 
     enum CodingKeys: String, CodingKey {
         case id, app, summary, body, glyph, urgency, timestamp
-        case hasAction = "has_action", active
+        case hasAction = "has_action", active, kind, withdrawn
     }
 
     public init(from decoder: Decoder) throws {
@@ -39,15 +47,22 @@ public struct HostNotification: Identifiable, Equatable, Sendable, Decodable {
         timestamp = try c.decodeIfPresent(Int.self, forKey: .timestamp) ?? 0
         hasAction = try c.decodeIfPresent(Bool.self, forKey: .hasAction) ?? false
         active = try c.decodeIfPresent(Bool.self, forKey: .active) ?? false
+        kind = try c.decodeIfPresent(String.self, forKey: .kind)
+        withdrawn = try c.decodeIfPresent(Bool.self, forKey: .withdrawn) ?? false
     }
 
     public init(id: String, app: String, summary: String, body: String, glyph: String? = nil,
-                urgency: Urgency = .normal, timestamp: Int, hasAction: Bool, active: Bool) {
+                urgency: Urgency = .normal, timestamp: Int, hasAction: Bool, active: Bool,
+                kind: String? = nil, withdrawn: Bool = false) {
         self.id = id; self.app = app; self.summary = summary; self.body = body; self.glyph = glyph
         self.urgency = urgency; self.timestamp = timestamp; self.hasAction = hasAction; self.active = active
+        self.kind = kind; self.withdrawn = withdrawn
     }
 
     public var date: Date { Date(timeIntervalSince1970: Double(timestamp) / 1000) }
+
+    /// NOTIFY-3: one of Omodachi's own pairing or SSH-key requests.
+    public var isRequest: Bool { kind == "pairing_request" || kind == "ssh_request" } // non-copy: wire values
 }
 
 struct HostNotificationPage: Decodable, Sendable {
@@ -107,9 +122,12 @@ struct HostNotificationList: Equatable, Sendable {
     /// A-45. Removing a row from *this device's* list. It is deliberately not
     /// conditional on the host: a row already in history has nothing on the
     /// desktop to dismiss, and a user who swiped it away here has said they do
-    /// not want to see it here. The host's own history is untouched and a
-    /// reload brings it back — which is the honest behaviour, because this
-    /// client is a mirror and does not own the record.
+    /// not want to see it here. The host's own history is untouched.
+    ///
+    /// NOTIFY-3: and it stays removed. This used to be remembered for the life
+    /// of the connection only, so the next launch or reconnect put every
+    /// cleared row back — Leo's "点不掉". `removed` is now kept per computer
+    /// (`HomeStore.saveRemovedNotifications`).
     @discardableResult mutating func remove(id: String) -> Bool {
         guard let index = rows.firstIndex(where: { $0.id == id }) else { return false }
         removed.insert(id)
@@ -132,6 +150,34 @@ struct HostNotificationList: Equatable, Sendable {
         rows[index].active = false
     }
 
+    /// NOTIFY-3. `notification.updated`: a toast left the desktop's screen (the
+    /// row stays, as history), or a request was decided (`withdrawn`: the row
+    /// goes — not into `removed`, since nobody here chose to hide it).
+    mutating func update(_ row: HostNotification) {
+        if row.withdrawn {
+            rows.removeAll { $0.id == row.id }
+        } else {
+            markInactive(id: row.id)
+        }
+    }
+
+    /// NOTIFY-3. What this device removed on an earlier run, for this computer.
+    mutating func restore(removed ids: Set<String>) {
+        removed.formUnion(ids)
+        rows.removeAll { ids.contains($0.id) }
+    }
+
+    /// The ids worth keeping: the newest `limit`, by the shell's id
+    /// (`<ms>-<id>`, compared as numbers). Older ones are long out of the
+    /// shell's ten-file history and core's 500.
+    func removedToKeep(limit: Int = 500) -> [String] {
+        func key(_ id: String) -> (Int, Int) {
+            let parts = id.split(separator: "-")
+            return (Int(parts.first ?? "") ?? 0, Int(parts.last ?? "") ?? 0)
+        }
+        return Array(removed.sorted { key($0) < key($1) }.suffix(limit))
+    }
+
     private mutating func trim() {
         if rows.count > Self.limit { rows.removeLast(rows.count - Self.limit) }
     }
@@ -145,8 +191,12 @@ struct HostNotificationList: Equatable, Sendable {
     /// The shell only exposes "fire the newest popup's default action", and
     /// core refuses anything else rather than running a stored command line.
     /// So the button exists on exactly one row, and only when it has an action.
+    ///
+    /// NOTIFY-3: never on one of Omodachi's own requests. Its action summons
+    /// the plugin's Devices view *on the computer* — nothing a phone shows — so
+    /// a tap on it explains where it is decided instead.
     func canInvoke(_ row: HostNotification) -> Bool {
-        row.hasAction && row.active && newestActive?.id == row.id
+        row.hasAction && row.active && !row.isRequest && newestActive?.id == row.id
     }
 
     /// Dismissing is offered for anything still on screen. A row already in

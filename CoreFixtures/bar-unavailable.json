@@ -1,8 +1,11 @@
 {
   "source": "shell.json",
   "source_status": "unavailable",
+  "position": null,
+  "modules": [],
+  "geometry": null,
   "left": [],
   "center": [],
   "right": [],
-  "revision": "18945923577c1855"
+  "revision": "39456a3e939e541b"
 }

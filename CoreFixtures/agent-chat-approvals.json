@@ -17,7 +17,8 @@
         "acceptForSession",
         "decline",
         "cancel"
-      ]
+      ],
+      "fingerprint": "082804af34b61a3b"
     }
   ],
   "contract_revision": "omodachi.v1"

@@ -25,6 +25,16 @@ struct AgentChatQuestion: Identifiable, Equatable, Sendable {
     let question: String
     let secret: Bool
     let options: [String]
+    /// AGENT-COLLIE-1: each option with the sentence codex sends beside it
+    /// (core's `choices`; from an older core, the bare labels).
+    var choices: [AgentChatChoice] = []
+    /// codex's `isOther`: the person may answer in their own words.
+    var other = false
+}
+
+struct AgentChatChoice: Equatable, Sendable {
+    let label: String
+    var description: String? = nil
 }
 
 enum AgentChatApprovalState: Equatable, Sendable {
@@ -38,7 +48,8 @@ enum AgentChatApprovalState: Equatable, Sendable {
 }
 
 struct AgentChatApproval: Identifiable, Equatable, Sendable {
-    let requestID: String
+    /// The provider's handle. `retire()` is the only thing that changes it.
+    private(set) var requestID: String
     let kind: String
     let summary: String
     let details: [AgentChatDetail]
@@ -47,8 +58,32 @@ struct AgentChatApproval: Identifiable, Equatable, Sendable {
     /// prompt, which is answered with values rather than a decision.
     let decisions: [String]
     var state: AgentChatApprovalState = .pending
+    /// AGENT-FIX-2 (Leo: "通过的 permission 会在底部堆积"). The tool row this
+    /// prompt is about - core's `details.item_id` - and the row that was last
+    /// on screen when it arrived. An answered prompt is drawn as one line
+    /// under the first of them that is still there, where it happened; it
+    /// never stays at the bottom of the conversation.
+    var itemID: String? = nil
+    var afterRowID: String? = nil
+    /// AGENT-COLLIE-1: what this device answered a `userInput` prompt with,
+    /// in question order, for the answered line. A secret answer is never
+    /// kept here (nil when every answer was secret or it was answered on the
+    /// host).
+    var answered: [String]? = nil
+    /// AGENT-COLLIE-1: a `fileChange` prompt's files and line counts, as
+    /// core named them (`details.files`, `added`, `removed`). The change
+    /// itself is drawn from the row `itemID` names.
+    var changeFiles: [String] = []
+    var changeAdded = 0
+    var changeRemoved = 0
 
     var id: String { requestID }
+    /// AGENT-FIX-2: an answered prompt whose id the provider has handed to a
+    /// new one keeps its line under a name of its own, so the new prompt's
+    /// answer can never land on it.
+    mutating func retire() {
+        requestID += "~" + String(UUID().uuidString.prefix(8))
+    }
     var isPending: Bool { if case .resolved = state { false } else { true } }
     var isDeciding: Bool { if case .deciding = state { true } else { false } }
 
@@ -70,6 +105,8 @@ struct AgentChatApproval: Identifiable, Equatable, Sendable {
         case "acceptForSession": Strings.approvalAcceptSession
         case "decline": Strings.approvalDecline
         case "cancel": Strings.actionCancel
+        // A `userInput` prompt is answered with values, not a decision.
+        case "input": Strings.approvalAnswered
         default: decision
         }
     }
@@ -80,6 +117,9 @@ struct AgentChatApprovalResolution: Equatable, Sendable {
     let kind: String
     let decision: String
     let resolved: Bool
+    /// AGENT-QUEUE-1: where a decline's reason went - `steered` (into the
+    /// turn), `queued` (the next message) or `unsent` (the person keeps it).
+    var delivery: String? = nil
 }
 
 /// `thread/status/changed`, as core projects it. `waiting` is the provider's
@@ -138,6 +178,9 @@ struct AgentChatUsage: Equatable, Sendable {
     var planType: String?
     var model: String?
     var effort: String?
+    /// AGENT-PLAN-1: the thread's collaboration mode as codex reports it
+    /// (`default` | `plan`), nil until it has said - or from an older core.
+    var mode: String?
 
     static let empty = AgentChatUsage()
 
@@ -253,7 +296,10 @@ struct AgentChatApprovalWire: Decodable, Sendable {
 
     /// `item_id` and `turn_id` identify the row for the provider, not for the
     /// reader, so they are not drawn as detail lines.
-    private static let internalKeys: Set<String> = ["item_id", "turn_id", "questions", "approval_id"]
+    /// AGENT-COLLIE-1: `files` / `added` / `removed` are drawn as the change
+    /// summary, not as detail lines.
+    private static let internalKeys: Set<String> = ["item_id", "turn_id", "questions", "approval_id",
+                                                    "files", "added", "removed"]
 
     func value() -> AgentChatApproval {
         let fields = details ?? [:]
@@ -263,13 +309,31 @@ struct AgentChatApprovalWire: Decodable, Sendable {
         let questions = (fields["questions"]?.array ?? []).prefix(8).compactMap { row -> AgentChatQuestion? in
             guard let object = row.object, let id = object["id"]?.text, !id.isEmpty,
                   let question = object["question"]?.text ?? object["header"]?.text else { return nil }
+            let options = (object["options"]?.array ?? []).compactMap(\.text)
+            let choices = (object["choices"]?.array ?? []).compactMap { choice -> AgentChatChoice? in
+                guard let label = choice.object?["label"]?.text, !label.isEmpty else { return nil }
+                let description = choice.object?["description"]?.text
+                return AgentChatChoice(label: label, description: description?.isEmpty == false ? description : nil)
+            }
             return AgentChatQuestion(id: id, header: object["header"]?.text, question: question,
-                                     secret: object["secret"]?.flag ?? false,
-                                     options: (object["options"]?.array ?? []).compactMap(\.text))
+                                     secret: object["secret"]?.flag ?? false, options: options,
+                                     choices: choices.isEmpty ? options.map { AgentChatChoice(label: $0) } : choices,
+                                     other: object["other"]?.flag ?? false)
         }
-        return AgentChatApproval(requestID: requestID, kind: kind,
-                                 summary: summary ?? "", details: lines, questions: Array(questions),
-                                 decisions: decisions ?? [])
+        let files = (fields["files"]?.array ?? []).compactMap(\.text).prefix(8)
+        var approval = AgentChatApproval(requestID: requestID, kind: kind,
+                                         summary: summary ?? "", details: lines, questions: Array(questions),
+                                         decisions: decisions ?? [],
+                                         itemID: fields["item_id"]?.text.flatMap { $0.isEmpty ? nil : $0 })
+        if !files.isEmpty {
+            approval.changeFiles = Array(files)
+            approval.changeAdded = Self.count(fields["added"])
+            approval.changeRemoved = Self.count(fields["removed"])
+        }
+        return approval
+    }
+    private static func count(_ value: AgentChatJSON?) -> Int {
+        if case .number(let number)? = value, number >= 0, number < 1e9 { Int(number) } else { 0 }
     }
 }
 
@@ -317,11 +381,14 @@ struct AgentChatUsageWire: Decodable, Sendable {
     let rate_limits: Limits?
     let model: String?
     let effort: String?
+    /// AGENT-PLAN-1. Read leniently: anything but the two modes is no mode.
+    let mode: AgentLenient<String>?
 
     func value() -> AgentChatUsage {
         .init(last: tokens?.last?.value(), total: tokens?.total?.value(),
               modelContextWindow: tokens?.modelContextWindow,
               primary: rate_limits?.primary?.value(), secondary: rate_limits?.secondary?.value(),
-              planType: rate_limits?.planType, model: model, effort: effort)
+              planType: rate_limits?.planType, model: model, effort: effort,
+              mode: mode?.value.flatMap { ["default", "plan"].contains($0) ? $0 : nil })
     }
 }

@@ -1,0 +1,28 @@
+› 混合宽度
+• 混合宽度测试：English words 和中文混排，全角标点（，。？！
+  「」）、emoji 🙂👍、数字 12345 与 ｆｕｌｌｗｉｄｔｈ 字
+  母。
+
+   名称        说明            状态
+  ━━━━━━━━━━  ━━━━━━━━━━━━━━  ━━━━━━━━━━━
+   测试一      中文表格内容    ✅ 完成
+  ──────────  ──────────────  ───────────
+   test two    mixed 中英      ⏳ 进行中
+
+  Worked for <1s • 1:49 AM
+
+
+› 请问我两个问题
+
+
+
+  Question 2/2 (1 unanswered)
+  回答要多详细？
+
+  › 1. 简短回答           简单问题简短回答，只给结论。
+    2. 详细解释           提供更多背景、步骤和注意事项。
+    3. None of the above  Optionally, add details in notes
+                          (tab)
+
+  tab to add notes | enter to submit all
+  ←/→ to navigate questions | esc to interrupt

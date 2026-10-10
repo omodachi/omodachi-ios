@@ -72,11 +72,16 @@ enum ReasonText {
         case "sunshine_control_unavailable": Strings.reasonSunshineControlUnavailable
         case "backend_not_installed": Strings.reasonBackendNotInstalled
         case "sunshine_assets_missing": Strings.reasonSunshineAssetsMissing
+        // TAIL-2 P2-2: `capabilities.road.reason`, the path is a DERP relay.
+        case "tailnet_relayed": Strings.remoteTailnetRelayed
         case "remote_runtime_unavailable": Strings.reasonRemoteRuntimeUnavailable
         case "dynamic_resolution_policy_denied": Strings.reasonDynamicResolutionDenied
         case "host_waking": Strings.reasonHostWaking
         case "vnc_bridge_unavailable": Strings.reasonVncBridgeUnavailable
         case "vnc_bridge_exists": Strings.reasonVncBridgeExists
+        // REMOTE-INPUT-1: `POST /v1/remote/sessions/{id}/text`.
+        case "remote_text_unavailable": Strings.remoteTypingUnavailable
+        case "remote_text_failed": Strings.remoteTypingFailed
         case "viewport_aspect_unsupported", "density_profile_unsupported", "quality_profile_unsupported":
             Strings.reasonProfileUnsupported
         case "pairing_required", "invalid_request": Strings.reasonRemoteRefused
@@ -119,12 +124,41 @@ enum ReasonText {
     static func herdr(_ code: String) -> String? {
         switch code {
         case "herdr_control_in_use": Strings.reasonHerdrControlInUse
+        // ATTACH-1: a chip whose file is no longer on the computer
+        case "attachment_gone": Strings.attachGone
         case "herdr_unavailable": Strings.reasonHerdrUnavailable
         case "herdr_request_failed": Strings.reasonHerdrRequestFailed
         case "invalid_pane": Strings.reasonInvalidPane
         case "invalid_workspace": Strings.reasonInvalidWorkspace
         case "invalid_geometry": Strings.reasonInvalidGeometry
         case "herdr_action_unsupported": Strings.reasonHerdrActionUnsupported
+        // HERDR-3: keys and text
+        case "invalid_key": Strings.reasonInvalidKey
+        case "herdr_key_unsupported": Strings.reasonHerdrKeyUnsupported
+        case "herdr_too_many_keys": Strings.reasonHerdrTooManyKeys
+        case "invalid_text": Strings.reasonInvalidText
+        case "herdr_text_too_long": Strings.reasonHerdrTextTooLong
+        case "herdr_pane_gone": Strings.reasonHerdrPaneGone
+        // `/text`'s `reason`, when the text went in and Enter did not follow
+        case "not_seen": Strings.reasonHerdrNotSeen
+        case "submit_failed": Strings.reasonHerdrSubmitFailed
+        case "not_requested": Strings.reasonHerdrNotRequested
+        // VERIFY-1: a dialog has the keyboard, so nothing was typed
+        case "herdr_agent_blocked": Strings.reasonHerdrAgentBlocked
+        // HERDR-5: starting and making sessions
+        case "invalid_session": Strings.reasonInvalidSession
+        case "invalid_session_name": Strings.reasonInvalidSessionName
+        case "herdr_session_exists": Strings.reasonHerdrSessionExists
+        case "herdr_session_start_failed": Strings.reasonHerdrSessionStartFailed
+        // HERDR-6: a new workspace in a folder
+        case "invalid_folder": Strings.reasonInvalidFolder
+        case "folder_outside_home": Strings.reasonFolderOutsideHome
+        case "folder_private": Strings.reasonFolderPrivate
+        case "folder_not_found": Strings.reasonFolderNotFound
+        case "folder_unreadable": Strings.reasonFolderUnreadable
+        case "invalid_workspace_name": Strings.reasonInvalidWorkspaceName
+        // HERDR-11: a launcher the host no longer lists
+        case "herdr_launch_not_allowed": Strings.reasonHerdrLaunchNotAllowed
         default: nil
         }
     }
@@ -159,6 +193,7 @@ enum ReasonText {
 
     static func agent(_ code: String) -> String? {
         switch code {
+        case "attachment_gone": Strings.attachGone
         case "existing_thread_handoff_required": Strings.reasonHandoffRequired
         case "agent_busy", "agent_pane_busy": Strings.reasonAgentBusy
         case "handoff_rolled_back": Strings.reasonHandoffRolledBack
@@ -175,7 +210,24 @@ enum ReasonText {
         case "agent_kind_mismatch": Strings.reasonAgentKindMismatch
         case "agent_kind_unsupported": Strings.reasonAgentKindUnsupported
         case "agent_chat_unavailable": Strings.reasonAgentChatUnavailable
+        // AGENT-NEW-1
+        case "agent_turn_active": Strings.agentNewWhileWorking
+        case "agent_approval_pending": Strings.agentNewWhileWaiting
+        case "agent_identity_changed": Strings.reasonAgentReplaced
+        case "agent_conversation_changing": Strings.reasonAgentChanging
+        case "new_conversation_confirmation_required": Strings.reasonAgentNewConfirm
+        case "agent_thread_creation_unconfirmed": Strings.reasonAgentNewUnconfirmed
+        // AGENT-PLAN-1
+        case "agent_mode_unavailable": Strings.reasonAgentModeUnavailable
+        case "invalid_agent_mode": Strings.reasonAgentModeInvalid
+        case "agent_command_while_working": Strings.reasonAgentCommandWhileWorking
+        // agent-chat-commands.schema.json, for older Apps: this one never
+        // asks that route, so one sentence says it for all four.
+        case "command_terminal_only", "command_settings_on_computer", "command_sessions_on_computer",
+             "command_not_on_phone_yet":
+            Strings.reasonAgentCommandOnComputer
         case "agent_approval_unknown": Strings.reasonAgentApprovalUnknown
+        case "agent_approval_changed": Strings.reasonAgentApprovalChanged
         case "agent_approval_decision_invalid": Strings.reasonAgentApprovalInvalid
         case "agent_cli_rejected": Strings.reasonAgentCliRejected
         case "default_agent_unset": Strings.reasonDefaultAgentUnset
@@ -259,6 +311,8 @@ enum ReasonText {
         case "unknown_credential": Strings.reasonUnknownCredential
         case "credential_renewal_not_due": Strings.reasonCredentialRenewalNotDue
         case "plugin_credential": Strings.reasonPluginCredential
+        // REMOTE-PAIR-1: the host could not check credentials just now (503).
+        case "auth_unavailable": Strings.reasonAuthUnavailable
         case "discovery_integration_failed", "discovery_registration_failed": Strings.reasonDiscoveryUnavailable
         case "desktop_entry_unavailable", "desktop_entry_install_failed": Strings.reasonDesktopEntryUnavailable
         case "preferences_invalid": Strings.reasonPreferencesInvalid
@@ -276,6 +330,20 @@ enum ReasonText {
         case "timeout": Strings.reasonTimeout
         case "unavailable": Strings.reasonUnavailable
         case "rate_limited": Strings.reasonRateLimited
+        // LINKS-1: `POST /v1/host/open`. Each refusal says what it was about
+        // the file, never "not allowed", which would send someone to re-pair.
+        case "open_not_mentioned": Strings.reasonOpenNotMentioned
+        case "open_outside_roots": Strings.reasonOpenOutsideRoots
+        case "open_denied": Strings.reasonOpenDenied
+        case "open_executable": Strings.reasonOpenExecutable
+        case "open_missing": Strings.reasonOpenMissing
+        case "open_source_gone": Strings.reasonOpenSourceGone
+        case "open_type_refused": Strings.reasonOpenTypeRefused
+        case "open_url_refused": Strings.reasonOpenURLRefused
+        case "open_rate_limited": Strings.reasonOpenRateLimited
+        case "open_unavailable": Strings.reasonOpenUnavailable
+        // Not core's code: the app's own, for a core from before LINKS-1.
+        case "open_unsupported": Strings.reasonOpenUnsupported
         default: nil
         }
     }
@@ -305,13 +373,17 @@ enum ReasonText {
     /// adds and this file does not map fails the build rather than reaching a
     /// screen as a bare identifier.
     static let knownCodes: [String: Domain] = [
+        // ATTACH-1
+        "attachment_gone": .herdr,
         // remote-api.md §Errors, plus the two capability reasons beside it
         "remote_session_exists": .remote, "stale_revision": .remote, "session_not_found": .remote,
         "session_not_ready": .remote, "permission_denied": .remote, "media_pairing_required": .remote,
         "wayvnc_0_10_1_required": .remote, "sunshine_desktop_unavailable": .remote,
         "sunshine_assets_missing": .remote, "remote_runtime_unavailable": .remote,
+        "tailnet_relayed": .remote,
         "dynamic_resolution_policy_denied": .remote, "host_waking": .remote,
         "vnc_bridge_unavailable": .remote, "vnc_bridge_exists": .remote,
+        "remote_text_unavailable": .remote, "remote_text_failed": .remote,
         "sunshine_control_unavailable": .remote, "backend_not_installed": .remote,
         "viewport_aspect_unsupported": .remote, "density_profile_unsupported": .remote,
         "quality_profile_unsupported": .remote, "pairing_required": .remote, "invalid_request": .remote,
@@ -334,6 +406,18 @@ enum ReasonText {
         "herdr_control_in_use": .herdr, "herdr_unavailable": .herdr, "herdr_request_failed": .herdr,
         "invalid_pane": .herdr, "invalid_workspace": .herdr, "invalid_geometry": .herdr,
         "herdr_action_unsupported": .herdr,
+        // herdr.md §Typing without taking the pane (HERDR-3)
+        "invalid_key": .herdr, "herdr_key_unsupported": .herdr, "herdr_too_many_keys": .herdr,
+        "invalid_text": .herdr, "herdr_text_too_long": .herdr, "herdr_pane_gone": .herdr,
+        "not_seen": .herdr, "submit_failed": .herdr, "not_requested": .herdr, "herdr_agent_blocked": .herdr,
+        // herdr.md §Starting a stopped session, making a new one (HERDR-5)
+        "invalid_session": .herdr, "invalid_session_name": .herdr, "herdr_session_exists": .herdr,
+        "herdr_session_start_failed": .herdr,
+        // herdr.md §A new workspace in a chosen folder (HERDR-6)
+        "invalid_folder": .herdr, "folder_outside_home": .herdr, "folder_private": .herdr,
+        "folder_not_found": .herdr, "folder_unreadable": .herdr, "invalid_workspace_name": .herdr,
+        // herdr.md §Starting an agent with it (HERDR-11)
+        "herdr_launch_not_allowed": .herdr,
         // voice.md and audio-input.schema.json's two reason enums
         "voxtype_not_installed": .voice, "voice_uplink_disabled": .voice, "audio_input_busy": .voice,
         "audio_input_unsupported": .voice, "audio_input_unavailable": .voice,
@@ -356,7 +440,7 @@ enum ReasonText {
         "provider_request_rejected": .agent, "structured_agent_kind_unsupported": .agent,
         "agent_state_unknown": .agent, "agent_blocked": .agent, "agent_not_working": .agent,
         "agent_kind_mismatch": .agent, "agent_kind_unsupported": .agent, "agent_chat_unavailable": .agent,
-        "agent_approval_unknown": .agent, "agent_approval_decision_invalid": .agent,
+        "agent_approval_unknown": .agent, "agent_approval_decision_invalid": .agent, "agent_approval_changed": .agent,
         "agent_cli_rejected": .agent, "default_agent_unset": .agent, "default_agent_exists": .agent,
         "provider_adapter_failed": .agent, "provider_adapter_unavailable": .agent,
         "provider_thread_not_loaded": .agent, "provider_thread_not_materialized": .agent,
@@ -364,6 +448,16 @@ enum ReasonText {
         "unmaterialized_empty_session_lost_after_host_restart": .agent,
         "task_too_large": .agent, "empty_task": .agent, "history_unavailable": .agent,
         "cancellation_pending": .agent,
+        // agent-chat-new.schema.json, agent-chat-command(s).schema.json (AGENT-NEW-1)
+        "agent_turn_active": .agent, "agent_approval_pending": .agent, "agent_identity_changed": .agent,
+        "agent_mode_unavailable": .agent, "invalid_agent_mode": .agent, "agent_command_while_working": .agent,
+        "agent_conversation_changing": .agent, "new_conversation_confirmation_required": .agent,
+        "agent_thread_creation_unconfirmed": .agent,
+        // AGENT-PLAN-1: agent-chat-commands.schema.json still names these for
+        // older Apps; this one never asks that route (what is typed is sent
+        // as typed), so they share one sentence.
+        "command_terminal_only": .agent, "command_settings_on_computer": .agent,
+        "command_sessions_on_computer": .agent, "command_not_on_phone_yet": .agent,
         // workspace-layout-action.schema.json and local-integration.md
         "workspace_layout_applied": .workspace, "workspace_layout_failed": .workspace,
         "workspace_layout_command_failed": .workspace, "workspace_layout_outcome_unknown": .workspace,
@@ -396,9 +490,15 @@ enum ReasonText {
         "approval_outcome_unknown": .host, "already_authorized": .host,
         "added": .host, "replaced": .host, "timeout": .host,
         "unavailable": .host, "rate_limited": .host,
+        // host-open.schema.json (LINKS-1)
+        "open_not_mentioned": .host, "open_outside_roots": .host, "open_denied": .host,
+        "open_executable": .host, "open_missing": .host, "open_source_gone": .host,
+        "open_type_refused": .host, "open_url_refused": .host, "open_rate_limited": .host,
+        "open_unavailable": .host,
         // pairing.md / http-error.schema.json `error.reason` (CORE-2)
         "credential_expired": .host, "credential_revoked": .host, "device_purged": .host,
         "unknown_credential": .host, "credential_renewal_not_due": .host, "plugin_credential": .host,
+        "auth_unavailable": .host,
         // clipboard.md, listed in remote-api.md's error table (CLIP-1)
         "clipboard_sync_disabled": .host, "clipboard_write_disabled": .host,
         "clipboard_too_large": .host, "clipboard_not_text": .host, "clipboard_invalid": .host,

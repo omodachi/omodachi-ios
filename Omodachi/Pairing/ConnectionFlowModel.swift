@@ -82,10 +82,23 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
 /// same panel (A-35), so they are the same model, and there is no success page
 /// — a claim goes straight to the Panel.
 @MainActor final class ConnectionFlowModel: ObservableObject {
+    /// TAIL-3b: the first screen is the Tailscale page; the Wi-Fi road
+    /// (Bonjour list, add by address) is behind "I don't use Tailscale".
     enum Stage: Equatable {
-        case list
+        case tailscale
+        case wifi
         case manual
         case pairing
+    }
+
+    /// TAIL-3b E03–E06: why a name on the Tailscale page did not get as far
+    /// as a pairing card. Said on that page, under the field.
+    enum TailscaleProblem: Equatable {
+        case notTailscale(String)
+        case noName(String)
+        case noPtr(String)
+        case asleep(String)
+        case noHost(String)
     }
 
     /// Every failure names one next step (N-24). `certificateChanged` is the
@@ -101,7 +114,14 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
         case message(String)
     }
 
-    @Published var stage: Stage = .list
+    @Published var stage: Stage = .tailscale
+    /// TAIL-3b. What is in the Tailscale page's field, and what it resolves to.
+    @Published var tailscaleInput = "" { didSet { if oldValue != tailscaleInput { inputChanged() } } }
+    @Published private(set) var resolution: TailscaleResolution = .empty
+    @Published private(set) var tailscaleProblem: TailscaleProblem?
+    /// Where the pairing in progress started, so a failure goes back there.
+    private(set) var origin: Stage = .tailscale
+    private var resolveTask: Task<Void, Never>?
     @Published private(set) var candidate: HostCandidate?
     @Published private(set) var fingerprint: String?
     @Published private(set) var expiresAt: Date?
@@ -119,13 +139,18 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
     @Published private(set) var claimed: PairedHostRecord?
     /// The two grants the claim reported besides the credential itself.
     @Published private(set) var grants: HostPin.Grants?
+    /// TAIL-3b E08: core said this device already holds a credential there.
+    @Published private(set) var alreadyPaired = false
 
     /// PAIR-4 §2: bumped whenever this device's own records change under the
     /// list, so the rows — which read the Keychain while they are being drawn —
     /// are rebuilt after a "忘记这台主机".
     @Published private(set) var revision = 0
 
-    let deviceID: String
+    /// REMOTE-PAIR-1: settles to the id a live credential was issued to when
+    /// one is adopted, so a pairing started later from this screen goes up
+    /// under the id the host already knows.
+    private(set) var deviceID: String
     let deviceName: String
     private let pins: HostPinStore
     private let credentials: CompanionCredentialStore
@@ -134,6 +159,10 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
     private let probe: HostHealthProbe
     private let makeClient: (URL) throws -> PairingClient
     private let makeProbe: (URL, String) -> CredentialProbe
+    /// REMOTE-PAIR-1: `CompanionDeviceIdentity.adopt`, and how long a refusal
+    /// with no reason waits to be asked about again. Tests replace both.
+    private let adoptIdentity: (String) -> String?
+    private let confirmationDelay: Duration
     private var client: PairingClient?
     private var task: Task<Void, Never>?
     private var sshPublicKey: String?
@@ -141,6 +170,8 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
     /// the key can be re-offered after a claim that did not carry one.
     private var sshKeyAccount: String?
     private let keyOffer: (any SSHKeyOffering)?
+    /// TAIL-2 P0-0 (c): the reverse lookup a typed tailnet address goes through.
+    private let nameResolver: any TailnetNameResolving
     private var modeProbe: Task<Void, Never>?
     private var probedModes: Set<String> = []
 
@@ -151,11 +182,16 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
          directory: PairedHostDirectory? = nil,
          probe: HostHealthProbe = HostHealthProbe(),
          keyOffer: (any SSHKeyOffering)? = SSHKeyOffer(),
+         nameResolver: any TailnetNameResolving = SystemTailnetNameResolver(),
          makeClient: @escaping (URL) throws -> PairingClient = { try PairingClient(endpoint: $0) },
          makeProbe: @escaping (URL, String) -> CredentialProbe = {
              CredentialProbe(endpoint: $0, pinnedFingerprint: $1)
-         }) {
+         },
+         adoptIdentity: @escaping (String) -> String? = { CompanionDeviceIdentity.adopt(credential: $0) },
+         confirmationDelay: Duration = .seconds(2)) {
         self.deviceID = deviceID
+        self.adoptIdentity = adoptIdentity
+        self.confirmationDelay = confirmationDelay
         self.deviceName = deviceName
         self.pins = pins
         self.credentials = credentials
@@ -163,6 +199,7 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
         self.directory = directory
         self.probe = probe
         self.keyOffer = keyOffer
+        self.nameResolver = nameResolver
         self.makeClient = makeClient
         self.makeProbe = makeProbe
     }
@@ -235,8 +272,79 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
         }
     }
 
-    func select(_ candidate: HostCandidate, sshPublicKey: String?, sshKeyAccount: String? = nil) {
+    // MARK: - TAIL-3b the Tailscale page
+
+    /// S02: the name the field will connect as, shown before Connect. Looked
+    /// up 350 ms after the last keystroke (or at once for a paste).
+    private func inputChanged(delay: Duration = .milliseconds(350)) {
+        resolveTask?.cancel()
+        tailscaleProblem = nil
+        let typed = tailscaleInput
+        guard !typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { resolution = .empty; return }
+        resolution = .resolving
+        resolveTask = Task { [weak self] in
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled, let self else { return }
+            let answer = await self.resolveTailscale(typed)
+            guard !Task.isCancelled, self.tailscaleInput == typed else { return }
+            self.resolution = answer
+        }
+    }
+
+    func resolveTailscale(_ input: String) async -> TailscaleResolution {
+        await TailscaleName.resolve(input, resolver: nameResolver, known: knownTailnetNames())
+    }
+
+    /// The Paste button: the pasteboard is read only on this tap.
+    func paste(_ text: String?) {
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return }
+        tailscaleInput = String(text.prefix(255))
+        inputChanged(delay: .zero)
+    }
+
+    /// Connect on the Tailscale page. Only a name that became a `*.ts.net`
+    /// name is dialled; anything else is said on the page (E04b / E04 / E05).
+    func connectTailscale(sshPublicKey: String?, sshKeyAccount: String? = nil) {
+        resolveTask?.cancel()
+        let typed = tailscaleInput
+        tailscaleProblem = nil
+        task?.cancel()
+        task = Task { [weak self] in
+            guard let self else { return }
+            let answer: TailscaleResolution
+            if case .resolved = self.resolution { answer = self.resolution }
+            else { answer = await self.resolveTailscale(typed) }
+            guard !Task.isCancelled, self.tailscaleInput == typed else { return }
+            self.resolution = answer
+            switch answer {
+            case let .resolved(url):
+                let candidate = HostCandidate(id: url.absoluteString, name: ConnectionFlowModel.firstLabel(url.host ?? ""),
+                                              hostIDSuffix: nil, address: url.host ?? "", url: url)
+                self.select(self.decorate(candidate), sshPublicKey: sshPublicKey, sshKeyAccount: sshKeyAccount,
+                            from: .tailscale)
+            case let .notTailscale(name): self.tailscaleProblem = .notTailscale(name)
+            case let .noName(name): self.tailscaleProblem = .noName(name)
+            case let .noPtr(address): self.tailscaleProblem = .noPtr(address)
+            case .empty, .resolving: break
+            }
+        }
+    }
+
+    /// E03 / E04 / E06 from the first read of the name.
+    static func problem(_ error: Error, name: String) -> TailscaleProblem {
+        switch error as? HostHealthError {
+        case .noSuchName?: .noName(name)
+        case .refused?, .notAnOmodachiHost?: .noHost(name)
+        default: .asleep(name)
+        }
+    }
+
+    func select(_ candidate: HostCandidate, sshPublicKey: String?, sshKeyAccount: String? = nil,
+                from origin: Stage? = nil) {
         cancel()
+        // Only the Tailscale page names itself; every other selection is a
+        // row on the Wi-Fi road (the list, or "Add by name or address").
+        self.origin = origin ?? .wifi
         self.candidate = candidate
         self.sshPublicKey = sshPublicKey
         self.sshKeyAccount = sshKeyAccount
@@ -245,11 +353,49 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
         expiresAt = nil
         claimed = nil
         grants = nil
+        alreadyPaired = false
+        tailscaleProblem = nil
         stage = .pairing
         probing = true
         task = Task { [weak self] in
             guard let self else { return }
-            let health = try? await probe.read(candidate.url)
+            // TAIL-2 P0-0 (c). ATS lets this app reach a `*.ts.net` name,
+            // never a tailnet address literal, so a typed 100.x would only
+            // ever fail in the TLS handshake as "could not finish securely".
+            // It becomes a MagicDNS name — a paired host's own, else the
+            // system resolver's reverse answer — or the sentence that says
+            // what to type.
+            var candidate = candidate
+            if let host = candidate.url.host, HostRoads.isTailnetAddress(host) {
+                let typed = [host.contains(":") ? "[\(host)]" : host, candidate.url.port.map(String.init)]
+                    .compactMap { $0 }.joined(separator: ":")
+                guard let named = await resolveTailscale(typed).url else {
+                    guard !Task.isCancelled else { return }
+                    probing = false
+                    failure = .message(PairingError.tailnetAddress.localizedDescription)
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                candidate = Self.candidate(candidate, renamedTo: named)
+                self.candidate = candidate
+            }
+            // TAIL-3b. A bare name is resolved on the Tailscale page, never
+            // here: on the Wi-Fi road ("Add by name or address") it is a LAN
+            // name, as typed.
+            let health: HostHealth?
+            do { health = try await probe.read(candidate.url) }
+            catch {
+                guard !Task.isCancelled else { return }
+                // On the Tailscale page a name that does not get this far is
+                // said there (E03/E04/E06), not on a pairing card.
+                if self.origin == .tailscale {
+                    probing = false
+                    tailscaleProblem = Self.problem(error, name: Self.firstLabel(candidate.url.host ?? ""))
+                    stage = .tailscale
+                    return
+                }
+                health = nil
+            }
             guard !Task.isCancelled else { return }
             probing = false
             fingerprint = health?.fingerprint
@@ -271,6 +417,13 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
             // out. It is never a refusal with nowhere to go.
             if await adoptStoredCredential(candidate: candidate, pin: pin) { return }
             guard !Task.isCancelled else { return }
+            // TAIL-2 P0-2. No pin under *this* address — but the host may be
+            // one this device is already paired with, reached on another road
+            // (its MagicDNS name away from home, its LAN address back home).
+            // A host is its `host_id` and its certificate, not an address.
+            if pin == nil, let health, await adoptOnAnotherRoad(candidate: candidate, health: health) { return }
+            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else { return }
             await self.requestPairing()
         }
     }
@@ -291,13 +444,19 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
             forget(account: account)
             return false
         }
-        let verdict = await makeProbe(candidate.url, pin.fingerprintSHA256).check(token: token)
+        let verdict = await makeProbe(candidate.url, pin.fingerprintSHA256)
+            .checkConfirmed(token: token, retryAfter: confirmationDelay)
         guard !Task.isCancelled else { return true }
         switch verdict {
         case .live:
             // The host answered an authenticated read over the certificate this
             // device pinned. That is the whole proof: nothing is re-issued, no
             // request is sent, and the host sees no pending approval.
+            //
+            // REMOTE-PAIR-1: and the credential names the id the host knows
+            // this device by. A reinstall that adopts it without that is how
+            // the id and the credential came apart on Leo's iPhone.
+            if let adopted = adoptIdentity(token) { deviceID = adopted }
             //
             // UX-4 §2: and that last part is exactly what left the SSH key
             // behind. The key goes up *with* a pairing request, and this path
@@ -318,6 +477,90 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
         case .unreachable:
             // Not a revocation. Nothing is deleted, and the card offers the
             // two exits every other failure has.
+            failure = .message(Strings.pairCredentialUnverified)
+            return true
+        }
+    }
+
+    /// The same row, reached under another name.
+    private static func candidate(_ candidate: HostCandidate, renamedTo url: URL) -> HostCandidate {
+        HostCandidate(id: url.absoluteString, name: candidate.name, hostIDSuffix: candidate.hostIDSuffix,
+                      address: [url.host, url.port.map(String.init)].compactMap { $0 }.joined(separator: ":"),
+                      url: url, pairing: candidate.pairing)
+    }
+
+    /// A host name with no dot that is not an address: what the Tailscale app
+    /// shows as a machine's name.
+    nonisolated static func isShortName(_ host: String) -> Bool {
+        !host.isEmpty && !host.contains(".") && !host.contains(":")
+            && host.unicodeScalars.contains { CharacterSet.letters.contains($0) || $0 == "-" }
+    }
+
+    nonisolated static func firstLabel(_ name: String) -> String {
+        String(name.lowercased().split(separator: ".", maxSplits: 1).first ?? "")
+    }
+
+    /// TAIL-2 P0-0. Every tailnet address a paired host published, mapped to
+    /// that host's MagicDNS name: a typed 100.x of a known host needs no lookup.
+    private func knownTailnetNames() -> [String: String] {
+        var names: [String: String] = [:]
+        for record in directory?.records ?? [] {
+            guard let pin = pins.load(account: record.account), let name = pin.tailnetName else { continue }
+            for road in pin.roads where HostRoads.isTailnetAddress(road.host) { names[road.host.lowercased()] = name }
+        }
+        return names
+    }
+
+    /// TAIL-2 P0-2. The paired host whose `host_id` and pinned fingerprint
+    /// this `/health` names, if there is one.
+    private func pairedHost(matching health: HostHealth) -> (record: PairedHostRecord, pin: HostPin)? {
+        guard let hostID = health.hostID, let fingerprint = health.fingerprint else { return nil }
+        for record in directory?.records ?? [] {
+            if let pin = pins.load(account: record.account), pin.hostID == hostID,
+               pin.fingerprintSHA256 == fingerprint {
+                return (record, pin)
+            }
+        }
+        return nil
+    }
+
+    /// TAIL-2 P0-2. Returns `true` when this tap is finished: the credential
+    /// this device holds for that host was checked on *this* road and adopted
+    /// — no pairing request, no second row — or the check could not be made
+    /// and the card says so. The credential only ever goes onto a connection
+    /// pinned to the certificate it was issued with, so the document's
+    /// `host_id` is a hint and the pinned handshake is the proof.
+    private func adoptOnAnotherRoad(candidate: HostCandidate, health: HostHealth) async -> Bool {
+        guard let (record, pin) = pairedHost(matching: health),
+              let token = storedCredential(account: record.account) else { return false }
+        let verdict = await makeProbe(candidate.url, pin.fingerprintSHA256)
+            .checkConfirmed(token: token, retryAfter: confirmationDelay)
+        guard !Task.isCancelled else { return true }
+        switch verdict {
+        case .live:
+            if let adopted = adoptIdentity(token) { deviceID = adopted }
+            // TAIL-3b. Reaching an already-paired Wi-Fi host by its Tailscale
+            // name is the user choosing Tailscale for it: the one road moves,
+            // and nothing else (no pairing, no second row). The other way —
+            // a Tailscale host found again on the Wi-Fi — changes nothing:
+            // there is no "back to Wi-Fi only" (forget it and pair again).
+            let typed = HostRoad(host: candidate.url.host ?? "", port: candidate.url.port ?? 8099)
+            if typed.kind.isTailscale, !pin.road(account: record.account).kind.isTailscale {
+                var updated = pin
+                updated.road = typed
+                try? pins.save(updated, account: record.account)
+                ManualHostTrace.note("moved \(record.hostName) to tailscale \(typed.host)")
+            }
+            await reconcileSSHKey(account: record.account)
+            grants = pin.grants
+            claimed = PairedHostRecord(account: record.account, hostID: pin.hostID,
+                                       hostName: pin.hostName.isEmpty ? record.hostName : pin.hostName,
+                                       address: record.address)
+            return true
+        case .rejected:
+            // The host no longer knows this device; an ordinary request follows.
+            return false
+        case .unreachable:
             failure = .message(Strings.pairCredentialUnverified)
             return true
         }
@@ -365,6 +608,7 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
             lockedInvitation = ""
             invitationOnlyHosts.remove(candidate.account)
             expiresAt = receipt.expiresAt
+            alreadyPaired = receipt.alreadyPaired
             if let observed = await client.observedFingerprint { fingerprint = observed }
             await poll(client: client, candidate: candidate, receipt: receipt)
         } catch let error as PairingError {
@@ -430,7 +674,7 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
 
     func retry() {
         guard let candidate else { return }
-        select(candidate, sshPublicKey: sshPublicKey, sshKeyAccount: sshKeyAccount)
+        select(candidate, sshPublicKey: sshPublicKey, sshKeyAccount: sshKeyAccount, from: origin)
     }
 
     func cancel() {
@@ -447,7 +691,7 @@ struct PairedHostRecord: Codable, Equatable, Identifiable, Sendable {
 
     func backToList() {
         cancel()
-        stage = .list
+        stage = origin == .wifi || origin == .manual ? .wifi : .tailscale
         candidate = nil
         failure = nil
         expiresAt = nil

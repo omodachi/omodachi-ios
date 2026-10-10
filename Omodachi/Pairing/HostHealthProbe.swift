@@ -22,10 +22,26 @@ struct HostHealth: Equatable, Sendable {
 
 enum HostHealthError: Error, LocalizedError, Equatable {
     case unreachable, notAnOmodachiHost
+    /// TAIL-3b E04: the name does not resolve (on Tailscale: no such machine
+    /// on this tailnet, or Tailscale is off here).
+    case noSuchName
+    /// TAIL-3b E06: the machine is there and refused the port: it answers,
+    /// but nothing is listening on 8099.
+    case refused
+
+    /// What a failed request says about the far end.
+    static func reach(_ error: Error) -> HostHealthError {
+        guard let url = error as? URLError else { return .unreachable }
+        switch url.code {
+        case .cannotFindHost, .dnsLookupFailed: return .noSuchName
+        case .cannotConnectToHost: return .refused
+        default: return .unreachable
+        }
+    }
 
     var errorDescription: String? {
         switch self {
-        case .unreachable: Strings.probeUnreachable
+        case .unreachable, .noSuchName, .refused: Strings.probeUnreachable
         case .notAnOmodachiHost: Strings.probeNotOmodachi
         }
     }
@@ -33,9 +49,14 @@ enum HostHealthError: Error, LocalizedError, Equatable {
 
 actor HostHealthProbe {
     private let session: URLSession
-    private let tls = HostTLSDelegate(pinnedFingerprint: nil)
+    private let tls: HostTLSDelegate
 
-    init(session: URLSession? = nil) {
+    /// `pinnedFingerprint` makes this a probe of one *known* host: the TLS
+    /// handshake itself refuses any other certificate, so an answer proves the
+    /// fingerprint and the document's `host_id` proves the installation
+    /// (TAIL-2 P0-2). Without one it is the unauthenticated first look.
+    init(session: URLSession? = nil, pinnedFingerprint: String? = nil, timeout: TimeInterval = 8) {
+        tls = HostTLSDelegate(pinnedFingerprint: pinnedFingerprint)
         if let session {
             self.session = session
         } else {
@@ -45,8 +66,8 @@ actor HostHealthProbe {
             options.httpShouldSetCookies = false
             options.urlCache = nil
             options.requestCachePolicy = .reloadIgnoringLocalCacheData
-            options.timeoutIntervalForRequest = 8
-            options.timeoutIntervalForResource = 10
+            options.timeoutIntervalForRequest = timeout
+            options.timeoutIntervalForResource = timeout + 2
             self.session = URLSession(configuration: options, delegate: tls, delegateQueue: nil)
         }
     }
@@ -73,7 +94,7 @@ actor HostHealthProbe {
         let data: Data
         let response: URLResponse
         do { (data, response) = try await session.data(for: request) }
-        catch { throw HostHealthError.unreachable }
+        catch { throw HostHealthError.reach(error) }
         guard let http = response as? HTTPURLResponse, http.statusCode == 200, data.count <= 16384,
               let document = try? JSONDecoder().decode(Document.self, from: data),
               document.service == "omodachid" else { throw HostHealthError.notAnOmodachiHost }

@@ -31,8 +31,9 @@ enum CredentialRejection: String, Equatable, Sendable, CaseIterable {
 enum CredentialVerdict: Equatable, Sendable {
     /// The host answered an authenticated read. The credential is live.
     case live
-    /// The host answered 401/403: this credential was refused, and the host
-    /// said why when it could (CORE-2). It is rubbish and can go.
+    /// The host answered 401: this credential was refused, and the host said
+    /// why when it could (CORE-2). It is rubbish and can go - once confirmed
+    /// (`checkConfirmed`) when the host did not say why.
     case rejected(CredentialRejection)
     /// Nobody answered, or the answer was not one of the two above. Nothing is
     /// deleted on this verdict — an unreachable host is not a revocation.
@@ -94,11 +95,32 @@ actor CredentialProbe {
                   http.url?.port == endpoint.port else { return .unreachable }
             switch http.statusCode {
             case 200..<300: return .live
-            case 401, 403: return .rejected(CredentialRejection.from(body: data))
+            // REMOTE-PAIR-1: only a 401 is a verdict on the credential. Core
+            // answers a credential it refuses with 401 `permission_denied`
+            // (CORE-2, with the reason); a 403 is a refusal of the request -
+            // a name or an origin it does not answer to - and says nothing
+            // about whether this device is still known. Throwing a credential
+            // away on one is how a phone ends up pairing again as a stranger.
+            case 401: return .rejected(CredentialRejection.from(body: data))
             default: return .unreachable
             }
         } catch {
             return .unreachable
         }
+    }
+
+    /// REMOTE-PAIR-1. `check`, made sure of before anything is deleted.
+    ///
+    /// A refusal that names its reason (expired, revoked, purged) is the host
+    /// saying so on purpose and is final. One that names none - `unknown`, a
+    /// host from before CORE-2 or a host that was half-way through starting -
+    /// is asked about once more after `retryAfter`; only a second refusal is
+    /// one. A host that answers "live" or nothing at all the second time
+    /// costs this device nothing.
+    func checkConfirmed(token: String, retryAfter: Duration = .seconds(2)) async -> CredentialVerdict {
+        let first = await check(token: token)
+        guard first == .rejected(.unknown) else { return first }
+        if retryAfter > .zero { try? await Task.sleep(for: retryAfter) }
+        return await check(token: token)
     }
 }

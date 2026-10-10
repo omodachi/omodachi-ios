@@ -1,0 +1,9 @@
+{
+  "action": "text",
+  "pane": "w1:p2",
+  "delivered": true,
+  "submitted": false,
+  "reason": "not_seen",
+  "proof": null,
+  "contract_revision": "omodachi.v1"
+}

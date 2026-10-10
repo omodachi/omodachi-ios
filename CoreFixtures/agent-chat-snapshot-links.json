@@ -1,0 +1,74 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-01"
+  },
+  "rows": [
+    {
+      "kind": "message",
+      "id": "item-fixture-ask",
+      "turnID": "turn-fixture-01",
+      "role": "user",
+      "text": "Make a chart of the totals and show it to me."
+    },
+    {
+      "kind": "tool",
+      "id": "item-fixture-change",
+      "turnID": "turn-fixture-01",
+      "name": "File changes",
+      "status": "succeeded",
+      "detail": "[{\"path\": \"/home/user/l1test/chart.py\", \"kind\": {\"type\": \"add\"}, \"diff\": \"print('chart')\\n\"}]",
+      "paths": [
+        "/home/user/l1test/chart.py"
+      ],
+      "changes": [
+        {
+          "path": "/home/user/l1test/chart.py",
+          "kind": "add",
+          "added": 1,
+          "removed": 0,
+          "diff": "+print('chart')"
+        }
+      ]
+    },
+    {
+      "kind": "tool",
+      "id": "item-fixture-view",
+      "turnID": "turn-fixture-01",
+      "name": "Viewed image",
+      "status": "succeeded",
+      "detail": "/home/user/l1test/chart.png",
+      "paths": [
+        "/home/user/l1test/chart.png"
+      ]
+    },
+    {
+      "kind": "message",
+      "id": "item-fixture-reply",
+      "turnID": "turn-fixture-01",
+      "role": "assistant",
+      "text": "## Done\n\n- Chart: ![Bar chart](/home/user/l1test/chart.png)\n- Script: [chart.py](/home/user/l1test/chart.py)\n\nPreview at http://localhost:8000/ (served from `~/l1test`).\n\n```sh\npython3 chart.py\n```"
+    }
+  ],
+  "activeTurn": null,
+  "sequence": 0,
+  "acceptedRequestIDs": [],
+  "pendingApprovals": [],
+  "status": {
+    "type": "unknown",
+    "activeFlags": [],
+    "waiting": null
+  },
+  "usage": {
+    "tokens": null,
+    "rate_limits": null,
+    "model": null,
+    "effort": null,
+    "mode": null
+  },
+  "earlier": false,
+  "queue": null,
+  "checklist": null
+}

@@ -118,7 +118,8 @@ import XCTest
     private static var icons: [String] {
         [Icon.menu, Icon.search, Icon.close, Icon.check, Icon.chevronRight, Icon.chevronDown, Icon.pin,
          Icon.remote, Icon.agent, Icon.herdr, Icon.ssh, Icon.settings, Icon.bell, Icon.bellOff, Icon.keyboard,
-         Icon.warning, Icon.error, Icon.host, Icon.send, Icon.retry, Icon.dnd, Icon.more, Icon.app].map(\.nerd)
+         Icon.warning, Icon.error, Icon.host, Icon.send, Icon.retry, Icon.dnd, Icon.more, Icon.app,
+         Icon.insertText].map(\.nerd)
     }
 
     private static func hex(_ text: String) -> String {

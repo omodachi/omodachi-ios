@@ -1,0 +1,18 @@
+{
+  "agent_id": "default",
+  "accepted": true,
+  "delivery": "queued",
+  "queue": [
+    {
+      "id": "q-01",
+      "request_id": "request-fixture-q1",
+      "text": "And then run the tests on SQLite."
+    }
+  ],
+  "queued": {
+    "id": "q-01",
+    "request_id": "request-fixture-q1",
+    "text": "And then run the tests on SQLite."
+  },
+  "contract_revision": "omodachi.v1"
+}

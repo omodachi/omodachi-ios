@@ -1,0 +1,126 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a11332-4d95-7e10-bf77-a7a95540db4b"
+  },
+  "rows": [
+    {
+      "kind": "message",
+      "id": "01a11332-5b02-7e00-9e0c-03ce473b5afb",
+      "turnID": "01a11332-5add-7893-acb1-235b4bdce5d3",
+      "role": "user",
+      "text": "hello 7"
+    },
+    {
+      "kind": "message",
+      "id": "m-d36",
+      "turnID": "01a11332-5add-7893-acb1-235b4bdce5d3",
+      "role": "assistant",
+      "text": "Got it: hello 7"
+    },
+    {
+      "kind": "message",
+      "id": "01a11332-5b33-7462-b554-c0b9b62f4ac1",
+      "turnID": "01a11332-5b0e-7353-9436-a11fdb2db38c",
+      "role": "user",
+      "text": "hello 8"
+    },
+    {
+      "kind": "message",
+      "id": "m-d37",
+      "turnID": "01a11332-5b0e-7353-9436-a11fdb2db38c",
+      "role": "assistant",
+      "text": "Got it: hello 8"
+    },
+    {
+      "kind": "message",
+      "id": "01a11332-5b65-74d0-9310-d3c22db49fce",
+      "turnID": "01a11332-5b40-7501-b8c9-3e368045505f",
+      "role": "user",
+      "text": "hello 9"
+    },
+    {
+      "kind": "message",
+      "id": "m-d38",
+      "turnID": "01a11332-5b40-7501-b8c9-3e368045505f",
+      "role": "assistant",
+      "text": "Got it: hello 9"
+    },
+    {
+      "kind": "message",
+      "id": "01a11332-5b97-7051-bcf6-7f083c6485e2",
+      "turnID": "01a11332-5b72-7f11-b1ff-51c80173bb1e",
+      "role": "user",
+      "text": "hello 10"
+    },
+    {
+      "kind": "message",
+      "id": "m-d39",
+      "turnID": "01a11332-5b72-7f11-b1ff-51c80173bb1e",
+      "role": "assistant",
+      "text": "Got it: hello 10"
+    },
+    {
+      "kind": "message",
+      "id": "01a11332-5bcb-7761-a592-b5f2c50bac59",
+      "turnID": "01a11332-5ba6-75d2-87e3-ae042bb26261",
+      "role": "user",
+      "text": "hello 11"
+    },
+    {
+      "kind": "message",
+      "id": "m-d40",
+      "turnID": "01a11332-5ba6-75d2-87e3-ae042bb26261",
+      "role": "assistant",
+      "text": "Got it: hello 11"
+    }
+  ],
+  "activeTurn": null,
+  "sequence": 5,
+  "acceptedRequestIDs": [],
+  "pendingApprovals": [],
+  "status": {
+    "type": "unknown",
+    "activeFlags": [],
+    "waiting": null
+  },
+  "usage": {
+    "tokens": null,
+    "rate_limits": null,
+    "model": "gpt-fixture",
+    "effort": "high",
+    "mode": "default"
+  },
+  "earlier": true,
+  "queue": [
+    {
+      "id": "q-01",
+      "request_id": "request-fixture-q1",
+      "text": "And then run the tests on SQLite."
+    },
+    {
+      "id": "q-02",
+      "request_id": "request-fixture-q2",
+      "text": "Keep the old port as a fallback."
+    }
+  ],
+  "checklist": {
+    "turnID": "01a11332-1ad5-7cc0-a881-95c727fa9c45",
+    "steps": [
+      {
+        "step": "Read the config",
+        "status": "completed"
+      },
+      {
+        "step": "Change the port",
+        "status": "completed"
+      },
+      {
+        "step": "Run the tests",
+        "status": "completed"
+      }
+    ]
+  }
+}

@@ -34,7 +34,8 @@
       "planType": "pro"
     },
     "model": "gpt-6-astra",
-    "effort": "high"
+    "effort": "high",
+    "mode": null
   },
   "status": {
     "type": "active",

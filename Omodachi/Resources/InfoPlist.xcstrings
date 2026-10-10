@@ -42,13 +42,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds paired Omodachi computers on this network. You still confirm the address and the credential."
+            "value": "Used only when you choose “I don’t use Tailscale”: finds and connects to your Omodachi computer on this Wi-Fi."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在本地网络里找已配对的 Omodachi 电脑。地址和凭据仍由你确认。"
+            "value": "只在你选「我不用 Tailscale」时使用：在这个 Wi-Fi 上找到你的 Omodachi 电脑并连接它。"
           }
         }
       }

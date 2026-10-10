@@ -16,6 +16,19 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(OMODACHI_BUILD_TIME)</string>
+	<!-- TAIL-3b I1: omodachi://open/<target>?host=<host_id>, the secondary
+	     "Already have the app? Open it" link from Odomo. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.omodachi</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>omodachi</string>
+			</array>
+		</dict>
+	</array>
 	<!-- STORE-2 §5. A legal declaration, and the maintainer's to make: false
 	     says the app uses only exempt, standard encryption (TLS, SSH, the
 	     GameStream AES/RSA via OpenSSL, CryptoKit). The inventory it rests on
@@ -28,14 +41,25 @@
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>ts.net</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
+	<!-- TAIL-3b: only Omodachi's own service. Nothing in the app or the
+	     vendored Moonlight code browses _nvstream._tcp (grep, 2026-10-01). -->
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_nvstream._tcp</string>
 		<string>_omodachi._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>在本地网络里找已配对的 Omodachi 电脑。地址和凭据仍由你确认。</string>
+	<string>只在你选「我不用 Tailscale」时使用：在这个 Wi-Fi 上找到你的 Omodachi 电脑并连接它。</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>用 Face ID 或 Touch ID 批准电脑上弹出的密码框。这台设备不保存、也看不到你的电脑密码。</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>

@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import RemoteInputCore
 import XCTest
 @testable import Omodachi
 
@@ -16,6 +17,9 @@ actor FakeRemoteHost: RemoteSessionServing {
     private(set) var releases: [String] = []
     private var live: RemoteSessionDTO?
     private var backend: RemoteBackend = .vnc
+    /// ROTATE-1: the session is in the mode it was asked for, because a turn
+    /// re-plans a takeover and never an extend.
+    private var mode: RemoteMode = .extend
     var failNextCreate: RemoteRequestError?
     /// Answers the first resize with a stale revision the way a host does when a
     /// second rotation overtakes the first.
@@ -36,7 +40,7 @@ actor FakeRemoteHost: RemoteSessionServing {
         let connection: String = backend == .vnc
             ? #"{"backend":"vnc","transport":"wss","path":"/v1/remote/sessions/rs_0123456789abcdef0123456789abcdef/vnc","output_id":"OMODACHI-0123456789abcdef","framebuffer_pixels":{"width":\#(width),"height":\#(height)}}"#
             : #"{"backend":"sunshine","host":"192.168.1.10","https_port":47984,"app_name":"Omodachi Desktop","output_id":"OMODACHI-0123456789abcdef","stream_pixels":{"width":\#(width),"height":\#(height)},"fps":60}"#
-        let body = #"{"id":"rs_0123456789abcdef0123456789abcdef","backend":"\#(backend.rawValue)","mode":"extend","state":"ready","revision":\#(revision),"ttl_seconds":60,"placement":"right","lock_local_input":false,"connection":\#(connection)}"#
+        let body = #"{"id":"rs_0123456789abcdef0123456789abcdef","backend":"\#(backend.rawValue)","mode":"\#(mode.rawValue)","state":"ready","revision":\#(revision),"ttl_seconds":60,"placement":"right","lock_local_input":false,"connection":\#(connection)}"#
         let value = try! JSONDecoder().decode(RemoteSessionDTO.self, from: Data(body.utf8))
         live = value
         return value
@@ -46,14 +50,19 @@ actor FakeRemoteHost: RemoteSessionServing {
     /// default, which is every host from before it.
     private var barOcclusion = false
     func setBarOcclusion(_ value: Bool) { barOcclusion = value }
+    /// TAIL-2 P2-2: the asking device's tailnet path is a DERP relay.
+    private var relayed = false
+    func setRelayed(_ value: Bool) { relayed = value }
     func remoteCapabilities() async throws -> RemoteCapabilitiesDTO {
-        let extra = barOcclusion ? #","bar_occlusion":true"# : ""
+        let extra = (barOcclusion ? #","bar_occlusion":true"# : "")
+            + (relayed ? #","default_backend":"vnc","road":{"kind":"tailnet","relayed":true,"reason":"tailnet_relayed"}"# : "")
         return try JSONDecoder().decode(RemoteCapabilitiesDTO.self, from: Data((#"{"backends":{"sunshine":{"available":true,"reason":null},"vnc":{"available":true,"reason":null,"audio":false}},"modes":["extend","takeover"],"placement_options":["right"],"lock_local_input_supported":true,"encoder_limits":null"# + extra + "}").utf8))
     }
     func createRemoteSession(_ body: RemoteCreateRequest) async throws -> RemoteSessionDTO {
         if let failure = failNextCreate { failNextCreate = nil; throw failure }
         created.append(body)
         backend = body.backend
+        mode = body.mode
         return makeSession(width: 2560, height: 1600)
     }
     /// REMOTE-4: the host re-preparing the backend under a session it still
@@ -70,12 +79,19 @@ actor FakeRemoteHost: RemoteSessionServing {
         guard let live else { throw RemoteRequestError(code: "session_not_found", status: 404) }
         if notReadyReads > 0 {
             notReadyReads -= 1
-            let body = #"{"id":"\#(live.id)","backend":"\#(live.backend.rawValue)","mode":"extend","state":"resizing","revision":\#(revision),"ttl_seconds":60,"placement":"right","lock_local_input":false,"connection":null}"#
+            let body = #"{"id":"\#(live.id)","backend":"\#(live.backend.rawValue)","mode":"\#(mode.rawValue)","state":"resizing","revision":\#(revision),"ttl_seconds":60,"placement":"right","lock_local_input":false,"connection":null}"#
             return try JSONDecoder().decode(RemoteSessionDTO.self, from: Data(body.utf8))
         }
         return live
     }
+    /// ROTATE-2: a host that takes a while to re-plan, or fails once.
+    var resizeDelay: Duration = .zero
+    var failNextResize: RemoteRequestError?
+    func setResizeDelay(_ value: Duration) { resizeDelay = value }
+    func setFailNextResize(_ value: RemoteRequestError?) { failNextResize = value }
     func resizeRemoteSession(id: String, body: RemoteResizeRequest) async throws -> RemoteSessionDTO {
+        if resizeDelay > .zero { try? await Task.sleep(for: resizeDelay) }
+        if let failure = failNextResize { failNextResize = nil; throw failure }
         if staleOnce { staleOnce = false; throw RemoteRequestError(code: "stale_revision", status: 409) }
         guard body.expected_revision == revision else { throw RemoteRequestError(code: "stale_revision", status: 409) }
         resizes.append(body)
@@ -111,6 +127,31 @@ actor FakeRemoteHost: RemoteSessionServing {
         live = nil
         return RemoteReleaseDTO(released: true, errors: [])
     }
+
+    /// REMOTE-INPUT-2: what was typed, and the host's own rule — one id is
+    /// typed once. `textFailures` answer the next attempts the given way
+    /// (`nil` = the reply is lost after the host typed it).
+    private(set) var textRequests: [RemoteTextRequest] = []
+    private(set) var typedTexts: [String] = []
+    private var typedIDs: Set<String> = []
+    private var textFailures: [RemoteRequestError?] = []
+    func setTextFailures(_ value: [RemoteRequestError?]) { textFailures = value }
+    func typeRemoteText(id: String, body: RemoteTextRequest) async throws -> RemoteTextDTO {
+        textRequests.append(body)
+        if !textFailures.isEmpty {
+            let failure = textFailures.removeFirst()
+            if let failure { throw failure }
+            // Typed, and the reply never arrived.
+            if let sendID = body.id, typedIDs.insert(sendID).inserted { typedTexts.append(body.text) }
+            throw CompanionHostError.transport(message: "lost")
+        }
+        guard live?.id == id else { throw RemoteRequestError(code: "session_not_found", status: 404) }
+        if let sendID = body.id, !typedIDs.insert(sendID).inserted {
+            return RemoteTextDTO(typed: true, chars: body.text.unicodeScalars.count, replayed: true)
+        }
+        typedTexts.append(body.text)
+        return RemoteTextDTO(typed: true, chars: body.text.unicodeScalars.count)
+    }
 }
 
 /// A backend that only records what the controller asked it to do and produces
@@ -142,6 +183,16 @@ actor FakeRemoteHost: RemoteSessionServing {
     private(set) var keyboardUp = false
     func toggleKeyboard() -> Bool { keyboardUp.toggle(); return keyboardUp }
     func hideKeyboard() { keyboardUp = false }
+
+    /// REMOTE-INPUT-2: what the compose bar handed to the host, in order.
+    enum Passed: Equatable { case key(UInt16, Bool), chord(UInt16, UInt8) }
+    private(set) var passed: [Passed] = []
+    private(set) var composeOwnsKeyboard = false
+    private(set) var keyboardTap: (() -> Void)?
+    func passKey(usage: UInt16, down: Bool) { passed.append(.key(usage, down)) }
+    func passChord(usage: UInt16, modifiers: RemoteModifiers) { passed.append(.chord(usage, modifiers.rawValue)) }
+    func setComposeOwnsKeyboard(_ owns: Bool) { composeOwnsKeyboard = owns }
+    func setKeyboardTapHandler(_ handler: (() -> Void)?) { keyboardTap = handler }
 
     func deliverFrame(_ pixels: RemotePixels, rect: CGRect = CGRect(x: 0, y: 0, width: 1194, height: 746)) {
         onFirstFrame?(pixels, rect)
@@ -258,6 +309,8 @@ actor FakeRemoteHost: RemoteSessionServing {
     /// was first expressed is told again rather than left closed.
     func testTheSessionReAppliesItsInputWantOnEveryTransition() async throws {
         let (controller, _, backend) = make()
+        // ROTATE-1: only a takeover re-plans on a turn.
+        controller.mode = .takeover
         controller.start()
         await settle("no connection") { await backend.connections.count == 1 }
         XCTAssertEqual(backend.inputEnabled, [false], "connecting closes input")
@@ -300,6 +353,8 @@ actor FakeRemoteHost: RemoteSessionServing {
 
     func testRotationStopsDecodingResizesAndKeepsTheOldFrameUntilTheNewOne() async throws {
         let (controller, host, backend) = make()
+        // ROTATE-1: only a takeover re-plans on a turn.
+        controller.mode = .takeover
         controller.start()
         await settle("no first connection") { await backend.connections.count == 1 }
         backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
@@ -322,6 +377,8 @@ actor FakeRemoteHost: RemoteSessionServing {
 
     func testAStaleRevisionIsRetriedAgainstTheReReadSession() async throws {
         let (controller, host, backend) = make()
+        // ROTATE-1: only a takeover re-plans on a turn.
+        controller.mode = .takeover
         controller.start()
         await settle("no first connection") { await backend.connections.count == 1 }
         backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
@@ -378,6 +435,10 @@ actor FakeRemoteHost: RemoteSessionServing {
         try? await Task.sleep(for: .milliseconds(40))
         controller.setForeground(true)
         let beats = await host.heartbeats
+        // POLISH-R2: the stream was paused while away and is dialled again
+        // on return; its first frame puts the picture back.
+        await settle("not dialled again on return") { await backend.connections.count == 2 }
+        backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
         try? await Task.sleep(for: .milliseconds(400))
         XCTAssertEqual(controller.phase, .streaming, "coming back did not cancel the pending release")
         XCTAssertNotNil(controller.session)
@@ -385,6 +446,81 @@ actor FakeRemoteHost: RemoteSessionServing {
         XCTAssertEqual(released.count, 0)
         let later = await host.heartbeats
         XCTAssertGreaterThan(later, beats, "the beat stopped while the app was away")
+    }
+
+    /// POLISH-R2 (Leo, 2026-10-05: "切出 app 再次连接就会有问题"). Leaving the
+    /// app stops the stream cleanly and keeps the session; nothing is dialled
+    /// while away, even when the stream breaks; coming back dials the same
+    /// session once, at once.
+    func testLeavingPausesTheStreamAndComingBackDialsTheSameSessionOnce() async throws {
+        let (controller, host, backend) = make(heartbeatInterval: .milliseconds(10),
+                                               backgroundGrace: .seconds(30))
+        controller.start()
+        await settle("no connection") { await backend.connections.count == 1 }
+        backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
+        await settle("never streamed") { controller.isStreaming }
+        let session = try XCTUnwrap(controller.session?.id)
+        controller.setForeground(false)
+        await settle("the stream was not stopped on leaving") { backend.stops >= 1 }
+        XCTAssertTrue(controller.pausedForBackground)
+        backend.onFailure?("The remote stream ended.")
+        try? await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(backend.connections.count, 1, "nothing may be dialled from the background")
+        controller.setForeground(true)
+        await settle("not dialled on return") { await backend.connections.count == 2 }
+        backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
+        await settle("no picture after return") { controller.isStreaming }
+        XCTAssertEqual(controller.session?.id, session, "the same session, not a new one")
+        let releases = await host.releases
+        XCTAssertTrue(releases.isEmpty)
+        let created = await host.created.count
+        XCTAssertEqual(created, 1)
+        try? await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(backend.connections.count, 2, "dialled once")
+    }
+
+    /// POLISH-R2 with TUTORIAL-1: a turn of the device while away is planned
+    /// once, after the picture is back - not dropped, not twice.
+    func testATurnWhileAwayIsPlannedOnceAfterTheReturn() async throws {
+        let (controller, host, backend) = make(heartbeatInterval: .milliseconds(10),
+                                               backgroundGrace: .seconds(30))
+        // ROTATE-1: only a takeover re-plans on a turn.
+        controller.mode = .takeover
+        controller.start()
+        await settle("no connection") { await backend.connections.count == 1 }
+        backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
+        await settle("never streamed") { controller.isStreaming }
+        let before = await host.resizeCount()
+        controller.setForeground(false)
+        await settle("not paused") { controller.pausedForBackground }
+        controller.viewportChanged(size: CGSize(width: 834, height: 1194), orientation: "portrait")
+        controller.viewportChanged(size: CGSize(width: 834, height: 1194), orientation: "portrait")
+        controller.setForeground(true)
+        await settle("not dialled on return") { await backend.connections.count == 2 }
+        backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
+        await settle("the turn was never planned") { await host.resizeCount() == before + 1 }
+        try? await Task.sleep(for: .milliseconds(500))
+        let after = await host.resizeCount()
+        XCTAssertEqual(after, before + 1, "one re-plan per turn")
+    }
+
+    /// Several trips out and back in a row, each a clean resume.
+    func testRepeatedTripsOutAndBackEachResume() async throws {
+        let (controller, host, backend) = make(heartbeatInterval: .milliseconds(10),
+                                               backgroundGrace: .seconds(30))
+        controller.start()
+        await settle("no connection") { await backend.connections.count == 1 }
+        backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
+        for trip in 1...3 {
+            controller.setForeground(false)
+            await settle("trip \(trip): not paused") { controller.pausedForBackground }
+            controller.setForeground(true)
+            await settle("trip \(trip): not dialled") { await backend.connections.count == trip + 1 }
+            backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
+            await settle("trip \(trip): no picture") { controller.isStreaming }
+        }
+        let releases = await host.releases
+        XCTAssertTrue(releases.isEmpty)
     }
 
     /// REMOTE-2 item 1, the rule itself: while a session exists the beat goes
@@ -458,6 +594,44 @@ actor FakeRemoteHost: RemoteSessionServing {
         XCTAssertEqual(controller.phase, .idle)
     }
 
+    /// POLISH-R item 4. The app was killed mid-session; the host still holds
+    /// that session for its 60 s heartbeat, owned by this same device. The
+    /// next start ends the leftover and goes on, instead of a 409 card.
+    func testThisDevicesOwnLeftoverIsEndedAndTheSessionStarts() async throws {
+        let key = "omodachi.deviceID.v1"
+        let previous = AppDefaults.shared.string(forKey: key)
+        AppDefaults.shared.set("ios-polish-r-test", forKey: key)
+        defer { AppDefaults.shared.set(previous, forKey: key) }
+        let (controller, host, backend) = make()
+        let owner = RemoteRequestError.Owner(sessionID: "rs_leftover", deviceID: "ios-polish-r-test",
+                                             deviceName: "iPad", mode: .takeover, backend: .sunshine, startedAt: nil)
+        await host.setFailNextCreate(RemoteRequestError(code: "remote_session_exists", status: 409, owner: owner))
+        controller.start()
+        await settle("the leftover blocked the start") { await backend.connections.count == 1 }
+        let releases = await host.releases
+        XCTAssertEqual(releases, ["rs_leftover"], "only the leftover, and only once")
+        XCTAssertNil(controller.sessionOwner)
+        XCTAssertFalse(controller.phase.isFailed)
+    }
+
+    /// Another device's session is never ended from here; the card still asks.
+    func testSomebodyElsesSessionIsNeverEndedFromHere() async throws {
+        let key = "omodachi.deviceID.v1"
+        let previous = AppDefaults.shared.string(forKey: key)
+        AppDefaults.shared.set("ios-polish-r-test", forKey: key)
+        defer { AppDefaults.shared.set(previous, forKey: key) }
+        let (controller, host, _) = make()
+        let owner = RemoteRequestError.Owner(sessionID: "rs_theirs", deviceID: "ios-someone-else",
+                                             deviceName: "iPhone", mode: .extend, backend: .sunshine, startedAt: nil)
+        await host.setFailNextCreate(RemoteRequestError(code: "remote_session_exists", status: 409, owner: owner))
+        controller.start()
+        await settle("a 409 must surface") { controller.phase.isFailed }
+        let releases = await host.releases
+        XCTAssertTrue(releases.isEmpty)
+        XCTAssertEqual(controller.sessionOwner?.sessionID, "rs_theirs")
+        XCTAssertFalse(controller.canReclaimSession)
+    }
+
     func testABackendSwitchGoesThroughTheSameStopAndReconnect() async throws {
         let (controller, host, backend) = make()
         controller.start()
@@ -473,6 +647,19 @@ actor FakeRemoteHost: RemoteSessionServing {
 
 /// The wire shapes, checked against the host's own generated fixtures.
 final class RemoteWireTests: XCTestCase {
+    /// POLISH-R2: a release with a failed step decodes (it used to throw, and
+    /// the App's retry made the host end the session a second time).
+    func testAReleaseWithFailedStepsDecodes() throws {
+        let failed = try JSONDecoder().decode(RemoteReleaseDTO.self, from: Data(
+            #"{"released":false,"errors":[{"step":"backend","code":"session_not_stopped"},{"step":"workspaces","code":"x"}]}"#.utf8))
+        XCTAssertFalse(failed.released)
+        XCTAssertEqual(failed.errors, ["backend", "workspaces"])
+        let clean = try JSONDecoder().decode(RemoteReleaseDTO.self, from: Data(#"{"released":true,"errors":[]}"#.utf8))
+        XCTAssertTrue(clean.released)
+        let names = try JSONDecoder().decode(RemoteReleaseDTO.self, from: Data(#"{"released":false,"errors":["backend"]}"#.utf8))
+        XCTAssertEqual(names.errors, ["backend"])
+    }
+
     private func fixture(_ name: String) throws -> Data {
         let url = try XCTUnwrap(Bundle(for: RemoteSessionControllerTests.self).url(forResource: name, withExtension: "json", subdirectory: "CoreFixtures"))
         return try Data(contentsOf: url)
@@ -486,20 +673,21 @@ final class RemoteWireTests: XCTestCase {
         XCTAssertEqual(session.revision, 2)
         XCTAssertTrue(session.isReady)
         XCTAssertEqual(session.lockLocalInput, false)
-        XCTAssertEqual(session.profile?.stream_pixels, RemotePixels(width: 2392, height: 1672))
+        // POLISH-U: core's fixture as core writes it today (the copy here had
+        // drifted): the stream and the VNC framebuffer are the output's mode
+        // pixels, and the connection names the framebuffer it starts at.
+        XCTAssertEqual(session.profile?.stream_pixels, RemotePixels(width: 2560, height: 1788))
         let vnc = try XCTUnwrap(session.connection?.vnc)
         XCTAssertEqual(vnc.path, "/v1/remote/sessions/rs_00000000000000000000000000000000/vnc")
-        // WayVNC serves the compositor's logical size, not the output mode
-        // pixels: the two are different numbers for the same screen.
-        XCTAssertEqual(vnc.framebufferPixels, RemotePixels(width: 1280, height: 894))
+        XCTAssertEqual(vnc.framebufferPixels, RemotePixels(width: 2560, height: 1788))
+        XCTAssertEqual(vnc.initialFramebufferPixels, RemotePixels(width: 2560, height: 1788))
         XCTAssertEqual(session.profile?.output_mode_pixels, RemotePixels(width: 2560, height: 1788))
-        XCTAssertNotEqual(vnc.framebufferPixels, session.profile?.output_mode_pixels)
         XCTAssertNil(session.connection?.sunshine, "a VNC connection is never read as a Sunshine one")
     }
 
     func testConnectionFixtureAndTheSunshineShape() throws {
         let vnc = try JSONDecoder().decode(RemoteConnectionDTO.self, from: fixture("remote-connection"))
-        XCTAssertEqual(vnc.decodedPixels, RemotePixels(width: 1280, height: 894))
+        XCTAssertEqual(vnc.decodedPixels, RemotePixels(width: 2560, height: 1788))
         let sunshine = try JSONDecoder().decode(RemoteConnectionDTO.self, from: Data(#"{"backend":"sunshine","host":"192.168.1.11","https_port":47984,"app_name":"Omodachi Desktop","output_id":"OMODACHI-abc","stream_pixels":{"width":2560,"height":1440},"fps":60}"#.utf8))
         XCTAssertEqual(sunshine.sunshine?.appName, "Omodachi Desktop")
         XCTAssertEqual(sunshine.decodedPixels, RemotePixels(width: 2560, height: 1440))
@@ -836,6 +1024,39 @@ final class RemoteWireTests: XCTestCase {
         backend.deliverFrame(RemotePixels(width: 2560, height: 1600))
         XCTAssertTrue(controller.isStreaming, "the first frame after a pairing is the point")
         XCTAssertTrue(controller.sunshinePaired)
+    }
+
+    /// POLISH-R item 5 (LINKS-1): the panel said "Sunshine has not approved
+    /// this device" right above "Sunshine pairing is done". The pairing had
+    /// landed; the session it resumed then failed for another reason. One
+    /// truthful state: no repair card once the pairing is done, and the
+    /// failure in its own words.
+    func testAFinishedPairingNeverBringsBackTheUnapprovedCard() async throws {
+        let (controller, host, _) = make()
+        await refuseOnce(host)
+        controller.start()
+        await settle("the refusal never settled") { !controller.pairingStatus.isEmpty }
+        XCTAssertFalse(controller.showsSunshineRepair, "a pairing in flight with no PIN yet is not a failure")
+        await host.setFailNextCreate(RemoteRequestError(code: "sunshine_desktop_unavailable", status: 503))
+        controller.receivePairing(.paired)
+        await settle("the resumed session never failed") { controller.phase.isFailed }
+        XCTAssertTrue(controller.sunshinePaired)
+        XCTAssertEqual(controller.pairingStatus, Strings.mediaPairingDone)
+        XCTAssertFalse(controller.showsSunshineRepair,
+                       "the repair card's headline would contradict the pairing that just finished")
+        XCTAssertFalse(controller.message.isEmpty, "the real failure is still said")
+    }
+
+    /// A pairing that never finished still gets the repair card.
+    func testAPairingThatFailedStillShowsTheRepair() async throws {
+        let (controller, host, _) = make()
+        await refuseOnce(host)
+        controller.start()
+        await settle("the refusal never settled") { !controller.pairingStatus.isEmpty }
+        controller.receivePairing(.pin(""))
+        await settle("the failure never settled") { controller.phase.isFailed }
+        XCTAssertFalse(controller.sunshinePaired)
+        XCTAssertTrue(controller.showsSunshineRepair)
     }
 
     /// A pairing that was cancelled must not leave a session queued behind it:

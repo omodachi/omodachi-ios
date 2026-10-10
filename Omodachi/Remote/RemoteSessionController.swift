@@ -1,6 +1,7 @@
 import Combine
 import CoreGraphics
 import Foundation
+import RemoteInputCore
 import UIKit
 
 /// Drives the one Remote session a host can have: create, connect a backend,
@@ -27,8 +28,21 @@ import UIKit
             RemoteSessionTrace.phase("\(phase)", streaming: isStreaming, panelVisible: panelVisible)
         }
     }
-    @Published private(set) var session: RemoteSessionDTO?
-    @Published private(set) var capabilities: RemoteCapabilitiesDTO?
+    @Published private(set) var session: RemoteSessionDTO? {
+        didSet { if oldValue?.id != session?.id { typingNoticeShown = false } }
+    }
+    @Published private(set) var capabilities: RemoteCapabilitiesDTO? {
+        // TAIL-2 P2-2: over a relayed tailnet path a Sunshine stream someone
+        // picked anyway is held to a rate the relay can carry.
+        didSet {
+            sunshine?.relayedRoad = capabilities?.relayedTailnet ?? false
+            if oldValue?.text_input != capabilities?.text_input {
+                applyTyping()
+                // REMOTE-INPUT-2: the limits and whether the field can be used.
+                composer.apply(capabilities?.text_input)
+            }
+        }
+    }
     /// Kept on screen across a resize until the new backend's first frame lands.
     @Published private(set) var retainedFrame: UIImage?
     @Published private(set) var message = ""
@@ -95,15 +109,20 @@ import UIKit
     }
 
     init(service: (any RemoteSessionServing)? = nil, driver: RemoteBackendDriver? = nil,
-         heartbeatInterval: Duration = .seconds(10), backgroundGrace: Duration = .seconds(20)) {
+         heartbeatInterval: Duration = .seconds(10), backgroundGrace: Duration = .seconds(20),
+         streamSettle: Duration? = nil) {
         injectedService = service
         injectedDriver = driver
         self.heartbeatInterval = heartbeatInterval
         self.backgroundGrace = backgroundGrace
+        // A test's in-memory host has no fork to wait for; it says so by
+        // injecting a service, or names its own settle time.
+        self.streamSettle = streamSettle ?? (service == nil ? .seconds(3) : .zero)
         client = service
         mode = preferences.mode
         backendChoice = preferences.backend
         backend = preferences.backend.resolve(nil)
+        wireComposer()
         if let driver { bind(driver) }
     }
 
@@ -126,11 +145,19 @@ import UIKit
     private var pin: HostPin?
     private let mediaPairing = SunshinePairingFlow()
     private var client: (any RemoteSessionServing)?
+    /// TAIL-2: the road `client` was built for; nil for an injected client.
+    private var clientRoad: URL?
     var run = UUID()
     private var heartbeat: Task<Void, Never>?
     private var resizeDebounce: Task<Void, Never>?
+    /// The geometry the session is planned for (and the next one will be).
     private var viewport: CGSize = .zero
     private var orientation = "landscape_left"
+    /// ROTATE-1 (Leo, 2026-10-05: "拓展模式不动啊，只有接管模式动"). The window
+    /// as it last really was, kept apart from `viewport` while an extend
+    /// session holds its geometry through a turn, so the next session is
+    /// planned for the window it actually opens in.
+    private var windowReading: (size: CGSize, orientation: String)?
     /// The host's own rate preference. It is a planning input, never a local
     /// default: without it the request carries this client's own ceiling.
     private var hostQuality: RemoteHostPreferences.Quality?
@@ -140,7 +167,11 @@ import UIKit
     private var hasFrame = false
     var panelVisible = false
     /// A-43. Published so the quick action reads "已弹出" when it is up.
+    /// REMOTE-INPUT-2: it is also whether the compose bar is up — the bar is
+    /// the keyboard's top row, in the field's mode and in Keys mode alike.
     @Published private(set) var keyboardVisible = false
+    /// REMOTE-INPUT-2. The compose bar's draft, switches and send.
+    let composer = RemoteComposer()
     /// MENU-2. Where the host's own bar is, as core measured it on the output
     /// this session owns. `RemoteBarMarks` puts our mark on top of the Omarchy
     /// logo from this; `nil` means there is nothing on the bar to cover and
@@ -181,6 +212,7 @@ import UIKit
     private var lastBarGeometry: HostBarGeometry?
     /// Operator-only replay, at most one per session.
     private var operatorGestureRun: Task<Void, Never>?
+    private var operatorTypingRun: Task<Void, Never>?
 
     /// Our mark was tapped. The host is told nothing about it: the mark is an
     /// ordinary view above the stream, so the tap never reached the picture —
@@ -234,13 +266,6 @@ import UIKit
         reportGestureToast(toast)
     }
 
-    /// A-60 rev 5. The rotation lock fixes the orientation **for this session
-    /// only** and releases itself when the session ends. While it is on, turning
-    /// the device sends nothing: the picture keeps its geometry and gains black
-    /// bars. Unlocking with the device already turned spends exactly one resize.
-    @Published private(set) var rotationLocked = false
-    /// The viewport a locked session refused, kept so unlocking can spend it.
-    private var deferredViewport: (size: CGSize, orientation: String)?
     /// A-60: the only quick action that depends on the backend, and the host
     /// says which. `capabilities.backends.vnc.audio` is `false` on a real
     /// install — RFB over a WebSocket has no audio channel — and the Sunshine
@@ -259,6 +284,9 @@ import UIKit
     /// The connection attempt that started this pairing is resumed once the
     /// pairing lands, so a user who asked for a session gets the session.
     private var pairedResumesSession = false
+    /// REMOTE-PAIR-1: how many times the automatic renewal has been tried
+    /// again by itself. One more try, then the manual button.
+    private(set) var automaticRenewalRetries = 0
 
     /// REMOTE-2 item 1. The host releases a session whose client stops beating
     /// within its TTL, so while `session != nil` the beat has to go out — and
@@ -320,6 +348,7 @@ import UIKit
         let changed = self.profile?.companionURL != profile.companionURL || self.profile?.hostname != profile.hostname
         self.profile = profile
         guard changed else { return }
+        composer.configure(host: profile.companionURL.isEmpty ? nil : HostAccount.canonical(profile.companionURL))
         pin = HostPinStore().load(account: HostAccount.canonical(profile.companionURL))
         mediaPairing.cancel()
         sunshine = nil; vnc = nil; capabilities = nil; sunshinePaired = false; pairingPIN = nil; pairingStatus = ""
@@ -344,17 +373,7 @@ import UIKit
         mediaPairing.onProgress = { [weak self] value in self?.pairingStatus = value }
         mediaPairing.onFinished = { [weak self] paired in
             guard let self else { return }
-            self.sunshinePaired = paired
-            self.pairingPIN = nil
-            // The session is what the user asked for; the pairing was only its
-            // precondition. Leaving them on the refusal that started it is how
-            // a finished pairing still read as "尚未批准".
-            if paired {
-                if self.pairedResumesSession { self.pairedResumesSession = false; self.start() }
-            } else if self.phase == .idle || self.phase.isFailed {
-                self.pairedResumesSession = false
-                self.phase = .failed(self.pairingStatus.isEmpty ? Strings.remotePairingIncomplete : self.pairingStatus)
-            }
+            self.pairingFinished(paired: paired, retriable: self.mediaPairing.lastFailureRetriable)
         }
         mediaPairing.cancelService = { [weak self] attempt in
             guard let self else { throw CompanionHostError.notConnected }
@@ -423,9 +442,22 @@ import UIKit
             self.onGesture?(gesture)
         }
         driver.setRegisteredGestures(gestureBindings.registered)
+        configureTyping(driver)
+        // REMOTE-INPUT-2: three fingers ask the session which keyboard.
+        driver.setKeyboardTapHandler { [weak self] in self?.keyboardTapped() }
         if let sunshine = driver as? SunshineBackendDriver {
             sunshine.onStats = { [weak self] stats in self?.receiveStats(stats) }
         }
+    }
+
+    /// TAIL-2 P2-2. The capabilities carry the road the asking device is on —
+    /// whether its tailnet path is relayed — and that changes under a live
+    /// connection. The entry re-reads them each time it appears and after a
+    /// reconnect or a road change, but never under a session, whose backend
+    /// is already chosen.
+    func refreshEntryCapabilities() async {
+        guard session == nil, !phase.isBusy else { return }
+        await refreshCapabilities()
     }
 
     func refreshCapabilities() async {
@@ -435,12 +467,9 @@ import UIKit
         guard let capabilities else { return }
         // `.auto` is whatever the host says it is; an explicit choice is only
         // overridden when the host reports that backend cannot run at all.
-        let resolved = backendChoice.resolve(capabilities)
-        if backendChoice == .auto {
-            backend = resolved
-        } else if !capabilities.available(backend) {
-            backend = capabilities.available(.sunshine) ? .sunshine : .vnc
-        }
+        // REMOTE-FIX-1: from the choice, not from the backend a previous read
+        // fell back to - an explicit Sunshine comes back once it can run.
+        backend = backendChoice.effective(capabilities)
     }
 
     /// N-24: the exit for "somebody else has it". Core has no steal, so the
@@ -452,7 +481,7 @@ import UIKit
     }
 
     static func pairedDeviceID() -> String? {
-        AppDefaults.shared.string(forKey: "omodachi.deviceID.v1")
+        CompanionDeviceIdentity.stored()
     }
 
     func reclaimSession() {
@@ -470,6 +499,41 @@ import UIKit
 
     func inspectSunshine() { sunshine?.inspect() }
 
+    /// The end of one Sunshine pairing attempt.
+    ///
+    /// REMOTE-PAIR-1 §3: a renewal the app started by itself (the host said
+    /// `media_pairing_required`) is not given up on at its first stumble. If it
+    /// stopped on something a second try can get past it is tried once more,
+    /// still by itself; only after that - or straight away, when what stopped
+    /// it needs the person at the computer - does the repair card with its
+    /// button come up, with the sentence that says what to do.
+    func pairingFinished(paired: Bool, retriable: Bool) {
+        sunshinePaired = paired
+        pairingPIN = nil
+        // The session is what the user asked for; the pairing was only its
+        // precondition. Leaving them on the refusal that started it is how
+        // a finished pairing still read as "尚未批准".
+        if paired {
+            automaticRenewalRetries = 0
+            if pairedResumesSession { pairedResumesSession = false; start() }
+            return
+        }
+        if pairedResumesSession, retriable, automaticRenewalRetries < 1 {
+            automaticRenewalRetries += 1
+            RemotePairingTrace.step("renew.retry", "attempt=\(automaticRenewalRetries)")
+            // After the attempt that just ended has let go of the flow.
+            Task { @MainActor [weak self] in
+                guard let self, self.pairedResumesSession else { return }
+                self.pairSunshine(renewing: true)
+            }
+            return
+        }
+        if phase == .idle || phase.isFailed {
+            pairedResumesSession = false
+            phase = .failed(pairingStatus.isEmpty ? Strings.remotePairingIncomplete : pairingStatus)
+        }
+    }
+
     /// Step 1 of the pairing: Moonlight generates the client certificate, hands
     /// out the PIN and issues the `getservercert` the fork suspends. The rest
     /// runs in `receivePairing` once that PIN exists.
@@ -484,11 +548,27 @@ import UIKit
     /// fork's side cannot be dropped from here.)
     func pairSunshine(renewing: Bool) {
         guard !mediaPairing.isRunning else { return }
+        // POLISH-R item 5: a pairing that is starting is not a pairing that
+        // is done, whatever the last attempt ended as.
+        sunshinePaired = false
         pairingPIN = nil
         pairingStatus = renewing
             ? Strings.remotePairingRenewing
             : Strings.remotePairingStarting
         sunshine?.pair(renewing: renewing)
+    }
+
+    /// POLISH-R item 5. Whether the Remote panel shows ⑦, the Sunshine
+    /// certificate repair, whose headline is "Sunshine has not approved this
+    /// device". LINKS-1 caught it printed over "Sunshine pairing is done": a
+    /// pairing finished, the session it resumed then failed for some other
+    /// reason (the stream, the network), and the failure plus the leftover
+    /// pairing status was enough to bring the repair card back. A finished
+    /// pairing is never a reason for it; the failure is told on the entry,
+    /// in its own words, instead.
+    var showsSunshineRepair: Bool {
+        if pairingPIN != nil { return true }
+        return phase.isFailed && !pairingStatus.isEmpty && !sunshinePaired
     }
 
     func cancelSunshinePairing() {
@@ -590,9 +670,12 @@ import UIKit
                                                placement: preferences.placement,
                                                lockLocalInput: mode == .takeover && lockLocalInput,
                                                ttlSeconds: ttlSeconds)
-                let created = try await create(body, using: client)
+                let created = try await createReclaimingOwnLeftover(body, using: client)
                 guard run == token else { _ = try? await client.releaseRemoteSession(id: created.id); return }
                 RemoteGeometryTrace.planned(created)
+                RemoteSessionTrace.codec(session: created.id, backend: created.backend.rawValue,
+                                         planned: created.profile?.codec ?? "-",
+                                         declared: RemoteDecoderSupport.codecs)
                 session = created
                 beginHeartbeat(token: token)
                 try await connectBackend(created, token: token)
@@ -607,6 +690,7 @@ import UIKit
                 // one exists.
                 await release(message: "", token: token)
                 pairedResumesSession = true
+                automaticRenewalRetries = 0
                 pairSunshine(renewing: true)
             } catch let error as RemoteRequestError where error.isSessionExists {
                 // Who, not "somebody". The card can then offer the one exit
@@ -639,34 +723,79 @@ import UIKit
     func toggleKeyboard(closingOverlay close: (() -> Void)? = nil) {
         guard let driver else { return }
         if keyboardVisible {
-            driver.hideKeyboard()
-            keyboardVisible = false
-            panelActions.keyboardHidden()
+            hideKeyboard()
             return
         }
+        // REMOTE-INPUT-2: the keyboard is the compose bar with this device's
+        // own input method in its field. It needs no first responder from the
+        // picture, so it comes up whatever the overlay was doing.
+        if composer.usesField, hasSession {
+            close?()
+            showComposeField()
+            return
+        }
+        driver.setComposeOwnsKeyboard(false)
         keyboardVisible = driver.toggleKeyboard()
+        if keyboardVisible { RemoteSessionTrace.composeBar("shown mode=keys") }
         guard !keyboardVisible, hasSession else { return }
         close?()
         enqueuePanelAction(.keyboard)
     }
 
+    /// REMOTE-INPUT-2. The bar comes up with the field holding the keyboard.
+    private func showComposeField() {
+        driver?.hideKeyboard()
+        driver?.setComposeOwnsKeyboard(true)
+        keyboardVisible = true
+        composer.requestFocus()
+        RemoteSessionTrace.composeBar("shown mode=field")
+    }
+
+    /// REMOTE-INPUT-2. Three fingers on the picture: the same switch as the
+    /// bar's keyboard action, whichever keyboard that is.
+    func keyboardTapped() {
+        guard hasSession else { return }
+        toggleKeyboard()
+    }
+
+    /// REMOTE-INPUT-2. ⌨ on the bar: the per-key keyboard (vim, shortcuts,
+    /// games), or back to the field.
+    func setKeysMode(_ on: Bool) {
+        guard composer.keysMode != on else { return }
+        composer.keysMode = on
+        RemoteSessionTrace.composeBar("mode=\(on ? "keys" : "field")")
+        guard keyboardVisible, let driver else { return }
+        if composer.usesField {
+            showComposeField()
+        } else {
+            composer.requestResign()
+            driver.setComposeOwnsKeyboard(false)
+            keyboardVisible = driver.toggleKeyboard()
+            if !keyboardVisible, hasSession { enqueuePanelAction(.keyboard) }
+        }
+    }
+
+    /// REMOTE-INPUT-2. The field let go of the keyboard without being asked
+    /// (the iPad's own dismiss key, another responder): the bar goes with it,
+    /// the draft stays.
+    func composeFieldResigned() {
+        guard keyboardVisible, composer.usesField else { return }
+        RemoteSessionTrace.composeBar("hidden by=system")
+        keyboardVisible = false
+        driver?.setComposeOwnsKeyboard(false)
+    }
+
     func hideKeyboard() {
         driver?.hideKeyboard()
+        if keyboardVisible { RemoteSessionTrace.composeBar("hidden") }
         keyboardVisible = false
+        panelActions.keyboardHidden()
+        composer.requestResign()
+        driver?.setComposeOwnsKeyboard(false)
         // A-61: the keyboard never moved the geometry, so there is nothing to
         // put back. The window will report its real rectangle on the next
         // layout pass, and if that is the same one it always was — which it is
         // — nothing is sent.
-    }
-
-    /// A-60 rev 5's lock. It is a session-scoped switch, not a preference, and
-    /// `release()` clears it so the next session starts unlocked.
-    func toggleRotationLock() {
-        rotationLocked.toggle()
-        RemoteSessionTrace.phase("rotation-lock=\(rotationLocked)", streaming: isStreaming,
-                                 panelVisible: panelVisible)
-        guard !rotationLocked else { return }
-        spendDeferredViewport()
     }
 
     /// A-60: the host's own sound, played here. Turning it off stops this
@@ -675,12 +804,6 @@ import UIKit
         guard backendHasAudio, let host = profile?.hostname, !host.isEmpty else { return }
         OMAudioController.shared.setPlaybackEnabled(on, muted: !on, volume: 1, forHost: host)
         hostAudioOn = on
-    }
-
-    private func spendDeferredViewport() {
-        guard !rotationLocked, let pending = deferredViewport else { return }
-        deferredViewport = nil
-        viewportChanged(size: pending.size, orientation: pending.orientation)
     }
 
     /// A-43: the overlay's button cannot raise the keyboard itself — the
@@ -692,8 +815,32 @@ import UIKit
     /// A-62. The gesture is the other half of the same toggle, and what it did
     /// is what the bar's quick action must say. It never touches the panel.
     func keyboardGestureReported(_ visible: Bool) {
+        // REMOTE-INPUT-2: the picture's keyboard going away while the field
+        // has the keyboard is the field taking it, not the bar closing.
+        if !visible, composer.usesField, keyboardVisible { return }
         keyboardVisible = visible
         if !visible { panelActions.keyboardHidden() }
+    }
+
+    /// POLISH-R item 4. Leo killed the app in the middle of a session at
+    /// 00:50 (host time) and could not start another one until the host
+    /// expired the old one on its 60 s heartbeat (00:51:47): the new process
+    /// was told "this device already has a session" and offered a button.
+    /// One device runs one copy of this app with one scene, so a session the
+    /// host says *this device* owns, and that this controller is not holding,
+    /// is that dead process's leftover — nobody else can be using it. It is
+    /// ended and the create asked again, once, without a question. A session
+    /// owned by any other device still gets the occupied card.
+    private func createReclaimingOwnLeftover(_ body: RemoteCreateRequest,
+                                             using client: any RemoteSessionServing) async throws -> RemoteSessionDTO {
+        do { return try await create(body, using: client) }
+        catch let error as RemoteRequestError where error.isSessionExists {
+            guard let owner = error.owner, let mine = Self.pairedDeviceID(), owner.deviceID == mine,
+                  owner.sessionID != session?.id else { throw error }
+            RemoteSessionTrace.release(session: owner.sessionID, cause: "reclaim-own-leftover", message: "")
+            _ = try await client.releaseRemoteSession(id: owner.sessionID)
+            return try await create(body, using: client)
+        }
     }
 
     /// `remote.start` refuses while the host screensaver is up, because a
@@ -724,6 +871,7 @@ import UIKit
 
     private func firstFrame(pixels: RemotePixels, rect: CGRect) {
         guard phase == .connecting || phase == .resizing || phase == .streaming, let session else { return }
+        if !hasFrame { streamStartedAt = ContinuousClock.now }
         // REMOTE-6: not always the first. A backend whose framebuffer changed
         // size under it presents again, and everything below — the aspect-fit
         // the bar marks are placed in, what the host is told was presented,
@@ -749,9 +897,17 @@ import UIKit
         dispatchPanelAction()
         replayOperatorGesture()
         walkOperatorStream()
+        typeOperatorText()
         if pendingRequality {
             pendingRequality = false
             requality(cause: "deferred")
+        }
+        if pendingViewportResize {
+            pendingViewportResize = false
+            if viewportDiffersFromPlan {
+                let token = run
+                Task { await resize(session: session, token: token) }
+            }
         }
         let token = run
         Task { [weak self] in
@@ -760,6 +916,150 @@ import UIKit
                 video_rect_points: RemoteRect(x: rect.origin.x, y: rect.origin.y, width: rect.width, height: rect.height),
                 decoded_pixels: pixels)
             _ = try? await client.reportRemotePresented(id: session.id, body: body)
+        }
+    }
+
+    // MARK: - REMOTE-INPUT-1: typing
+
+    /// Whether a typing toast has been shown in this session; one is enough.
+    private var typingNoticeShown = false
+
+    private func applyTyping() {
+        if let injectedDriver { configureTyping(injectedDriver); return }
+        sunshine.map(configureTyping); vnc.map(configureTyping)
+    }
+
+    private func configureTyping(_ driver: RemoteBackendDriver) {
+        let route = RemoteTypingRoute.from(capabilities)
+        driver.configureTyping(route: route, deliver: { [weak self] text in
+            await self?.typeOnHost(text) ?? .unavailable
+        }, onUndelivered: { [weak self] outcome in
+            self?.typingUndelivered(outcome)
+        })
+    }
+
+    /// Text no key produces, typed by core. The text is never traced: only
+    /// that it was asked for and how it went.
+    private func typeOnHost(_ text: String) async -> RemoteHostTextOutcome {
+        guard let session, phase == .streaming else { return .unavailable }
+        do {
+            _ = try await connectedClient().typeRemoteText(id: session.id, body: RemoteTextRequest(text: text))
+            RemoteSessionTrace.typing(session: session.id, outcome: "typed", characters: text.count)
+            return .typed
+        } catch {
+            let outcome = RemoteHostTextOutcome.from(error)
+            RemoteSessionTrace.typing(session: session.id, outcome: outcome == .unavailable ? "unavailable" : "failed",
+                                      characters: text.count)
+            return outcome
+        }
+    }
+
+    private func typingUndelivered(_ outcome: RemoteHostTextOutcome) {
+        guard !typingNoticeShown else { return }
+        typingNoticeShown = true
+        reportGestureToast(PanelToast(stage: .message,
+            label: outcome == .failed ? Strings.remoteTypingFailed : Strings.remoteTypingUnavailable))
+    }
+
+    // MARK: - REMOTE-INPUT-2: the compose bar
+
+    private func wireComposer() {
+        composer.currentSession = { [weak self] in self?.session?.id }
+        composer.isReady = { [weak self] id in self?.composeReady(id) ?? false }
+        composer.deliver = { [weak self] session, text, sendID in
+            guard let self else { return .sessionGone }
+            return await self.deliverCompose(session: session, text: text, sendID: sendID)
+        }
+    }
+
+    /// A send goes out only while the picture of *its* session is live, so it
+    /// is never typed blind, or into a session it was not pressed in.
+    func composeReady(_ sessionID: String) -> Bool {
+        session?.id == sessionID && isStreaming && reconnection == .none && !pausedForBackground
+    }
+
+    /// One attempt. The id is the press of Send; core types an id once.
+    func deliverCompose(session sessionID: String, text: String, sendID: String) async -> RemoteComposeOutcome {
+        guard session?.id == sessionID else { return .sessionGone }
+        do {
+            let client = try await connectedClient()
+            _ = try await client.typeRemoteText(id: sessionID, body: RemoteTextRequest(text: text, id: sendID))
+            return .typed
+        } catch let error as RemoteRequestError {
+            return Self.composeOutcome(error)
+        } catch let error as CompanionHostError {
+            if case .certificateChanged = error { return .refused(error.localizedDescription) }
+            return .lost
+        } catch {
+            return .lost
+        }
+    }
+
+    nonisolated static func composeOutcome(_ error: RemoteRequestError) -> RemoteComposeOutcome {
+        switch error.code {
+        case "session_not_ready": return .notReady
+        case "session_not_found", "permission_denied": return .sessionGone
+        case "remote_text_unavailable", "route_unavailable": return .refused(Strings.remoteTypingUnavailable)
+        case "remote_text_failed": return .refused(Strings.remoteTypingFailed)
+        case "invalid_request": return .refused(Strings.remoteComposeRefused)
+        default:
+            // A host that answered at all answered about this request; only a
+            // server error might hide a typed text, and the id covers a retry.
+            return error.status >= 500 ? .lost : .refused(error.userMessage)
+        }
+    }
+
+    /// The bar's keys row, and the keys an empty field passes through.
+    func passKey(usage: UInt16, down: Bool) {
+        guard hasSession else { return }
+        driver?.passKey(usage: usage, down: down)
+    }
+
+    func passChord(usage: UInt16, modifiers: RemoteModifiers) {
+        guard hasSession else { return }
+        driver?.passChord(usage: usage, modifiers: modifiers)
+    }
+
+    /// One tap of a key on the bar's keys row.
+    func tapKey(_ cap: RemoteKeyCap) {
+        if cap.modifiers.isEmpty {
+            passKey(usage: cap.usage, down: true)
+            passKey(usage: cap.usage, down: false)
+        } else {
+            passChord(usage: cap.usage, modifiers: cap.modifiers)
+        }
+    }
+
+    /// Operator-only. See `RemoteOperatorSupport.typing`: the simulator's soft
+    /// keyboard cannot be tapped key by key from outside, so an operator run
+    /// feeds each string through the picture's own `insertText:` — the call a
+    /// tap on the iOS keyboard makes — after its delay.
+    private func typeOperatorText() {
+        let steps = RemoteOperatorSupport.typing
+        if RemoteOperatorSupport.typingInbox != nil, operatorTypingRun == nil {
+            let token = run
+            operatorTypingRun = Task { [weak self] in
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .milliseconds(500))
+                    guard let self, self.run == token else { return }
+                    guard let text = RemoteOperatorSupport.takeTypingInbox() else { continue }
+                    RemoteSessionTrace.typing(session: self.session?.id ?? "-", outcome: "operator-injected",
+                                              characters: text.count)
+                    self.driver?.typeTextForOperator(text)
+                }
+            }
+            return
+        }
+        guard !steps.isEmpty, operatorTypingRun == nil else { return }
+        let token = run
+        operatorTypingRun = Task { [weak self] in
+            for step in steps {
+                try? await Task.sleep(for: .seconds(step.seconds))
+                guard !Task.isCancelled, let self, self.run == token else { return }
+                RemoteSessionTrace.typing(session: self.session?.id ?? "-", outcome: "operator-injected",
+                                          characters: step.text.count)
+                self.driver?.typeTextForOperator(step.text)
+            }
         }
     }
 
@@ -797,21 +1097,24 @@ import UIKit
 
     /// UIKit reports intermediate sizes during a rotation. Only a size that has
     /// been stable for 300 ms is worth a host round trip.
-    func viewportChanged(size: CGSize, orientation: String, corners: DisplayCorners? = nil) {
+    func viewportChanged(size: CGSize, orientation: String, corners: DisplayCorners? = nil, source: String = "stage") {
         // REMOTE-SAFE-1. Kept whatever happens below: the corners are a fact
         // about the window, and the next request that does go out uses them.
         if let corners { displayCorners = corners }
         guard size.width >= 64, size.height >= 64 else { return }
+        if session != nil {
+            RemoteSessionTrace.phase("viewport-reading source=\(source) window=\(size.width)x\(size.height) \(orientation) keyboard=\(keyboardVisible ? 1 : 0) phase=\(phase)", // non-copy: a trace value
+                                     streaming: isStreaming, panelVisible: panelVisible)
+        }
+        windowReading = (size, orientation)
         // A-61 (rev 5, review item 1). **The soft keyboard is a layer over the
         // picture and never a geometry change.** REMOTE-2 measured what the old
         // behaviour cost: the keyboard coming up re-planned the host's output,
         // which re-arranged its workspaces and left the picture letterboxed —
         // the opposite of "the keyboard is just a local switch". A window whose
         // safe area shrank has not changed size, so nothing here may act on it.
-        //
-        // A-60's rotation lock is the same refusal for a different reason: the
-        // user asked for this orientation to stay. Both remember the reading so
-        // that releasing them spends exactly one resize (A-60 rev 5).
+        // (POLISH-R: A-60's rotation lock used to be a second refusal here. Leo
+        // took it out; the system's own orientation lock does that job.)
         guard !keyboardVisible else {
             // Nothing is *held* here, because nothing really changed: the
             // window is the same window with a smaller safe area, and the
@@ -822,34 +1125,98 @@ import UIKit
                                      panelVisible: panelVisible)
             return
         }
-        guard !rotationLocked else {
-            // This one *is* a real change — the device turned — and the user
-            // asked it not to be acted on. It is held so that unlocking spends
-            // exactly one resize (A-60 rev 5).
-            deferredViewport = (size, orientation)
-            RemoteSessionTrace.phase("viewport-held rotationLock=1", streaming: isStreaming,
-                                     panelVisible: panelVisible)
+        let changed = size != viewport
+        // ROTATE-1. Only a takeover follows the device round. An extend
+        // session is a second screen standing beside the computer's own: its
+        // output keeps the geometry and the place it was planned with, and a
+        // turn only fits that same picture into the turned window (the video
+        // layer aspect-fits it; the next latched frame re-maps the pointer).
+        // The rule sits here, where a re-plan is decided, rather than in what
+        // detects a turn, so it holds whatever reports one.
+        if changed, let session, !Self.replans(mode: session.mode) {
+            sunshine?.invalidateViewportGeometry()
+            RemoteSessionTrace.phase("viewport-kept mode=\(session.mode.rawValue) window=\(Int(size.width))x\(Int(size.height))",
+                                     streaming: isStreaming, panelVisible: panelVisible)
             return
         }
-        let changed = size != viewport
         viewport = size
         self.orientation = orientation
         sunshine?.invalidateViewportGeometry()
-        guard changed, let session, phase == .streaming || phase == .resizing else { return }
+        // POLISH-R2: a turn while the stream is being dialled again (back from
+        // the background, or a host reconfigure) is not dropped: the dial uses
+        // the geometry the session already has, and the new one is planned
+        // once, after its first frame.
+        //
+        // ROTATE-2 (Leo's iPad, 17:23 AEDT: "现在一旋转 remote 就崩了"): the
+        // same holds while a re-plan is in flight. A second reading used to
+        // start a second resize over the first one's half-dialled stream; the
+        // stream the first one was opening failed under it, and a failure
+        // during a resize ended the session. One turn is one re-plan: a
+        // reading that arrives while the picture is being re-planned or
+        // dialled is planned after that picture's first frame, if it still
+        // differs from the plan then.
+        if changed, session != nil, phase == .connecting || phase == .resizing {
+            pendingViewportResize = true
+            RemoteSessionTrace.phase("viewport-held phase=\(phase)", streaming: isStreaming, panelVisible: panelVisible)
+            return
+        }
+        guard changed, session != nil, phase == .streaming else { return }
         resizeDebounce?.cancel()
         let token = run
         resizeDebounce = Task {
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled, run == token, size == viewport else { return }
+            // The session as it is now: an earlier re-plan moved its revision.
+            guard let session = self.session else { return }
+            // REMOTE-INPUT-2 host run: the keyboard sliding away reports a
+            // few transient heights (864…873 in an 874 window) and then the
+            // window again; "changed since the last reading" was true at the
+            // end, so a takeover re-planned to the geometry it already had.
+            // A re-plan is for a window that differs from the plan.
+            RemoteSessionTrace.phase("viewport-settled window=\(self.viewport.width)x\(self.viewport.height) \(self.orientation) plan=\(self.plannedWindow.map { "\($0.size.width)x\($0.size.height) \($0.orientation)" } ?? "none")", // non-copy: a trace value
+                                     streaming: self.isStreaming, panelVisible: self.panelVisible)
+            guard self.viewportDiffersFromPlan else {
+                RemoteSessionTrace.phase("viewport-settled-on-plan", streaming: self.isStreaming,
+                                         panelVisible: self.panelVisible)
+                return
+            }
             await resize(session: session, token: token)
         }
     }
 
+    /// ROTATE-1: whether a new window shape re-plans the host's output.
+    nonisolated static func replans(mode: RemoteMode) -> Bool { mode == .takeover }
+
     /// Stop decoding and release input, ask the host for new geometry, reconnect
     /// with the connection it answers with, and keep the old image until the new
     /// backend produces a frame.
-    private func resize(session: RemoteSessionDTO, token: UUID) async {
-        guard phase == .streaming, let client = try? await connectedClient() else { return }
+    /// `forWindow`: a re-plan for the window (a turn), which is dropped when
+    /// the window ends up where the plan already is; a quality change is not.
+    private func resize(session: RemoteSessionDTO, token: UUID, forWindow: Bool = true) async {
+        guard phase == .streaming else {
+            // ROTATE-2: never dropped — planned after the next first frame.
+            pendingViewportResize = true
+            return
+        }
+        // ROTATE-2, proven on the host (18:31 UTC+11): a held turn re-planned
+        // 10 ms after the new stream's first frame. The Sunshine fork cannot
+        // stop a stream that has not pinged yet; core's resize got
+        // `409 session_not_stopped`, marked the session `failed`, and the
+        // session was gone. A stream is given `streamSettle` before a re-plan
+        // stops it.
+        if let started = streamStartedAt, ContinuousClock.now < started + streamSettle {
+            RemoteSessionTrace.phase("resize-waits-for-stream", streaming: isStreaming, panelVisible: panelVisible)
+            try? await Task.sleep(until: started + streamSettle, clock: .continuous)
+            guard run == token, phase == .streaming else {
+                pendingViewportResize = true
+                return
+            }
+            if forWindow, !viewportDiffersFromPlan {
+                RemoteSessionTrace.phase("viewport-settled-on-plan", streaming: isStreaming, panelVisible: panelVisible)
+                return
+            }
+        }
+        guard let client = try? await connectedClient() else { return }
         phase = .resizing
         retainedFrame = driver?.retainedFrame
         hasFrame = false
@@ -876,8 +1243,15 @@ import UIKit
             RemoteGeometryTrace.planned(updated)
             self.session = updated
             try await connectBackend(updated, token: token)
-        } catch {
+        } catch let error as RemoteRequestError where error.code == "session_not_found" || error.status == 404 {
             await fail(Self.describe(error), token: token)
+        } catch {
+            // ROTATE-2: a turn never ends a session. The host still holds it;
+            // dial it again as the host has it (REMOTE-4's reconnect, with its
+            // own bounded window and retry).
+            guard run == token else { return }
+            RemoteSessionTrace.reconnect(session: session.id, attempt: 0, outcome: "resize-failed:\(Self.describe(error))")
+            await reconnectInPlace(reason: Self.describe(error), token: token, cause: "resize-failure")
         }
     }
 
@@ -905,7 +1279,23 @@ import UIKit
         }
     }
 
+    /// REMOTE-INPUT-2. The window the host's output was last planned for
+    /// (`geometry()` records it), so a reading that only returns to it is not
+    /// a re-plan.
+    private var plannedWindow: (size: CGSize, orientation: String)?
+    /// Within a point: SwiftUI hands the same window back as 873.99997 after
+    /// an animation, and that is not a new window. ROTATE-2: and by the
+    /// window's shape, not the name of its landscape — the window reader says
+    /// `landscape_left` for any landscape, the picture's reader says which.
+    var viewportDiffersFromPlan: Bool {
+        guard let plannedWindow else { return true }
+        return abs(plannedWindow.size.width - viewport.width) >= 1
+            || abs(plannedWindow.size.height - viewport.height) >= 1
+            || plannedWindow.orientation.hasPrefix("portrait") != orientation.hasPrefix("portrait")
+    }
+
     private func geometry() -> RemoteGeometryRequest {
+        plannedWindow = (viewport, orientation)
         var quality = RemoteQuality.forBackend(backend).applying(hostQuality)
         let plan = RemoteRatePlan.resolve(streamChoice, tier: adaptive.tier, host: hostPreferences)
         if streamChoice.preset != .host {
@@ -985,7 +1375,7 @@ import UIKit
             return
         }
         let token = run
-        Task { await resize(session: session, token: token) }
+        Task { await resize(session: session, token: token, forWindow: false) }
         RemoteSessionTrace.quality(session: session.id, preset: streamChoice.preset.rawValue,
                                    tier: streamChoice.preset == .auto ? adaptive.tier.wire : "-",
                                    cause: "redial:\(cause)")
@@ -1056,14 +1446,17 @@ import UIKit
     /// the first `.background` UIKit reports. The beat keeps going in the
     /// meantime, so a user who glanced at another app still has their desktop.
     func setForeground(_ active: Bool) {
+        inForeground = active
         if active {
             if backgroundRelease != nil {
                 backgroundRelease?.cancel(); backgroundRelease = nil
                 RemoteSessionTrace.foreground(true, decision: "cancelled-pending-release")
             }
+            resumeAfterBackground()
             return
         }
         guard phase != .idle || session != nil else { return }
+        pauseForBackground()
         guard backgroundRelease == nil else { return }
         RemoteSessionTrace.foreground(false, decision: "release-in-\(backgroundGrace)")
         let token = run
@@ -1074,6 +1467,59 @@ import UIKit
             self.backgroundRelease = nil
             await self.release(message: "", token: token, cause: "background")
         }
+    }
+
+    // MARK: - POLISH-R2: leaving the app is not a broken stream
+
+    /// Whether the scene is in front. The stream is never dialled while it is
+    /// not: iOS suspends a backgrounded app within seconds, and a dial that is
+    /// suspended between its launch and its first ping leaves the host's
+    /// Sunshine holding a stream nobody will ever ping (2026-10-05 09:47, host
+    /// time: Leo switched apps, the App re-dialled in the background, the new
+    /// stream died on "Initial Ping Timeout", and the release that followed
+    /// could not stop it).
+    private(set) var inForeground = true
+    /// The stream was stopped because the app left the front; the session is
+    /// still held on the host and is dialled again when the app comes back.
+    private(set) var pausedForBackground = false
+    /// A viewport change that arrived while the stream was being dialled.
+    private var pendingViewportResize = false
+    /// ROTATE-2. When the current stream's first frame landed, and how long a
+    /// new stream gets before a re-plan may stop it (the fork's first ping).
+    private var streamStartedAt: ContinuousClock.Instant?
+    let streamSettle: Duration
+
+    /// Leaving the front: end the stream now, cleanly, while the process still
+    /// runs, so the host sees a disconnect rather than a client gone silent
+    /// (which it notices only after its own timeout, and which the App would
+    /// notice only after Moonlight's ten-second timeout: a black picture on
+    /// return). The session itself stays; `backgroundRelease` decides that.
+    private func pauseForBackground() {
+        guard session != nil, phase != .stopping, !pausedForBackground else { return }
+        guard phase == .streaming || phase == .connecting || phase == .resizing || reconnection == .inFlight else { return }
+        pausedForBackground = true
+        RemoteSessionTrace.foreground(false, decision: "stream-paused")
+        retainedFrame = driver?.retainedFrame ?? retainedFrame
+        hasFrame = false
+        phase = .connecting
+        applyInputPolicy()
+        let task = UIApplication.shared.beginBackgroundTask(withName: "remote.pause") {}
+        Task { [weak self] in
+            await self?.driver?.stop()
+            UIApplication.shared.endBackgroundTask(task)
+        }
+    }
+
+    /// Back in front: dial the held session again at once.
+    private func resumeAfterBackground() {
+        guard pausedForBackground else { return }
+        pausedForBackground = false
+        guard session != nil, phase != .stopping else { return }
+        RemoteSessionTrace.foreground(true, decision: "stream-resumed")
+        let token = run
+        reconnection = .none
+        reconnectCycles = 0
+        Task { await reconnectInPlace(reason: "", token: token, cause: "foreground") }
     }
 
     // MARK: - REMOTE-4: the host reconfigured itself under a live session
@@ -1115,9 +1561,24 @@ import UIKit
     /// again in place: same id, same revision chain, same picture on screen.
     private func backendFailed(_ reason: String, token: UUID) async {
         guard run == token, phase != .stopping else { return }
+        // POLISH-R2: a stream that broke while the app is away is dialled
+        // again when it comes back, never from the background.
+        if !inForeground, session != nil {
+            pausedForBackground = true
+            RemoteSessionTrace.reconnect(session: session?.id ?? "-", attempt: 0, outcome: "deferred:background:\(reason)")
+            await driver?.stop()
+            return
+        }
         // A resize stops the backend itself and reconnects on the host's new
-        // geometry; that path owns its own failure.
-        guard session != nil, phase != .resizing, reconnectCycles < Self.maxReconnectCycles else {
+        // geometry; that path owns its own failure. ROTATE-2: a failure that
+        // lands while a resize is in flight is the stream the resize stopped
+        // (or one a turn overtook) — it is the resize's, never the end of
+        // the session.
+        if phase == .resizing {
+            RemoteSessionTrace.reconnect(session: session?.id ?? "-", attempt: 0, outcome: "ignored-during-resize:\(reason)")
+            return
+        }
+        guard session != nil, reconnectCycles < Self.maxReconnectCycles else {
             await fail(reason, token: token, cause: "backend-failure")
             return
         }
@@ -1176,6 +1637,13 @@ import UIKit
         await driver?.stop()
         let deadline = ContinuousClock.now.advanced(by: reconnectWindow)
         while run == token, ContinuousClock.now < deadline {
+            if !inForeground {
+                // Left again mid-dial: leave it for the return.
+                pausedForBackground = true
+                reconnection = .none
+                RemoteSessionTrace.reconnect(session: existing.id, attempt: reconnectAttempts, outcome: "deferred:background")
+                return
+            }
             reconnectAttempts += 1
             let attempt = reconnectAttempts
             do {
@@ -1233,12 +1701,22 @@ import UIKit
         run = UUID()
         phase = .stopping
         backgroundRelease?.cancel(); backgroundRelease = nil
+        pausedForBackground = false
+        pendingViewportResize = false
         heartbeat?.cancel(); heartbeat = nil
         resizeDebounce?.cancel(); resizeDebounce = nil
         panelActions.cancel()
         hasFrame = false
         applyInputPolicy()
         await driver?.stop()
+        // Only while the host still holds this session for us: once it says
+        // the session is gone, the fork's lease may already be somebody
+        // else's, and their desktop app is not ours to end.
+        if let session, session.backend == .sunshine, cause != "host-session-gone",
+           let outcome = await driver?.endHostApp() {
+            RemoteSessionTrace.release(session: session.id, cause: "\(cause).host-app", message: outcome)
+            RemoteSessionTrace.sunshineQuit(session: session.id, outcome: outcome)
+        }
         if let session {
             // REMOTE-2 item 1. This DELETE is what keeps the host from holding
             // an output for a whole TTL after the session is over, and it used
@@ -1256,14 +1734,23 @@ import UIKit
             RemoteSessionTrace.release(session: session.id, cause: "\(cause).delete", message: outcome)
         }
         session = nil
+        // REMOTE-INPUT-2: no session, no bar. The draft stays for the next.
+        if keyboardVisible {
+            keyboardVisible = false
+            composer.requestResign()
+            driver?.setComposeOwnsKeyboard(false)
+        }
+        // ROTATE-1: an extend session held its geometry through a turn; the
+        // next session is planned for the window as it is now.
+        if let windowReading, windowReading.size != viewport {
+            viewport = windowReading.size
+            orientation = windowReading.orientation
+        }
         retainedFrame = nil
         reconnection = .none
         // MENU-2: the mark belongs to the picture, and there is no picture.
         pictureSize = .zero
         applyBarGeometry(nil)
-        // A-60 rev 5: the lock is this session's, so it goes with it.
-        rotationLocked = false
-        deferredViewport = nil
         hostAudioOn = false
         decoded = ""
         message = reason
@@ -1271,13 +1758,24 @@ import UIKit
     }
 
     func connectedClient() async throws -> any RemoteSessionServing {
-        if let client { return client }
-        guard let profile, let endpoint = URL(string: profile.companionURL) else { throw CompanionHostError.invalidEndpoint }
-        let created = CompanionHostClient(configuration: try CompanionHostConfiguration(endpoint: endpoint),
+        guard let profile, let endpoint = URL(string: profile.companionURL) else {
+            if let client { return client }
+            throw CompanionHostError.invalidEndpoint
+        }
+        // TAIL-3b. The Remote requests go down the host's one road, while
+        // the credential stays where it is stored (the account).
+        let account = HostAccount.canonical(profile.companionURL)
+        let road = HostRoads.dialURL(account: account) ?? endpoint
+        if let client, clientRoad == nil || clientRoad == road { return client }
+        let created = CompanionHostClient(configuration: try CompanionHostConfiguration(endpoint: road, account: account),
                                           credentials: CompanionCredentialStore(),
                                           pinnedFingerprint: pin?.fingerprintSHA256)
         try await created.connect()
         client = created
+        clientRoad = road
+        // Moonlight's own requests before a session names an address
+        // (inspection, pairing) follow the same road.
+        sunshine?.follow(road: road.host)
         return created
     }
 

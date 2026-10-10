@@ -28,8 +28,7 @@ struct RemoteEntryCards: View {
                 progress
             } else if let owner = controller.sessionOwner {
                 occupied(owner)
-            } else if controller.pairingPIN != nil || !controller.pairingStatus.isEmpty,
-                      controller.phase.isFailed || controller.pairingPIN != nil {
+            } else if controller.showsSunshineRepair {
                 sunshineRepair
             } else if confirmingTakeover {
                 takeoverConfirm
@@ -42,6 +41,8 @@ struct RemoteEntryCards: View {
         // every descendant and the cards lose their own (OVERLAY-1).
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("remote-entry")
+        // TAIL-2 P2-2: the road may have changed since the last read.
+        .task { await controller.refreshEntryCapabilities() }
     }
 
     // MARK: - ① two cards
@@ -63,6 +64,12 @@ struct RemoteEntryCards: View {
         }
         .padding(.horizontal, 12)
         .padding(.top, 10)
+        // TAIL-2 P2-2. Over a relayed Tailscale path the host defaults to
+        // VNC at a low rate; the entry says so before the user presses.
+        if controller.capabilities?.relayedTailnet == true {
+            note(Strings.remoteTailnetRelayed).foregroundStyle(OmodachiTheme.secondaryText)
+                .accessibilityIdentifier("remote-road-relayed")
+        }
         advanced
         // Whatever the controller has to say, not only what it says after it
         // has failed: `start()` can refuse before the phase moves at all, and
@@ -96,26 +103,21 @@ struct RemoteEntryCards: View {
     }
 
     /// The one place a `capabilities.reason` reaches the screen, and it goes
-    /// through the table on the way (N-23).
-    private func notice(for mode: RemoteMode) -> BigModeCard.Notice? {
-        guard let capabilities = controller.capabilities else { return nil }
-        let backend = controller.backendChoice.resolve(capabilities)
-        guard backend == .sunshine else { return nil }
-        guard let reason = capabilities.reason(.sunshine) else { return nil }
-        let entry = RemoteReasonCopy.entry(reason)
-        if capabilities.available(.sunshine) {
-            return entry.isAdvisory ? .init(text: entry.sentence, isError: false) : nil
-        }
-        return .init(text: entry.sentence, isError: true)
+    /// through the table on the way (N-23). REMOTE-FIX-1: red only when the
+    /// press cannot start a stream; see `RemoteEntryNotice`.
+    private func notice(for mode: RemoteMode) -> RemoteEntryNotice? {
+        RemoteEntryNotice.make(choice: controller.backendChoice, capabilities: controller.capabilities)
     }
 
     /// A-38's consequence: when Sunshine cannot run, the button says what it is
     /// going to do instead, rather than asking the user to learn what VNC is.
+    /// REMOTE-FIX-1: what it is going to do is the effective backend, which
+    /// for an explicit Sunshine the host cannot run is VNC.
     private func buttonTitle(for mode: RemoteMode) -> String {
         let action = mode == .extend ? Strings.remoteStartExtend : Strings.remoteStartTakeoverShort
         guard let capabilities = controller.capabilities,
-              controller.backendChoice.resolve(capabilities) == .vnc,
-              !capabilities.available(.sunshine) else { return action }
+              controller.backendChoice.effective(capabilities) == .vnc,
+              !capabilities.available(.sunshine) || capabilities.relayedTailnet else { return action }
         return Strings.remoteUseVNCWith(mode == .extend ? Strings.remoteStartExtend : Strings.remoteStartTakeoverShort)
     }
 
@@ -291,11 +293,9 @@ struct RemoteEntryCards: View {
 /// One of the two intent cards: a picture of what will happen, one sentence,
 /// and the button that does it.
 struct BigModeCard: View {
-    struct Notice: Equatable { let text: String; let isError: Bool }
-
     let kind: RemoteMode
     let isDefault: Bool
-    var notice: Notice?
+    var notice: RemoteEntryNotice?
     let title: String
     let action: () -> Void
 
@@ -330,13 +330,16 @@ struct BigModeCard: View {
                 .padding(.top, 10)
             if let notice {
                 HStack(spacing: 6) {
-                    HostGlyphView(glyph: "\u{f071}", fallbackSymbol: "exclamationmark.triangle", size: 12)
+                    // A quiet line is information, not a warning: no triangle.
+                    if notice.isWarning {
+                        HostGlyphView(glyph: "\u{f071}", fallbackSymbol: "exclamationmark.triangle", size: 12)
+                    }
                     Text(notice.text)
                         .font(OmodachiTheme.font(size: 11))
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
-                .foregroundStyle(notice.isError ? OmodachiTheme.danger : OmodachiTheme.warning)
+                .foregroundStyle(noticeColor(notice))
                 .padding(.horizontal, 12)
                 .padding(.top, 10)
                 .accessibilityIdentifier("remote-card-reason-\(kind.rawValue)")
@@ -356,6 +359,14 @@ struct BigModeCard: View {
         .clipped()
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("remote-card-\(kind.rawValue)")
+    }
+
+    private func noticeColor(_ notice: RemoteEntryNotice) -> Color {
+        switch notice {
+        case .error: OmodachiTheme.danger
+        case .advisory: OmodachiTheme.warning
+        case .quiet: OmodachiTheme.secondaryText
+        }
     }
 }
 

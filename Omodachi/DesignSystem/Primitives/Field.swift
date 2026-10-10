@@ -16,6 +16,9 @@ struct Field: View {
     /// lands on the Keybindings search, not merely on the panel).
     var focusOnAppear = false
     var onSubmit: (() -> Void)?
+    /// HERDR-5: a name that can only be ASCII (a Herdr session) gets the
+    /// keyboard that types it, not a Chinese IME's candidates.
+    var asciiOnly = false
 
     @FocusState private var focused: Bool
 
@@ -29,6 +32,7 @@ struct Field: View {
                 .foregroundStyle(OmodachiTheme.current.color(.brightForeground))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .keyboardType(asciiOnly ? .asciiCapable : .default)
                 .focused($focused)
                 .submitLabel(.search)
                 .onSubmit { onSubmit?() }

@@ -190,6 +190,38 @@ struct RemoteCapabilitiesDTO: Decodable, Equatable, Sendable {
     /// REMOTE-SAFE-1: the host takes `bar_occlusion_points`. Absent on a host
     /// from before it, which is the same as `false`.
     var bar_occlusion: Bool? = nil
+    /// TAIL-2 P2-2: how the asking device reaches the host. Absent on a host
+    /// from before TAIL-2.
+    struct Road: Decodable, Equatable, Sendable {
+        let kind: String?
+        let relayed: Bool?
+        let reason: String?
+    }
+    var road: Road? = nil
+    /// REMOTE-INPUT-1: whether `POST …/text` can type here, and the keymap
+    /// the stream's key positions are read through. Absent on a host from
+    /// before it: then nothing but keys reaches the host.
+    struct TextInput: Decodable, Equatable, Sendable {
+        let available: Bool
+        let layout: String?
+        let variant: String?
+        /// REMOTE-INPUT-2: the route's limits, so a draft over them is shown
+        /// before Send, and whether the route takes a whole compose-field
+        /// draft (line breaks, a send id). Absent on a host from before it.
+        var max_chars: Int? = nil
+        var max_bytes: Int? = nil
+        var compose: Bool? = nil
+
+        init(available: Bool, layout: String?, variant: String?,
+             max_chars: Int? = nil, max_bytes: Int? = nil, compose: Bool? = nil) {
+            self.available = available; self.layout = layout; self.variant = variant
+            self.max_chars = max_chars; self.max_bytes = max_bytes; self.compose = compose
+        }
+    }
+    var text_input: TextInput? = nil
+    /// The tailnet path is relayed (DERP): core then answers `default_backend`
+    /// `vnc`, and the entry says why.
+    var relayedTailnet: Bool { road?.kind == "tailnet" && road?.relayed == true }
 
     func available(_ backend: RemoteBackend) -> Bool { backends[backend.rawValue]?.available == true }
     /// Whether this backend can carry the host's sound at all.
@@ -271,6 +303,44 @@ enum RemoteReasonCopy {
     }
 
     static func sentence(_ reason: String) -> String { entry(reason).sentence }
+}
+
+/// REMOTE-FIX-1. What the entry card says under each mode, decided from the
+/// same capabilities the press will use.
+///
+/// Red is for a press that cannot start a stream at all. A Sunshine the host
+/// cannot run while VNC can is not that: the press connects over VNC, so the
+/// card says so in a quiet line instead of warning about a backend nobody is
+/// going to use. An advisory reason next to a Sunshine that works (software
+/// encoding) keeps its amber line.
+enum RemoteEntryNotice: Equatable, Sendable {
+    case error(String)
+    case advisory(String)
+    case quiet(String)
+
+    var text: String {
+        switch self {
+        case .error(let text), .advisory(let text), .quiet(let text): text
+        }
+    }
+
+    var isWarning: Bool {
+        if case .quiet = self { return false }
+        return true
+    }
+
+    static func make(choice: RemoteBackendChoice, capabilities: RemoteCapabilitiesDTO?) -> RemoteEntryNotice? {
+        guard let capabilities, choice.resolve(capabilities) == .sunshine else { return nil }
+        if capabilities.available(.sunshine) {
+            guard let reason = capabilities.reason(.sunshine) else { return nil }
+            let entry = RemoteReasonCopy.entry(reason)
+            return entry.isAdvisory ? .advisory(entry.sentence) : nil
+        }
+        if choice.effective(capabilities) == .vnc, capabilities.available(.vnc) {
+            return .quiet(Strings.remoteSunshineFallsBackToVNC)
+        }
+        return .error(RemoteReasonCopy.sentence(capabilities.reason(.sunshine) ?? "backend_unavailable"))
+    }
 }
 
 /// What this device can actually decode. VideoToolbox H.264 on every shipping
@@ -445,6 +515,22 @@ struct RemotePresentedRequest: Encodable, Sendable {
     let decoded_pixels: RemotePixels
 }
 
+/// REMOTE-INPUT-1. `POST /v1/remote/sessions/{id}/text`.
+struct RemoteTextRequest: Encodable, Sendable {
+    let text: String
+    /// REMOTE-INPUT-2. One press of Send: a retry with the same id is typed
+    /// once by the host. Only sent to a host whose `text_input.compose` is
+    /// true (an older one refuses any field but `text`).
+    var id: String? = nil
+}
+
+struct RemoteTextDTO: Decodable, Sendable {
+    let typed: Bool
+    let chars: Int
+    /// REMOTE-INPUT-2: this id had already been typed; nothing was typed now.
+    var replayed: Bool? = nil
+}
+
 struct RemoteHeartbeatDTO: Decodable, Sendable {
     let revision: Int
     let state: String
@@ -456,9 +542,42 @@ struct RemotePresentedDTO: Decodable, Sendable {
     let revision: Int
 }
 
+/// What `DELETE /v1/remote/sessions/{id}` answers. POLISH-R2: core reports
+/// each restore step that failed as `{"step": …, "code": …}` (remote-api.md),
+/// and this used to expect bare strings — so a release that ended with an
+/// error failed to decode, the App took that for a failed request and sent
+/// the DELETE again, which made the host end the session a second time.
 struct RemoteReleaseDTO: Decodable, Sendable {
     let released: Bool
+    /// The failed steps' names (`backend`, `workspaces`, …).
     let errors: [String]
+
+    init(released: Bool, errors: [String]) {
+        self.released = released
+        self.errors = errors
+    }
+
+    private enum CodingKeys: String, CodingKey { case released, errors }
+    private struct Step: Decodable { let step: String? }
+    private enum Entry: Decodable {
+        case name(String), step(String?)
+        init(from decoder: Decoder) throws {
+            if let value = try? decoder.singleValueContainer().decode(String.self) { self = .name(value); return }
+            self = .step(try Step(from: decoder).step)
+        }
+        var text: String {
+            switch self {
+            case .name(let value): value
+            case .step(let value): value ?? "unknown" // non-copy: a wire value
+            }
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        released = try container.decode(Bool.self, forKey: .released)
+        errors = (try container.decodeIfPresent([Entry].self, forKey: .errors) ?? []).map(\.text)
+    }
 }
 
 /// The bounded code set from `remote-api.md`'s error table, plus the daemon
@@ -509,6 +628,8 @@ protocol RemoteSessionServing: Sendable {
     func heartbeatRemoteSession(id: String) async throws -> RemoteHeartbeatDTO
     func reportRemotePresented(id: String, body: RemotePresentedRequest) async throws -> RemotePresentedDTO
     func releaseRemoteSession(id: String) async throws -> RemoteReleaseDTO
+    /// REMOTE-INPUT-1. Text no key produces, typed on the host.
+    func typeRemoteText(id: String, body: RemoteTextRequest) async throws -> RemoteTextDTO
 }
 
 /// A seam that only the real client has to answer. A test double exercising the
@@ -516,5 +637,8 @@ protocol RemoteSessionServing: Sendable {
 extension RemoteSessionServing {
     func remoteHostPreferences() async throws -> RemoteHostPreferences {
         RemoteHostPreferences(profile_defaults: nil)
+    }
+    func typeRemoteText(id: String, body: RemoteTextRequest) async throws -> RemoteTextDTO {
+        throw RemoteRequestError(code: "route_unavailable", status: 404)
     }
 }

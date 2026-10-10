@@ -13,6 +13,9 @@ enum NativeBarMetrics {
     /// the study's 22 inside the 44 slot, which is 27's optical ratio held at
     /// touch size (Study 01 §2.6: enlarge the hit area, not the drawing).
     static let glyph: CGFloat = 22
+    /// MOTION-1: the agent face in an entry slot. 24, one point per grid
+    /// cell, the smallest size the study draws the ring (C) at.
+    static let faceGlyph: CGFloat = 24
     /// D-14 / `Workspaces.qml 63,66–67`: the square is a constant, occupied or
     /// not. A vacant one only loses opacity.
     static let workspaceSquare: CGFloat = 28

@@ -1,0 +1,18 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-01"
+  },
+  "sequence": 3,
+  "event": {
+    "type": "tool.output",
+    "value": {
+      "kind": "tool",
+      "id": "item-fixture-build",
+      "turnID": "turn-fixture-01",
+      "delta": "cc -c main.c\ncc -o app main.o\n"
+    }
+  }
+}

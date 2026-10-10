@@ -1,0 +1,125 @@
+{
+  "agent": "claude",
+  "family": "claude",
+  "quick": [
+    {
+      "id": "confirm",
+      "title": null,
+      "items": [
+        "yes",
+        "no"
+      ],
+      "operator": false
+    },
+    {
+      "id": "common",
+      "title": null,
+      "items": [
+        "continue",
+        "commit and push",
+        "retry",
+        "skip"
+      ],
+      "operator": false
+    }
+  ],
+  "keys": [
+    {
+      "label": "Ctrl C",
+      "keys": [
+        "ctrl+c"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl D",
+      "keys": [
+        "ctrl+d"
+      ],
+      "danger": true,
+      "operator": false
+    },
+    {
+      "label": "Ctrl U",
+      "keys": [
+        "ctrl+u"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl R",
+      "keys": [
+        "ctrl+r"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl L",
+      "keys": [
+        "ctrl+l"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl Z",
+      "keys": [
+        "ctrl+z"
+      ],
+      "danger": true,
+      "operator": false
+    }
+  ],
+  "harness": [
+    {
+      "id": "model",
+      "label": null,
+      "command": "/model",
+      "confirm": false,
+      "operator": false
+    },
+    {
+      "id": "effort",
+      "label": null,
+      "command": "/effort",
+      "confirm": false,
+      "operator": false
+    },
+    {
+      "id": "compact",
+      "label": null,
+      "command": "/compact",
+      "confirm": false,
+      "operator": false
+    },
+    {
+      "id": "resume",
+      "label": null,
+      "command": "/resume",
+      "confirm": false,
+      "operator": false
+    }
+  ],
+  "commands": [],
+  "sources": [
+    {
+      "file": "quick-replies.toml",
+      "origin": "shipped",
+      "warning": null
+    },
+    {
+      "file": "keys.toml",
+      "origin": "shipped",
+      "warning": null
+    },
+    {
+      "file": "commands.toml",
+      "origin": "shipped",
+      "warning": null
+    }
+  ],
+  "contract_revision": "omodachi.v1"
+}

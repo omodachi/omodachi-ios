@@ -89,8 +89,9 @@ struct PanelToastView: View {
 /// Study 04 rev 5, review item 4: the stream has no native chrome, so a
 /// notification, an agent approval or a dropped connection was invisible while
 /// a session was up — A-12's toast hangs on a bar that is not there, the
-/// approval card lives inside panel ③, and `AgentApprovalNotifier` only raises a
-/// local notification when the app is in the *background*, which it is not.
+/// approval card lives inside panel ③, and a local notification (then
+/// `AgentApprovalNotifier`, now NOTIFY-2's `AttentionNotifier`) is a banner the
+/// picture would cover.
 ///
 /// So: one 26-high row against the picture's bar edge, for exactly three kinds
 /// of event. Tapping it summons the panel that event belongs to (⑦ / ③ / ②);

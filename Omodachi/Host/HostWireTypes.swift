@@ -77,13 +77,35 @@ public struct HostStateDTO: Decodable, Equatable, Sendable {
         public let exists: Bool?
         public let paneAvailable: Bool?
         public let status: CompanionOperationStatus
+        /// NOTIFY-2: the status as core wrote it. `status` folds everything it
+        /// does not know into `.unknown`, and `waiting_on_approval` /
+        /// `waiting_on_user_input` are exactly what the Agent badge and the
+        /// app's own alerts need to tell apart.
+        public let statusText: String?
         public let paneID: String?
         public let agentID: String?
         public let attachVerified: Bool?
         public let defaultAgent: DefaultAgentCapabilityDTO?
+        /// MOTION-1 `state.agent.chat`: the provider's waiting flag, its
+        /// pending approvals and `activity` — what the turn is doing now, for
+        /// the animated face. Read leniently; a host without it has no face
+        /// beyond idle / waiting.
+        let chat: AgentActivity?
+        /// NOTIFY-1 `state.agent.chat.approval`: the oldest pending approval,
+        /// ids only, for an alert's Allow / Deny.
+        let approval: AttentionApproval?
         enum CodingKeys: String, CodingKey {
             case kind, exists, paneAvailable = "pane_available", status, paneID = "pane_id"
             case agentID = "agent_id", attachVerified = "attach_verified", defaultAgent = "default_agent"
+            case chat
+        }
+        private struct ChatDTO: Decodable {
+            struct Status: Decodable { let waiting: String? }
+            struct Activity: Decodable { let phase: String?; let turn_id: String? }
+            let status: Status?
+            let pending_approvals: Int?
+            let activity: Activity?
+            let approval: AttentionApproval.Wire?
         }
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -91,16 +113,46 @@ public struct HostStateDTO: Decodable, Equatable, Sendable {
             exists = try c.decodeIfPresent(Bool.self, forKey: .exists)
             paneAvailable = try c.decodeIfPresent(Bool.self, forKey: .paneAvailable)
             status = try c.decodeIfPresent(CompanionOperationStatus.self, forKey: .status) ?? .unknown
+            statusText = (try? c.decodeIfPresent(String.self, forKey: .status)).flatMap { $0 }
             paneID = try c.decodeIfPresent(String.self, forKey: .paneID)
             agentID = try c.decodeIfPresent(String.self, forKey: .agentID)
             attachVerified = try c.decodeIfPresent(Bool.self, forKey: .attachVerified)
             defaultAgent = try c.decodeIfPresent(DefaultAgentCapabilityDTO.self, forKey: .defaultAgent)
+            let chatDTO = (try? c.decodeIfPresent(ChatDTO.self, forKey: .chat)) ?? nil
+            approval = AttentionApproval(chatDTO?.approval)
+            chat = chatDTO.map { dto in
+                let phase = dto.activity?.phase ?? "idle"
+                let known = ["idle", "thinking", "working", "tool", "done", "error", "stopped", "offline"].contains(phase) // INTEGRATE-2: stopped
+                let turn = dto.activity?.turn_id.flatMap { $0.utf8.count <= 128 ? $0 : nil }
+                return AgentActivity(phase: known ? phase : "idle", turnID: turn,
+                                     waiting: dto.status?.waiting, pendingApprovals: max(0, dto.pending_approvals ?? 0))
+            }
         }
     }
     public struct Herdr: Decodable, Equatable, Sendable {
         public let available: Bool?
         public let agentCount: Int?
-        enum CodingKeys: String, CodingKey { case available, agentCount = "agent_count" }
+        /// NOTIFY-2: per watched session, what is blocked right now — the
+        /// app's first look, so the next `herdr.layout.changed` is news
+        /// against it. Ids and names only; read leniently.
+        public let blocked: [String: [HerdrAttentionEvent.Pane]]?
+        enum CodingKeys: String, CodingKey { case available, agentCount = "agent_count", blocked }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            available = try c.decodeIfPresent(Bool.self, forKey: .available)
+            agentCount = try c.decodeIfPresent(Int.self, forKey: .agentCount)
+            struct Row: Decodable { let pane_id: String?; let name: String? }
+            let raw = (try? c.decodeIfPresent([String: [Row]].self, forKey: .blocked)) ?? nil
+            blocked = raw.map { map in
+                Dictionary(uniqueKeysWithValues: map.filter { AppLink.validSession($0.key) }.prefix(64).map { session, rows in
+                    (session, rows.prefix(32).compactMap { row in
+                        guard let id = row.pane_id, AppLink.validPane(id) else { return nil }
+                        let name = row.name.map { String($0.filter { !$0.isNewline }.prefix(32)) }
+                        return HerdrAttentionEvent.Pane(paneID: id, name: name?.isEmpty == true ? nil : name)
+                    })
+                })
+            }
+        }
     }
 
     /// ARCH-1 §5 #17 / N-36. The shell's own Do Not Disturb, pushed with every
@@ -126,10 +178,17 @@ public struct HostStateDTO: Decodable, Equatable, Sendable {
     public let wake: HostWakeStateDTO?
     public let focus: HostFocusDTO?
     public let notifications: Notifications?
+    /// NOTIFY-1: whether the person is at the computer, and what finished
+    /// with nobody looking. Absent from a core before NOTIFY-1.
+    let desk: DeskReading?
+    let unseen: UnseenReading?
+    /// OVERVIEW-1: everything that wants Leo, one list. Absent from a core
+    /// before OVERVIEW-1 (then the app builds a smaller one, `fallback`).
+    let overview: OverviewReading?
 
     enum CodingKeys: String, CodingKey {
         case revision, host, workspace, agent, herdr, toggles, catalog, bar, focus, wake, remote
-        case notifications
+        case notifications, desk, unseen, overview
         case eventCursor = "event_cursor", instanceID = "instance_id", remoteBar = "remote_bar"
     }
     public init(from decoder: Decoder) throws {
@@ -149,6 +208,9 @@ public struct HostStateDTO: Decodable, Equatable, Sendable {
         wake = try c.decodeIfPresent(HostWakeStateDTO.self, forKey: .wake)
         focus = try c.decodeIfPresent(HostFocusDTO.self, forKey: .focus)
         notifications = try c.decodeIfPresent(Notifications.self, forKey: .notifications)
+        desk = DeskReading((try? c.decodeIfPresent(DeskReading.Wire.self, forKey: .desk)) ?? nil)
+        unseen = UnseenReading((try? c.decodeIfPresent(UnseenReading.Wire.self, forKey: .unseen)) ?? nil)
+        overview = OverviewReading((try? c.decodeIfPresent(OverviewReading.Wire.self, forKey: .overview)) ?? nil)
     }
 }
 
@@ -288,6 +350,9 @@ public struct CatalogEntryDTO: Decodable, Equatable, Sendable {
 public struct HostCatalogDTO: Decodable, Equatable, Sendable {
     public let revision: String
     public let entries: [CatalogEntryDTO]
+    /// HERDR-11: core was told this revision is already here
+    /// (`X-Omodachi-Catalog`) and sent no rows; the ones on hand stand.
+    public var unchanged: Bool? = nil
 }
 
 public struct HerdrAgentDTO: Decodable, Equatable, Sendable {
@@ -438,6 +503,8 @@ public struct SanitizedHostEvent: Equatable, Sendable {
     /// `notification.posted`. The whole row arrives in the payload — the shell
     /// keeps ten of these and evicts the rest, so a client that only learned
     /// "something happened" would have to race the eviction to read it.
+    /// NOTIFY-3: `notification.updated` carries the same row (now inactive,
+    /// or `withdrawn`).
     public var notification: HostNotification? = nil
     /// `voice.transcript`: the same words the dictation stop response carries,
     /// published so the device that spoke them can still get them when its own
@@ -455,4 +522,27 @@ public struct SanitizedHostEvent: Equatable, Sendable {
     /// reason - `host_reconfigured` means the host rebuilt the output under a
     /// session it still holds - rather than only marking the snapshot stale.
     public var remoteSession: RemoteSessionChange? = nil
+    /// NOTIFY-2 `agent.changed`: the status this event set, when it set one.
+    /// A patch without a status changed something else.
+    public var agentStatus: String? = nil
+    /// NOTIFY-2 `herdr.layout.changed`: which session moved and which of its
+    /// panes are blocked now — ids and the agent's own name, nothing else.
+    public var herdrAttention: HerdrAttentionEvent? = nil
+    /// NOTIFY-1 `agent.changed` (the pending approval's ids), `desk.changed`
+    /// and `unseen.changed`.
+    var notify: NotifyWire? = nil
+    /// OVERVIEW-1 `overview.changed`: the whole list.
+    var overview: OverviewReading? = nil
+}
+
+/// NOTIFY-2. What `herdr.layout.changed` says about a session's panes.
+public struct HerdrAttentionEvent: Equatable, Sendable {
+    public struct Pane: Equatable, Sendable {
+        public let paneID: String
+        public let name: String?
+    }
+    public let session: String
+    public let blocked: [Pane]
+    /// The session stopped; `blocked` is then empty.
+    public var stopped = false
 }

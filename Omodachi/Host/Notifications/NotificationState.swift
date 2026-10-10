@@ -18,6 +18,8 @@ extension HomeStore {
         do {
             let page = try await client.notifications()
             guard current == connectionGeneration else { return }
+            // NOTIFY-3: what was cleared here on an earlier run stays cleared.
+            notifications.restore(removed: storedRemovedNotifications())
             notifications.replace(with: page.notifications)
             // DND is not read here: it arrives with every state snapshot
             // (`state.notifications.dnd`) and is pushed when the desktop
@@ -76,6 +78,31 @@ extension HomeStore {
         }
     }
 
+    /// NOTIFY-3. `notification.updated`, which this app used to ignore: a
+    /// toast that left the desktop became history here only after a reload,
+    /// and a request decided on the computer stayed "active" in this list.
+    func notificationUpdated(_ row: HostNotification) {
+        notifications.update(row)
+        if row.withdrawn, notificationToast?.id == row.id { notificationToast = nil }
+    }
+
+    /// NOTIFY-3: the rows this device cleared, per computer, so a relaunch or
+    /// a reconnect does not put them back.
+    private var removedNotificationsKey: String? {
+        guard !profile.mock, !demoActive, !profile.companionURL.isEmpty else { return nil }
+        return "omodachi.notifications.removed.v1." + odomoHostKey // non-copy: defaults key
+    }
+
+    func storedRemovedNotifications() -> Set<String> {
+        guard let key = removedNotificationsKey else { return [] }
+        return Set(defaults.stringArray(forKey: key) ?? [])
+    }
+
+    func saveRemovedNotifications() {
+        guard let key = removedNotificationsKey else { return }
+        defaults.set(notifications.removedToKeep(), forKey: key)
+    }
+
     /// A-45. Take one row off *this* list. An active row is also dismissed on
     /// the desktop, best effort: the local removal is not conditional on the
     /// host answering, because a mirror that refuses to let go of a row until a
@@ -83,6 +110,7 @@ extension HomeStore {
     func deleteNotification(_ row: HostNotification) {
         let wasActive = row.active
         notifications.remove(id: row.id)
+        saveRemovedNotifications()
         guard wasActive, let client = client as? CompanionHostClient else { return }
         let current = connectionGeneration
         Task { [weak self] in
@@ -96,6 +124,7 @@ extension HomeStore {
     func clearNotifications() {
         let active = notifications.rows.filter(\.active)
         notifications.removeAll()
+        saveRemovedNotifications()
         guard let client = client as? CompanionHostClient else { return }
         Task {
             for row in active { _ = try? await client.notificationAction(id: row.id, invoke: false) }

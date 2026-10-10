@@ -1,0 +1,161 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a10e79-d2c9-7451-9794-49e071d49db2"
+  },
+  "rows": [
+    {
+      "kind": "message",
+      "id": "01a10e79-d4fd-7972-9351-eb2b1153291c",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "role": "user",
+      "text": "six steps please"
+    },
+    {
+      "kind": "tool",
+      "id": "call-s0-4",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "name": "/bin/zsh -lc 'git status'",
+      "status": "succeeded",
+      "detail": "git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEM",
+      "command": "git status",
+      "actions": [
+        {
+          "type": "unknown"
+        }
+      ],
+      "exit_code": 0,
+      "duration_ms": 3428
+    },
+    {
+      "kind": "tool",
+      "id": "call-s1-5",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "name": "/bin/zsh -lc 'cat app.py'",
+      "status": "succeeded",
+      "detail": "import os\n\n\ndef main():\n    port = 8080\n    print(\"hello\")\n\n\n# TODO: read the po",
+      "command": "cat app.py",
+      "actions": [
+        {
+          "type": "read",
+          "name": "app.py"
+        }
+      ],
+      "exit_code": 0,
+      "duration_ms": 0
+    },
+    {
+      "kind": "tool",
+      "id": "call-s2-6",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "name": "/bin/zsh -lc 'ls -la'",
+      "status": "succeeded",
+      "detail": "total 24\ndrwxr-xr-x@  6 user  wheel  192 Oct  6 10:50 .\ndrwxr-xr-x@ 15 user  whe",
+      "command": "ls -la",
+      "actions": [
+        {
+          "type": "listFiles"
+        }
+      ],
+      "exit_code": 0,
+      "duration_ms": 0
+    },
+    {
+      "kind": "tool",
+      "id": "call-s3-7",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "name": "/bin/zsh -lc 'grep -rn TODO .'",
+      "status": "succeeded",
+      "detail": "./app.py:9:# TODO: read the port from the environment\n./.git/hooks/sendemail-val",
+      "command": "grep -rn TODO .",
+      "actions": [
+        {
+          "type": "search",
+          "query": "TODO",
+          "path": "."
+        }
+      ],
+      "exit_code": 0,
+      "duration_ms": 0
+    },
+    {
+      "kind": "tool",
+      "id": "call-s4-8",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "name": "/bin/zsh -lc 'sed -n 1,3p app.py'",
+      "status": "succeeded",
+      "detail": "import os\n\n\n",
+      "command": "sed -n 1,3p app.py",
+      "actions": [
+        {
+          "type": "read",
+          "name": "app.py"
+        }
+      ],
+      "exit_code": 0,
+      "duration_ms": 0
+    },
+    {
+      "kind": "tool",
+      "id": "call-s5-9",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "name": "/bin/zsh -lc false",
+      "status": "failed",
+      "detail": "",
+      "command": "false",
+      "actions": [
+        {
+          "type": "unknown"
+        }
+      ],
+      "exit_code": 1,
+      "duration_ms": 0
+    },
+    {
+      "kind": "message",
+      "id": "m-s10",
+      "turnID": "01a10e79-d4d2-7c00-9628-a1b30a102fa4",
+      "role": "assistant",
+      "text": "Looked around; one step failed."
+    }
+  ],
+  "activeTurn": null,
+  "sequence": 28,
+  "acceptedRequestIDs": [],
+  "pendingApprovals": [],
+  "status": {
+    "type": "idle",
+    "activeFlags": [],
+    "waiting": null
+  },
+  "usage": {
+    "tokens": {
+      "last": {
+        "inputTokens": 10,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 5,
+        "reasoningOutputTokens": 0,
+        "totalTokens": 15
+      },
+      "total": {
+        "inputTokens": 70,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 35,
+        "reasoningOutputTokens": 0,
+        "totalTokens": 105
+      },
+      "modelContextWindow": 258400
+    },
+    "rate_limits": null,
+    "model": null,
+    "effort": null,
+    "mode": null
+  },
+  "earlier": false,
+  "queue": null,
+  "checklist": null
+}

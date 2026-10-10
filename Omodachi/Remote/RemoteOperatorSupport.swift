@@ -67,6 +67,33 @@ import Foundation
             return (choice, seconds)
         }
     }
+    /// REMOTE-INPUT-1. Strings to type through the picture's own
+    /// `insertText:` once the first frame is up, each after its own delay:
+    /// `--remote-operator-type=20:youtube.com%0A|5:%E4%BD%A0%E5%A5%BD` (the
+    /// text is percent-encoded so a newline or a `|` can be written).
+    /// Operator-only: DEBUG, Simulator, explicit launch argument.
+    static var typing: [(seconds: Int, text: String)] {
+        guard enabled, let raw = argument("--remote-operator-type="), raw != "inbox" else { return [] }
+        return raw.split(separator: "|").compactMap { entry in
+            guard let colon = entry.firstIndex(of: ":"), let seconds = Int(entry[..<colon]), seconds >= 0,
+                  let text = String(entry[entry.index(after: colon)...]).removingPercentEncoding,
+                  !text.isEmpty else { return nil }
+            return (seconds, text)
+        }
+    }
+    /// `--remote-operator-type=inbox`: instead of fixed delays, each UTF-8
+    /// file the operator drops at `RemoteOperator/type.txt` in this app's
+    /// container is typed once and removed, so a host-side window can be
+    /// opened and focused before its text is sent.
+    static var typingInbox: URL? {
+        guard enabled, argument("--remote-operator-type=") == "inbox" else { return nil }
+        return directory.appendingPathComponent("type.txt")
+    }
+    static func takeTypingInbox() -> String? {
+        guard let file = typingInbox, let data = try? Data(contentsOf: file) else { return nil }
+        try? FileManager.default.removeItem(at: file)
+        return String(data: data, encoding: .utf8).flatMap { $0.isEmpty ? nil : $0 }
+    }
     private static var expectedHost: String { argument("--remote-operator-host=") ?? "" }
     private static func argument(_ prefix: String) -> String? {
         ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(prefix) }).map { String($0.dropFirst(prefix.count)) }

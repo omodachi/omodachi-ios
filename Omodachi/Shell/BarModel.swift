@@ -5,43 +5,49 @@ import SwiftUI
 /// do not fit.
 ///
 /// The bar is one row: left is the logo, the connection dot and the workspaces;
-/// the centre is empty except under Remote, where it is five quick actions; the
+/// the centre is empty except under Remote, where it is three quick actions; the
 /// right is the panel entries. The arithmetic is Study 04 §6's, in logical
 /// points:
 ///
 /// | | non-Remote | Remote |
 /// |---|---|---|
 /// | left | 44 + 10 + N×44 | same |
-/// | centre | 0 | 5×44 = 220 |
+/// | centre | 0 | 3×44 = 132 |
 /// | right | entries×44 | same |
 ///
 /// Every screen but one fits at full size once the microphone left (rev 5): the
-/// iPhone in portrait needs 318 + 220 + 264 + 34 = 836 ≤ 852. The Duo's outer
+/// iPhone in portrait needs 318 + 132 + 264 + 34 = 748 ≤ 852. The Duo's outer
 /// screen is 678 and cannot, which is what the ladder below is for.
 
-/// A-60's five. There is no microphone: rev 5 took it out of the study
-/// entirely, and N-35 leaves the app with none at all.
+/// A-60's quick actions, three since POLISH-R. There is no microphone: rev 5
+/// took it out of the study entirely, and N-35 leaves the app with none at all.
+///
+/// POLISH-R (Leo, 2026-10-05) took two more out:
+/// * `endSession`, a stop square (U+F04D) that did not end anything — it only
+///   opened the Remote panel, whose session card holds the real two-step End.
+///   Leo read it as a pause button that does nothing, which is what it was.
+///   The panel is one tap away from the logo mark and the Remote entry, so
+///   nothing was folded in its place.
+/// * `rotationLock`, drawn as a bare padlock (U+F023). Its own lever was one
+///   UIKit never reads, and the system's orientation lock in Control Center
+///   already does the job, so Leo removed it rather than have it fixed.
 enum QuickAction: String, CaseIterable, Identifiable, Sendable {
-    case keyboard, rotationLock, pointerMode, hostAudio, endSession
+    case keyboard, pointerMode, hostAudio
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .keyboard: Strings.quickKeyboard
-        case .rotationLock: Strings.quickRotationLock
         case .pointerMode: Strings.quickPointerMode
         case .hostAudio: Strings.quickHostAudio
-        case .endSession: Strings.quickEndSession
         }
     }
 
     func icon(on: Bool) -> (symbol: String, nerd: String) {
         switch self {
         case .keyboard: on ? Icon.keyboardDown : Icon.keyboard
-        case .rotationLock: Icon.rotationLock
         case .pointerMode: Icon.pointer
         case .hostAudio: on ? Icon.speaker : Icon.speakerOff
-        case .endSession: Icon.stop
         }
     }
 
@@ -50,22 +56,18 @@ enum QuickAction: String, CaseIterable, Identifiable, Sendable {
         guard enabled else { return reason ?? Strings.quickUnavailable }
         switch self {
         case .keyboard: return on ? Strings.quickKeyboardUp : Strings.quickKeyboardDown
-        case .rotationLock: return on ? Strings.quickRotationLocked : Strings.quickRotationUnlocked
         case .pointerMode: return on ? Strings.quickPointerTouchpad : Strings.quickPointerDirect
         case .hostAudio: return on ? Strings.quickOn : Strings.quickOff
-        case .endSession: return Strings.quickTwoStep
         }
     }
 }
 
 /// One quick action, evaluated against what the session can actually do.
 ///
-/// Study 04 §21 board ④d is the table this implements. Only one of the five
+/// Study 04 §21 board ④d is the table this implements. Only one of the three
 /// depends on the backend: VNC has no audio channel at all
 /// (`capabilities.vnc.audio == false`), and host audio playback is a preference
-/// in ⑥ on top of that. The rest are local switches, so they are never dimmed;
-/// `endSession` cannot be dimmed on its own because the whole centre segment
-/// only exists while there is a session to end.
+/// in ⑥ on top of that. The rest are local switches, so they are never dimmed.
 struct QuickActionState: Equatable, Identifiable, Sendable {
     let action: QuickAction
     var enabled: Bool
@@ -81,7 +83,6 @@ struct QuickActionState: Equatable, Identifiable, Sendable {
 struct QuickActionContext: Equatable, Sendable {
     var hasSession = false
     var keyboardVisible = false
-    var rotationLocked = false
     var relativeTouchpad = false
     /// `capabilities.<backend>.audio`. False for VNC, always.
     var backendHasAudio = true
@@ -94,8 +95,6 @@ struct QuickActionContext: Equatable, Sendable {
             switch action {
             case .keyboard:
                 return .init(action: action, enabled: true, on: keyboardVisible)
-            case .rotationLock:
-                return .init(action: action, enabled: true, on: rotationLocked)
             case .pointerMode:
                 return .init(action: action, enabled: true, on: relativeTouchpad)
             case .hostAudio:
@@ -108,8 +107,6 @@ struct QuickActionContext: Equatable, Sendable {
                                  reason: Strings.quickAudioOff)
                 }
                 return .init(action: action, enabled: true, on: hostAudioOn)
-            case .endSession:
-                return .init(action: action, enabled: hasSession, on: false)
             }
         }
     }
@@ -121,8 +118,9 @@ enum BarLadder: Int, Comparable, Sendable {
     case full = 0
     /// The centre's slots narrow to 32; the entries never do.
     case compactCentre = 1
-    /// Keyboard / pointer / end, plus a `…` that opens the other two on a
-    /// 26-high row inside the bar.
+    /// Keyboard / pointer, plus a `…` that opens the rest on a 26-high row
+    /// inside the bar. With three actions it saves nothing over the compact
+    /// centre (POLISH-R), so `plan` skips it and keeps all three visible.
     case overflowCentre = 2
     /// The workspace collection drops the always-drawn 1–5 and shows only the
     /// ones holding a window.
@@ -141,8 +139,8 @@ enum BarMetrics {
     static let compactSlot: CGFloat = 32
     static let logo = NativeBarMetrics.hit
     static let connectionDot: CGFloat = 10
-    /// A-60's overflow keeps three and adds a `…`.
-    static let overflowActions: [QuickAction] = [.keyboard, .pointerMode, .endSession]
+    /// A-60's overflow keeps the two used mid-stroke and adds a `…`.
+    static let overflowActions: [QuickAction] = [.keyboard, .pointerMode]
 
     static func leftWidth(workspaces: Int) -> CGFloat {
         logo + connectionDot + CGFloat(workspaces) * slot
@@ -152,7 +150,7 @@ enum BarMetrics {
         switch ladder {
         case .full: CGFloat(actions) * slot
         case .compactCentre: CGFloat(actions) * compactSlot
-        default: CGFloat(overflowActions.count + 1) * compactSlot
+        default: CGFloat(min(actions, overflowActions.count + 1)) * compactSlot
         }
     }
 
@@ -202,9 +200,12 @@ enum BarMetrics {
             return Plan(ladder: .compactCentre, workspaces: workspaces, scrollsWorkspaces: false,
                         centreSlot: compactSlot, visibleActions: actions, overflowActions: [])
         }
-        let kept = overflowActions.filter { actions.contains($0) }
+        // A `…` that would stand in for a single action saves no width, so it
+        // is only used when it hides at least two.
+        let folds = actions.count > overflowActions.filter { actions.contains($0) }.count + 1
+        let kept = folds ? overflowActions.filter { actions.contains($0) } : actions
         let hidden = actions.filter { !kept.contains($0) }
-        if fits(.overflowCentre, workspaces) {
+        if folds, fits(.overflowCentre, workspaces) {
             return Plan(ladder: .overflowCentre, workspaces: workspaces, scrollsWorkspaces: false,
                         centreSlot: compactSlot, visibleActions: kept, overflowActions: hidden)
         }

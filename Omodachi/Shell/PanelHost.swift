@@ -36,7 +36,11 @@ struct PanelHost: View {
             SettingsPanelView(directory: directory, registry: registry,
                               preferences: $preferences, router: router, remote: remote)
         case .notifications:
-            NotificationsPanelView()
+            // LITE-1d: the Odomo card's way to Tailscale is the move in ⑥.
+            NotificationsPanelView(onMove: {
+                home.pendingMoveAccount = HostAccount.canonical(home.profile.companionURL)
+                router.show(.settings)
+            })
         }
     }
 }

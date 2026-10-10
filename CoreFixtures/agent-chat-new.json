@@ -1,0 +1,43 @@
+{
+  "agent_id": "default",
+  "status": "new_conversation_started",
+  "previous_provider_session_id": "thread-fixture-01",
+  "provider_session_id": "thread-fixture-02",
+  "same_thread": false,
+  "previous_kept": true,
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "thread-fixture-02"
+  },
+  "snapshot": {
+    "identity": {
+      "hostID": "omarchy-fixture",
+      "agentID": "default",
+      "provider": "codex",
+      "providerSessionID": "thread-fixture-02"
+    },
+    "rows": [],
+    "activeTurn": null,
+    "sequence": 0,
+    "acceptedRequestIDs": [],
+    "pendingApprovals": [],
+    "status": {
+      "type": "unknown",
+      "activeFlags": [],
+      "waiting": null
+    },
+    "usage": {
+      "tokens": null,
+      "rate_limits": null,
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "mode": null
+    },
+    "earlier": false,
+    "queue": null,
+    "checklist": null
+  },
+  "contract_revision": "omodachi.v1"
+}

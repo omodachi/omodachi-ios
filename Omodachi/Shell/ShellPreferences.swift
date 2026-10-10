@@ -48,7 +48,10 @@ struct ShellPreferences: Codable, Equatable, Sendable {
 
     private static let key = "omodachi.shell.preferences.v1"
 
-    static func load(defaults: UserDefaults = .standard) -> ShellPreferences {
+    /// `AppDefaults.shared`: the app's own store, which a UI-test launch
+    /// swaps for a suite wiped at start — so a test that moves the bar does
+    /// not leave it moved for the next one.
+    static func load(defaults: UserDefaults = AppDefaults.shared) -> ShellPreferences {
         guard let data = defaults.data(forKey: key),
               let value = try? JSONDecoder().decode(ShellPreferences.self, from: data) else {
             return ShellPreferences()
@@ -56,7 +59,7 @@ struct ShellPreferences: Codable, Equatable, Sendable {
         return value
     }
 
-    func save(defaults: UserDefaults = .standard) {
+    func save(defaults: UserDefaults = AppDefaults.shared) {
         guard let data = try? JSONEncoder().encode(self) else { return }
         defaults.set(data, forKey: Self.key)
     }

@@ -110,9 +110,17 @@ public protocol CompanionServing: Sendable {
     /// holds is current.
     func fetchIcon(name: String, pixels: Int, knownDigest: String?) async throws -> HostIconBytes?
     func events(since: Int, instanceID: String?) async -> AsyncThrowingStream<SanitizedHostEvent, Error>
+    /// HERDR-11 §4: the state, telling core which catalog revision is already
+    /// here (`X-Omodachi-Catalog`), so it can leave the rows out.
+    func fetchState(knownCatalog: String?) async throws -> HostStateDTO
+    /// HERDR-11 §3: called whenever the connection proves it is alive - a
+    /// frame on the event socket, a pong to the beat ping. One clock reads it.
+    func setLiveness(_ handler: (@Sendable () -> Void)?) async
 }
 
 public extension CompanionServing {
+    func fetchState(knownCatalog: String?) async throws -> HostStateDTO { try await fetchState() }
+    func setLiveness(_ handler: (@Sendable () -> Void)?) async {}
     func searchCatalog(_ query: String) async throws -> HostCatalogDTO {
         throw CompanionHostError.protocolError(message: ReasonText.message("route_unavailable", domain: .host))
     }
@@ -156,16 +164,25 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     /// Events, chat and audio stay open for as long as the surface is on screen,
     /// so they cannot share the request/response session's resource timeout.
     private let sockets: URLSession
+    /// ATTACH-1: what an upload rides — the streaming session (no 30 s
+    /// resource limit), or the session a test injected.
+    private let uploads: URLSession
     private let tls: HostTLSDelegate
     private var bearerToken: String?
     private var socket: URLSessionWebSocketTask?
     private var socketID: UUID?
+    /// TAIL-2 P0-1: how the event socket is checked for being alive.
+    private let liveness: EventLiveness.Timing
+    /// HERDR-11 §3: told each time the connection proves alive.
+    private var alive: (@Sendable () -> Void)?
 
     public init(configuration: CompanionHostConfiguration,
                 credentials: CompanionCredentialProviding,
                 pinnedFingerprint: String?,
-                session: URLSession? = nil) {
+                session: URLSession? = nil,
+                liveness: EventLiveness.Timing = .standard) {
         self.configuration = configuration
+        self.liveness = liveness
         self.credentials = credentials
         let delegate = HostTLSDelegate(pinnedFingerprint: pinnedFingerprint)
         tls = delegate
@@ -182,6 +199,7 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         streaming.timeoutIntervalForRequest = 60
         streaming.timeoutIntervalForResource = .infinity
         sockets = URLSession(configuration: streaming, delegate: delegate, delegateQueue: nil)
+        uploads = session ?? sockets
         if let session { self.session = session }
         else {
             let request = options()
@@ -209,6 +227,18 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     // MARK: - Host surfaces
 
     public func fetchState() async throws -> HostStateDTO { try await request(path: "v1/state") }
+
+    /// HERDR-11 §4. A core from before HERDR-11 does not know the header and
+    /// sends the rows, which `HomeStore.apply` takes as it always did.
+    public func fetchState(knownCatalog: String?) async throws -> HostStateDTO {
+        guard let knownCatalog, !knownCatalog.isEmpty, knownCatalog.utf8.count <= 128 else { return try await fetchState() }
+        let (value, _): (HostStateDTO?, String?) = try await conditionalGET(path: "v1/state",
+                                                                          headers: ["X-Omodachi-Catalog": knownCatalog])
+        guard let value else { throw CompanionHostError.decoding(message: Strings.hostErrorContractMismatch) }
+        return value
+    }
+
+    public func setLiveness(_ handler: (@Sendable () -> Void)?) { alive = handler }
     public func fetchCapabilities() async throws -> HostCapabilitiesDTO { try await request(path: "v1/capabilities") }
     public func fetchCatalog() async throws -> HostCatalogDTO { try await request(path: "v1/catalog") }
     public func fetchHerdr() async throws -> HostHerdrDTO { try await request(path: "v1/herdr") }
@@ -219,6 +249,20 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     /// is core's, never a client value: there is nothing here to name but the
     /// pane.
     public func herdrLayout() async throws -> HerdrLayoutDTO { try await request(path: "v1/herdr/layout") }
+
+    /// HERDR-11 §4: the layout unless it is still the one this device holds
+    /// (`ETag: "<session>:<revision>"`, answered 304). `nil` = unchanged.
+    func herdrLayout(etag: String?) async throws -> (layout: HerdrLayoutDTO?, etag: String?) {
+        try await conditionalGET(path: "v1/herdr/layout", headers: etag.map { ["If-None-Match": $0] } ?? [:],
+                                 herdrOperation: true)
+    }
+
+    /// HERDR-11 §1: star or un-star a folder for every device of this host.
+    func herdrFavourite(path: String, on: Bool) async throws -> HerdrFoldersDTO {
+        struct Body: Encodable, Sendable { let path: String; let favourite: Bool }
+        return try await request(path: "v1/herdr/folders/favourites", method: "POST",
+                                 body: Body(path: path, favourite: on), herdrOperation: true)
+    }
 
     /// Every Herdr session on the host, and the one this device is on. The
     /// owned `omodachi` session is where every device starts; the user's own
@@ -234,7 +278,51 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
                                  body: [String: String](), herdrOperation: true)
     }
 
+    /// HERDR-5. Start a session the host lists (a stopped one is brought up
+    /// on the computer with no window) and move this device into it.
     @discardableResult
+    public func herdrStartSession(_ name: String) async throws -> HerdrSessionStartDTO {
+        guard Self.isHerdrSession(name) else { throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest) }
+        return try await request(path: "v1/herdr/sessions/\(name)/start", method: "POST",
+                                 body: [String: String](), herdrOperation: true)
+    }
+
+    /// HERDR-5. A new session in the computer's home folder, then the same.
+    @discardableResult
+    public func herdrCreateSession(_ name: String) async throws -> HerdrSessionStartDTO {
+        guard Self.isNewHerdrSession(name) else { throw HerdrRequestError(code: "invalid_session_name", status: 400) } // non-copy: a reason code
+        return try await request(path: "v1/herdr/sessions", method: "POST",
+                                 body: ["name": name], herdrOperation: true)
+    }
+
+    @discardableResult
+    /// HERDR-6: `POST /v1/herdr/sessions/{name}/workspaces {cwd, name?}`.
+    /// The folder is the person's own text; core resolves and checks it (in
+    /// the home folder, not a private place, there) and refuses in words.
+    public func herdrCreateWorkspace(session: String, cwd: String, name: String?,
+                                     launch: String? = nil) async throws -> HerdrWorkspaceCreatedDTO {
+        guard Self.isHerdrSession(session) else { throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest) }
+        // HERDR-11: an empty folder is the home folder. It is sent as `~`, which
+        // a core from before HERDR-11 takes too.
+        var body = ["cwd": cwd.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "~" : cwd] // non-copy: the home folder
+        if let name, !name.isEmpty { body["name"] = name }
+        // HERDR-11: one of the host's own launchers, exactly as it listed it.
+        if let launch, !launch.isEmpty { body["launch"] = launch }
+        return try await request(path: "v1/herdr/sessions/\(session)/workspaces", method: "POST",
+                                 body: body, herdrOperation: true)
+    }
+
+    /// HERDR-6: `GET /v1/herdr/folders[?under=&hidden=1]` — the recent and
+    /// common folders, or one level of `under`.
+    public func herdrFolders(under: String? = nil, hidden: Bool = false) async throws -> HerdrFoldersDTO {
+        var query: [URLQueryItem] = []
+        if let under {
+            query.append(URLQueryItem(name: "under", value: under))
+            if hidden { query.append(URLQueryItem(name: "hidden", value: "1")) }
+        }
+        return try await request(path: "v1/herdr/folders", query: query, herdrOperation: true)
+    }
+
     public func herdrPaneAction(pane: String, action: HerdrPaneAction) async throws -> HerdrActionResponseDTO {
         guard Self.isHerdrPane(pane) else { throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest) }
         return try await request(path: "v1/herdr/panes/\(pane)/\(action.path)", method: "POST",
@@ -246,6 +334,126 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         guard Self.isHerdrWorkspace(id) else { throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest) }
         return try await request(path: "v1/herdr/workspaces/\(id)/select", method: "POST",
                                  body: [String: String](), herdrOperation: true)
+    }
+
+    // MARK: HERDR-3 — keys and text without taking the pane
+
+    /// `POST /v1/herdr/panes/{p}/keys`: Herdr's `pane.send_keys`, one shot. No
+    /// controller is taken and the pane keeps the computer's size.
+    @discardableResult
+    public func herdrKeys(pane: String, keys: [String]) async throws -> HerdrKeysResultDTO {
+        guard Self.isHerdrPane(pane), (1...HerdrKeyEncoder.maximumKeysPerCall).contains(keys.count) else {
+            throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest)
+        }
+        return try await request(path: "v1/herdr/panes/\(pane)/keys", method: "POST",
+                                 body: HerdrKeysBody(keys: keys), herdrOperation: true)
+    }
+
+    /// `POST /v1/herdr/panes/{p}/text`: one `pane.send_text`; with `submit`
+    /// core presses Enter only once the screen shows the text arrived.
+    /// HERDR-4: `GET /v1/herdr/operator-rows[?agent=]` — the Quick dock, key
+    /// presets and harness segment for one kind of pane (no agent = a shell).
+    public func herdrOperatorRows(agent: String?) async throws -> HerdrOperatorRowsDTO {
+        if let agent {
+            guard HerdrPaneKind.agentName(agent: agent) != nil else {
+                throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest)
+            }
+            return try await request(path: "v1/herdr/operator-rows", query: [URLQueryItem(name: "agent", value: agent)])
+        }
+        return try await request(path: "v1/herdr/operator-rows")
+    }
+
+    public func herdrText(pane: String, text: String, submit: Bool) async throws -> HerdrTextResultDTO {
+        try await herdrText(pane: pane, text: text, submit: submit, attachments: [])
+    }
+
+    /// ATTACH-1: with chips, core swaps each marker for its file's path.
+    func herdrText(pane: String, text: String, submit: Bool,
+                   attachments: [AttachmentRef]) async throws -> HerdrTextResultDTO {
+        guard Self.isHerdrPane(pane) else { throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest) }
+        return try await request(path: "v1/herdr/panes/\(pane)/text", method: "POST",
+                                 body: HerdrTextBody(text: text, submit: submit,
+                                                     attachments: attachments.isEmpty ? nil : attachments),
+                                 herdrOperation: true)
+    }
+
+    // MARK: - LINKS-1: open a file (or a page) on the computer
+
+    /// `POST /v1/host/open`. Core opens only what appeared in that source,
+    /// inside the person's own folders, never a program; with `check` it
+    /// answers the same question and opens nothing.
+    func hostOpen(_ body: HostOpenRequest) async throws -> HostOpenResult {
+        try await request(path: "v1/host/open", method: "POST", body: body, openOperation: true)
+    }
+
+    // MARK: - ATTACH-1: a picture or a file for the agent or a Herdr pane
+
+    /// `POST /v1/uploads?name=&target=` with the file as the body. It rides
+    /// the streaming session (no 30 s resource limit: 25 MB over a slow road
+    /// takes longer) with a task delegate that reports how far it got.
+    func upload(_ data: Data, name: String, target: UploadTarget,
+                progress: @escaping @Sendable (Double) -> Void) async throws -> UploadedFile {
+        guard let token = bearerToken, !token.isEmpty else { throw CompanionHostError.notConnected }
+        guard data.count <= AttachmentRules.maximumBytes else { throw AttachmentUploadError(code: "upload_too_large") }
+        var components = URLComponents(url: configuration.endpoint.appendingPathComponent("v1/uploads"),
+                                       resolvingAgainstBaseURL: false)
+        var query = [URLQueryItem(name: "name", value: String(name.prefix(200))),
+                     URLQueryItem(name: "target", value: target.kind)]
+        if let session = target.session { query.append(URLQueryItem(name: "session", value: session)) }
+        if let pane = target.pane, Self.isHerdrPane(pane) { query.append(URLQueryItem(name: "pane", value: pane)) }
+        components?.queryItems = query
+        guard let url = components?.url else { throw CompanionHostError.invalidEndpoint }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 120
+        let (body, response): (Data, URLResponse)
+        do {
+            (body, response) = try await uploads.upload(for: request, from: data, delegate: UploadProgress(progress))
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError()
+        } catch {
+            if case let .certificateChanged(observed, pinned)? = tls.lastFailure {
+                throw CompanionHostError.certificateChanged(observed: observed, pinned: pinned)
+            }
+            throw AttachmentUploadError(code: "host_unreachable")
+        }
+        guard let http = response as? HTTPURLResponse else { throw AttachmentUploadError(code: "host_unreachable") }
+        guard (200..<300).contains(http.statusCode) else {
+            throw AttachmentUploadError(code: Self.errorCode(body) ?? "upload_failed")
+        }
+        do { return try JSONDecoder().decode(UploadedFile.self, from: body) }
+        catch { throw AttachmentUploadError(code: "upload_failed") }
+    }
+
+    /// `DELETE /v1/uploads/{id}`: a chip taken off before Send.
+    func deleteUpload(id: String) async throws {
+        guard id.utf8.count == 32, id.allSatisfy({ $0.isHexDigit && !$0.isUppercase }) else { return }
+        let _: EmptyResponse = try await request(path: "v1/uploads/\(id)", method: "DELETE")
+    }
+
+    /// `POST /v1/herdr/workspaces/{id}/tabs`. `focus: false`: a new tab made
+    /// from the phone does not move the computer's screen.
+    @discardableResult
+    public func herdrNewTab(workspace: String) async throws -> HerdrActionResponseDTO {
+        guard Self.isHerdrWorkspace(workspace) else { throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest) }
+        return try await request(path: "v1/herdr/workspaces/\(workspace)/tabs", method: "POST",
+                                 body: ["focus": false], herdrOperation: true)
+    }
+
+    /// `DELETE /v1/herdr/workspaces/{id}/tabs/{tab}` — every pane in it ends.
+    @discardableResult
+    public func herdrCloseTab(workspace: String, tab: String) async throws -> HerdrActionResponseDTO {
+        guard Self.isHerdrWorkspace(workspace), Self.isHerdrTab(tab), tab.hasPrefix(workspace + ":") else {
+            throw CompanionHostError.protocolError(message: Strings.hostErrorBadRequest)
+        }
+        return try await request(path: "v1/herdr/workspaces/\(workspace)/tabs/\(tab)", method: "DELETE",
+                                 body: Optional<EmptyBody>.none, herdrOperation: true)
     }
 
     /// One `terminal session observe|control`, on the WSS this device already
@@ -268,6 +476,7 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     /// Checking them here means a client value can never become a flag or a
     /// path segment of its own.
     static func isHerdrPane(_ value: String) -> Bool { matches(value, separator: "p") }
+    static func isHerdrTab(_ value: String) -> Bool { matches(value, separator: "t") }
     /// `[A-Za-z0-9][A-Za-z0-9_.-]{0,63}` is the bridge's own session alphabet
     /// (`herdr_bridge.py:40`). Checking it here keeps a name off the path.
     static func isHerdrSession(_ value: String) -> Bool {
@@ -275,6 +484,10 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
               first.isASCII, first.isLetter || first.isNumber else { return false }
         return value.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "_" || $0 == "." || $0 == "-") }
     }
+    /// HERDR-5: a name a person types for a new session - core's
+    /// `NEW_SESSION_NAME`, `[A-Za-z0-9][A-Za-z0-9._-]{0,31}`: no `..`, no
+    /// leading `-`, at most 32.
+    static func isNewHerdrSession(_ value: String) -> Bool { value.count <= 32 && isHerdrSession(value) }
     static func isHerdrWorkspace(_ value: String) -> Bool {
         guard value.count >= 2, value.hasPrefix("w") else { return false }
         let digits = value.dropFirst()
@@ -587,6 +800,11 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         try await request(path: "v1/remote/sessions/\(try Self.sessionPath(id))/presented", method: "POST",
                           body: body, remoteOperation: true)
     }
+    /// REMOTE-INPUT-1. The text never appears in a log or trace here.
+    func typeRemoteText(id: String, body: RemoteTextRequest) async throws -> RemoteTextDTO {
+        try await request(path: "v1/remote/sessions/\(try Self.sessionPath(id))/text", method: "POST",
+                          body: body, remoteOperation: true)
+    }
     /// Idempotent release. A second DELETE on a gone session is a success.
     func releaseRemoteSession(id: String) async throws -> RemoteReleaseDTO {
         do {
@@ -621,21 +839,14 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         struct Body: Encodable { let plan_id: String; let confirmed = true }
         return try await request(path: "v1/agent/default/chat/handoff:confirm", method: "POST", body: Body(plan_id: planID))
     }
-    func chatSlashCommands() async throws -> AgentSlashCatalog {
-        try await request(path: "v1/agent/default/chat/commands")
-    }
-    func chatExecuteSlash(id: String, revision: String, arguments: String, requestID: UUID) async throws -> AgentSlashResult {
-        guard Self.isSafeIdentifier(id) else { throw AgentChatHostError(code: "slash_commands_unavailable") }
-        struct Body: Encodable { let revision: String; let arguments: String; let request_id: String }
-        struct Response: Decodable {
-            struct Result: Decodable { let summary: String? }
-            struct Native: Decodable { let action: String; let arguments: String }
-            let status: String; let command_id: String; let result: Result?; let native_request: Native?
-        }
-        let value: Response = try await request(path: "v1/agent/default/chat/commands/\(id):execute", method: "POST",
-            body: Body(revision: revision, arguments: arguments, request_id: requestID.uuidString))
-        return .init(status: value.status, commandID: value.command_id, message: value.result?.summary,
-                     nativeRequest: value.native_request.map { .init(action: $0.action, arguments: $0.arguments) })
+    /// AGENT-NEW-1: a fresh default conversation for the one on screen. The
+    /// old thread stays on the computer; the answer is the new, empty one.
+    func chatNew(expected providerSessionID: String) async throws -> AgentChatSnapshot {
+        struct Body: Encodable { let confirmed = true; let expected_provider_session_id: String }
+        struct Response: Decodable { let snapshot: AgentChatSnapshotWire }
+        let value: Response = try await request(path: "v1/agent/default/chat:new", method: "POST",
+                                                body: Body(expected_provider_session_id: providerSessionID))
+        return try value.snapshot.value()
     }
     func ensureChat() async throws -> AgentChatSnapshot {
         struct Body: Encodable { let surface = "chat" }
@@ -651,10 +862,31 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     /// them, so they ride the message and `thread/settings/updated` confirms
     /// what landed (`omodachi-core/docs/agent.md`).
     func chatSend(_ text: String, id: UUID, model: String? = nil, effort: String? = nil) async throws {
-        struct Body: Encodable { let request_id: String; let text: String; let model: String?; let effort: String? }
-        let _: EmptyResponse = try await request(path: "v1/agent/default/chat/messages", method: "POST",
-                                                 body: Body(request_id: id.uuidString, text: text,
-                                                            model: model, effort: effort))
+        _ = try await chatSend(text, id: id, model: model, effort: effort, attachments: [])
+    }
+    /// ATTACH-1: `attachments` are the chips' ids and markers. The reply's
+    /// `images` says whether the pictures went as pictures (`native`) or, when
+    /// codex would not take them, as paths (`path`).
+    func chatSend(_ text: String, id: UUID, model: String?, effort: String?,
+                  attachments: [AttachmentRef]) async throws -> AgentSendReceipt {
+        struct Body: Encodable {
+            let request_id: String; let text: String; let model: String?; let effort: String?
+            let attachments: [AttachmentRef]?
+        }
+        struct Reply: Decodable {
+            let images: String?
+            let delivery: String?
+            let command: AgentLenient<String>?
+            let changes: AgentLenient<[AgentLenient<AgentChatSnapshotWire.Row.ChangeWire>]>?
+            let changes_omitted: AgentLenient<Int>?
+        }
+        let value: Reply = try await request(path: "v1/agent/default/chat/messages", method: "POST",
+                                             body: Body(request_id: id.uuidString, text: text, model: model,
+                                                        effort: effort, attachments: attachments.isEmpty ? nil : attachments))
+        return AgentSendReceipt(imagesAsPaths: value.images == "path", command: value.command?.value,
+                                startsNoTurn: value.delivery == "command",
+                                changes: Array((value.changes?.value ?? []).compactMap { $0.value?.value }.prefix(16)),
+                                changesOmitted: max(0, value.changes_omitted?.value ?? 0))
     }
     func chatSteer(_ text: String, id: UUID) async throws {
         struct Body: Encodable { let request_id: String; let text: String }
@@ -674,21 +906,76 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     /// The request id is the provider's own handle, so it is checked for shape
     /// before it becomes part of a path.
     func chatResolveApproval(requestID: String, decision: String?,
-                             input: [String: [String]]?) async throws -> AgentChatApprovalResolution {
+                             input: [String: [String]]?, fingerprint: String? = nil,
+                             reason: String? = nil) async throws -> AgentChatApprovalResolution {
         guard Self.isSafeIdentifier(requestID), (decision == nil) != (input == nil) else {
             throw AgentChatHostError(code: "agent_approval_decision_invalid")
         }
         // The host refuses a body carrying both keys, so the two answers are
         // two bodies rather than one with a null in it.
-        struct DecisionBody: Encodable { let decision: String }
+        // NOTIFY-1: a decision from an alert names what the alert showed, and
+        // core sends nothing when that request changed (or is gone).
+        struct DecisionBody: Encodable {
+            let decision: String
+            var fingerprint: String?
+            /// AGENT-QUEUE-1: a decline's one line of why.
+            var reason: String?
+            func encode(to encoder: Encoder) throws {
+                enum Keys: String, CodingKey { case decision, fingerprint, reason }
+                var c = encoder.container(keyedBy: Keys.self)
+                try c.encode(decision, forKey: .decision)
+                if let fingerprint { try c.encode(fingerprint, forKey: .fingerprint) }
+                if let reason { try c.encode(reason, forKey: .reason) }
+            }
+        }
         struct InputBody: Encodable { let input: [String: [String]] }
-        struct Response: Decodable { let request_id: String; let kind: String?; let decision: String?; let resolved: Bool? }
+        struct Response: Decodable {
+            let request_id: String; let kind: String?; let decision: String?; let resolved: Bool?; let delivery: String?
+        }
         let path = "v1/agent/default/chat/approvals/\(requestID)"
         let value: Response
-        if let decision { value = try await request(path: path, method: "POST", body: DecisionBody(decision: decision)) }
+        if let decision {
+            let checked = fingerprint.flatMap { AttentionApproval.validFingerprint($0) ? $0 : nil }
+            value = try await request(path: path, method: "POST",
+                                      body: DecisionBody(decision: decision, fingerprint: checked, reason: reason))
+        }
         else { value = try await request(path: path, method: "POST", body: InputBody(input: input ?? [:])) }
         return .init(requestID: value.request_id, kind: value.kind ?? "",
-                     decision: value.decision ?? decision ?? "input", resolved: value.resolved ?? false)
+                     decision: value.decision ?? decision ?? "input", resolved: value.resolved ?? false,
+                     delivery: value.delivery)
+    }
+    // MARK: AGENT-QUEUE-1: the queue, earlier messages
+
+    private struct QueueReply: Decodable { let queue: AgentLenient<[AgentLenient<AgentQueuedWire>]>? }
+    /// Words for when the running turn ends, in codex's own queue. The answer
+    /// is the queue now.
+    func chatQueue(_ text: String, id: UUID) async throws -> [AgentQueuedMessage]? {
+        struct Body: Encodable { let request_id: String; let text: String }
+        let value: QueueReply = try await request(path: "v1/agent/default/chat/queue", method: "POST",
+                                                  body: Body(request_id: id.uuidString, text: text))
+        return AgentQueuedWire.list(value.queue)
+    }
+    /// A waiting message's Send now, Edit or Delete. Its id is codex's, so it
+    /// is checked for shape before it becomes part of a path.
+    func chatQueueItem(_ id: String, action: AgentQueueAction, text: String? = nil) async throws -> [AgentQueuedMessage]? {
+        guard Self.isSafeIdentifier(id) else { throw AgentChatHostError(code: "agent_queue_item_gone") }
+        struct Edit: Encodable { let text: String }
+        let path = "v1/agent/default/chat/queue/\(id):\(action.rawValue)"
+        let value: QueueReply
+        if action == .edit { value = try await request(path: path, method: "POST", body: Edit(text: text ?? "")) }
+        else { value = try await request(path: path, method: "POST", body: EmptyBody()) }
+        return AgentQueuedWire.list(value.queue)
+    }
+    /// The rows before `before`, oldest first, and whether there are more.
+    func chatHistory(before: String?, limit: Int = 100) async throws -> AgentHistoryPage {
+        struct Reply: Decodable { let rows: [AgentChatSnapshotWire.Row]; let earlier: Bool? }
+        var query = [URLQueryItem(name: "limit", value: String(max(1, min(200, limit))))]
+        if let before {
+            guard Self.isSafeIdentifier(before) else { throw AgentChatHostError(code: "agent_history_row_unknown") }
+            query.insert(URLQueryItem(name: "before", value: before), at: 0)
+        }
+        let value: Reply = try await request(path: "v1/agent/default/chat/history", query: query)
+        return AgentHistoryPage(rows: value.rows.compactMap { try? $0.value() }, earlier: value.earlier == true)
     }
     func chatUsage() async throws -> AgentChatUsage {
         struct Response: Decodable { let usage: AgentChatUsageWire? }
@@ -698,8 +985,20 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     func chatModels() async throws -> AgentModelCatalog {
         try await request(path: "v1/agent/default/models")
     }
+    /// AGENT-PLAN-1: codex's collaboration mode (`plan` | `default`) for the
+    /// turns that follow, changed in the thread itself; the answer is the
+    /// usage the header reads, with the mode in it.
+    func chatMode(_ mode: String) async throws -> AgentChatUsage {
+        struct Body: Encodable { let mode: String }
+        struct Response: Decodable { let usage: AgentChatUsageWire? }
+        let value: Response = try await request(path: "v1/agent/default/chat/mode", method: "POST", body: Body(mode: mode))
+        return value.usage?.value() ?? .empty
+    }
     func chatEvents(identity: AgentChatIdentity, after sequence: Int) throws -> AsyncThrowingStream<AgentChatEnvelope, Error> {
-        let ws = try socketTask(path: "v1/agent/default/chat/events", query: [], maximumMessageSize: 1_048_576)
+        // AGENT-FIX-2: core keeps every frame well under 1 MB now (clipped tool
+        // output, increments); the room above that is so an older core's
+        // snapshot of a long conversation still opens instead of breaking.
+        let ws = try socketTask(path: "v1/agent/default/chat/events", query: [], maximumMessageSize: 8 * 1_048_576)
         return AsyncThrowingStream { continuation in
             let reader = Task {
                 ws.resume()
@@ -882,12 +1181,46 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         let task = try socketTask(path: "v1/events", query: query, maximumMessageSize: 1_048_576)
         socket = task; socketID = id
         task.resume()
+        // TAIL-2 P0-1. A path that dies without a FIN — the phone changed
+        // networks, Tailscale relayed and dropped, tailscaled stopped — leaves
+        // `receive()` waiting for ever, and the bar said Connected over a dead
+        // socket until the app went to the background (TAIL-1 §5.5). So the
+        // socket is pinged: a missing pong, or nothing at all for too long,
+        // is a dead connection, and cancelling it makes `receive()` throw into
+        // the ordinary reconnect.
+        let watchdog = EventLiveness(timing: liveness)
+        let timing = liveness
+        let pinger = Task {
+            let dead = await watchdog.watch(ping: { await EventLiveness.ping(task, deadline: timing.pongDeadline) })
+            if dead { task.cancel(with: .abnormalClosure, reason: nil) }
+        }
+        // HERDR-11 §3: a small ping every two seconds, only to keep one clock:
+        // a host that answers is live, whatever else is quiet. It decides
+        // nothing about the socket - that stays the watchdog's.
+        let beat = Task { [alive] in
+            while !Task.isCancelled {
+                if await EventLiveness.ping(task, deadline: .seconds(3)) { alive?() }
+                try? await Task.sleep(for: EventLiveness.beat)
+            }
+        }
         defer {
+            beat.cancel()
+            pinger.cancel()
             task.cancel(with: .goingAway, reason: nil)
             if socketID == id { socket = nil; socketID = nil }
         }
         while !Task.isCancelled {
-            let data = try Self.payload(of: try await task.receive())
+            let message: URLSessionWebSocketTask.Message
+            do { message = try await task.receive() }
+            catch {
+                if await watchdog.declaredDead {
+                    throw CompanionHostError.transport(message: Strings.hostErrorEventStreamSilent)
+                }
+                throw error
+            }
+            await watchdog.noteActivity()
+            alive?()
+            let data = try Self.payload(of: message)
             let event: SanitizedHostEvent
             do { event = try Self.decodeEvent(data) }
             catch { throw CompanionHostError.decoding(message: Strings.hostErrorInvalidEvent) }
@@ -960,9 +1293,9 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         // "the snapshot is stale": a mirrored notification, and a transcript.
         var notification: HostNotification?
         var transcript: VoiceTranscriptEvent?
-        if wire.type == "notification.posted" || wire.type == "voice.transcript" {
+        if wire.type == "notification.posted" || wire.type == "notification.updated" || wire.type == "voice.transcript" {
             struct Typed<Value: Decodable>: Decodable { let payload: Value? }
-            if wire.type == "notification.posted" {
+            if wire.type == "notification.posted" || wire.type == "notification.updated" {
                 notification = (try? JSONDecoder().decode(Typed<HostNotification>.self, from: data))?.payload
                     ?? (try? JSONDecoder().decode(EventFrame<HostNotification>.self, from: data))?.event?.payload
             } else {
@@ -1006,12 +1339,47 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
                                                     state: payload.state ?? "", reason: payload.reason)
             }
         }
+        // NOTIFY-2. The app's own alerts read two payloads: the status an
+        // `agent.changed` set, and the blocked panes of `herdr.layout.changed`.
+        // Both are read leniently and validated here, ids only.
+        var agentStatus: String?
+        var herdrAttention: HerdrAttentionEvent?
+        if wire.type == "agent.changed" {
+            struct Agent: Decodable { let status: String? }
+            struct Change: Decodable { let agent: Agent? }
+            struct Typed: Decodable { let payload: Change? }
+            let payload = (try? JSONDecoder().decode(Typed.self, from: data))?.payload
+                ?? (try? JSONDecoder().decode(EventFrame<Change>.self, from: data))?.event?.payload
+            if let status = payload?.agent?.status, status.utf8.count <= 64,
+               status.range(of: #"^[a-z_]+$"#, options: .regularExpression) != nil {
+                agentStatus = status
+            }
+        } else if wire.type == "herdr.layout.changed" {
+            struct Row: Decodable { let pane_id: String?; let name: String? }
+            struct Change: Decodable { let session: String?; let blocked: [Row]?; let stopped: Bool? }
+            struct Typed: Decodable { let payload: Change? }
+            let payload = (try? JSONDecoder().decode(Typed.self, from: data))?.payload
+                ?? (try? JSONDecoder().decode(EventFrame<Change>.self, from: data))?.event?.payload
+            if let session = payload?.session, AppLink.validSession(session), let rows = payload?.blocked {
+                let panes = rows.prefix(32).compactMap { row -> HerdrAttentionEvent.Pane? in
+                    guard let id = row.pane_id, AppLink.validPane(id) else { return nil }
+                    let name = row.name.map { String($0.filter { !$0.isNewline }.prefix(32)) }
+                    return .init(paneID: id, name: name?.isEmpty == true ? nil : name)
+                }
+                herdrAttention = HerdrAttentionEvent(session: session, blocked: panes,
+                                                     stopped: payload?.stopped == true)
+            }
+        }
         return SanitizedHostEvent(sequence: wire.seq, eventID: wire.event_id, type: wire.type,
                                   instanceID: frame.instance_id, snapshot: nil,
                                   needsResync: wire.type == "resync.required" || wire.payload?.snapshot_required == true,
                                   panelSummon: summon, notification: notification, transcript: transcript,
                                   approvalRequest: approvalRequest, approvalResolution: approvalResolution,
-                                  remoteSession: remoteSession)
+                                  remoteSession: remoteSession, agentStatus: agentStatus,
+                                  herdrAttention: herdrAttention,
+                                  notify: NotifyWire.parse(type: wire.type, payload: data),
+                                  overview: wire.type == "overview.changed" // non-copy: event type
+                                      ? OverviewReading.parse(payload: data) : nil)
     }
 
     // MARK: - Transport
@@ -1043,16 +1411,40 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
                           remoteOperation: remoteOperation, mediaOperation: mediaOperation)
     }
 
-    private func request<T: Decodable>(path: String, query: [URLQueryItem]) async throws -> T {
+    private func request<T: Decodable>(path: String, query: [URLQueryItem],
+                                       herdrOperation: Bool = false) async throws -> T {
         var components = URLComponents(url: configuration.endpoint.appendingPathComponent(path),
                                        resolvingAgainstBaseURL: false)
-        components?.queryItems = query
+        components?.queryItems = query.isEmpty ? nil : query
+        // `+` is a space to a form decoder; a folder name may have one.
+        let encoded = components?.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
+        components?.percentEncodedQuery = encoded
         guard let url = components?.url else { throw CompanionHostError.invalidEndpoint }
         let (data, http) = try await send(URLRequest(url: url), method: "GET", limit: 8 * 1_048_576)
         guard (200..<300).contains(http.statusCode) else {
+            if herdrOperation { throw HerdrRequestError(code: Self.errorCode(data) ?? "herdr_unavailable", status: http.statusCode) }
             throw Self.mapHTTPError(status: http.statusCode, code: Self.errorCode(data))
         }
         do { return try JSONDecoder().decode(T.self, from: data) }
+        catch { throw CompanionHostError.decoding(message: Strings.hostErrorContractMismatch) }
+    }
+
+    /// HERDR-11: a JSON GET with headers of its own (`If-None-Match`, the
+    /// catalog revision), where `304` is an answer - `nil`, the copy on hand
+    /// stands - and the reply's `ETag` comes back for the next ask.
+    private func conditionalGET<T: Decodable>(path: String, headers: [String: String],
+                                              herdrOperation: Bool = false) async throws -> (T?, String?) {
+        var value = URLRequest(url: configuration.endpoint.appendingPathComponent(path))
+        value.setValue("application/json", forHTTPHeaderField: "Accept")
+        for (name, field) in headers { value.setValue(field, forHTTPHeaderField: name) }
+        let (data, http) = try await send(value, method: "GET", limit: 8 * 1_048_576)
+        let etag = http.value(forHTTPHeaderField: "ETag").flatMap { $0.utf8.count <= 128 ? $0 : nil }
+        if http.statusCode == 304 { return (nil, etag) }
+        guard (200..<300).contains(http.statusCode) else {
+            if herdrOperation { throw HerdrRequestError(code: Self.errorCode(data) ?? "herdr_unavailable", status: http.statusCode) }
+            throw Self.mapHTTPError(status: http.statusCode, code: Self.errorCode(data))
+        }
+        do { return (try JSONDecoder().decode(T.self, from: data), etag) }
         catch { throw CompanionHostError.decoding(message: Strings.hostErrorContractMismatch) }
     }
 
@@ -1098,7 +1490,7 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
     private func request<T: Decodable, Body: Encodable & Sendable>(
         path: String, method: String = "GET", body: Body?,
         remoteOperation: Bool = false, workspaceLayoutOperation: Bool = false,
-        mediaOperation: Bool = false, herdrOperation: Bool = false) async throws -> T {
+        mediaOperation: Bool = false, herdrOperation: Bool = false, openOperation: Bool = false) async throws -> T {
         guard let token = bearerToken, !token.isEmpty else { throw CompanionHostError.notConnected }
         var request = URLRequest(url: configuration.endpoint.appendingPathComponent(path))
         request.httpMethod = method
@@ -1113,7 +1505,12 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         }
         do {
             let (data, response) = try await session.data(for: request)
-            guard data.count <= 1_048_576 else { throw CompanionHostError.protocolError(message: Strings.hostErrorTooLarge) }
+            // AGENT-FIX-2: the Agent's snapshot is a whole conversation. Over
+            // 1 MB it failed here and a panel opened from cold showed nothing
+            // at all - the history "vanished". Core now keeps it far smaller;
+            // this is the margin for an older core.
+            let limit = path.hasPrefix("v1/agent/default") ? 8 * 1_048_576 : 1_048_576
+            guard data.count <= limit else { throw CompanionHostError.protocolError(message: Strings.hostErrorTooLarge) }
             guard let http = response as? HTTPURLResponse else { throw CompanionHostError.transport(message: Strings.hostErrorNotHTTP) }
             if mediaOperation || remoteOperation {
                 RemotePairingTrace.http(path: path, status: http.statusCode,
@@ -1127,6 +1524,10 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
                 }
                 if mediaOperation { throw MediaPairingError(code: code ?? "media_pairing_unavailable", status: http.statusCode) }
                 if herdrOperation { throw HerdrRequestError(code: code ?? "herdr_unavailable", status: http.statusCode) }
+                // LINKS-1: every refusal of an open is a sentence of its own
+                // (`ReasonText`), including the 403s, which here mean "not
+                // that file" and never "this device is not allowed".
+                if openOperation { throw HostOpenError.answer(status: http.statusCode, code: code) }
                 if workspaceLayoutOperation { throw WorkspaceLayoutRequestError(code: WorkspaceLayoutRequestError.safeCode(code)) }
                 if path.hasPrefix("v1/agent/default/chat") || path == "v1/agent/default:ensure" {
                     throw AgentChatHostError(code: AgentChatHostError.safeCode(code))
@@ -1144,6 +1545,7 @@ public actor CompanionHostClient: CompanionServing, RemoteSessionServing, MediaP
         catch let error as RemoteRequestError { throw error }
         catch let error as MediaPairingError { throw error }
         catch let error as HerdrRequestError { throw error }
+        catch let error as HostOpenError { throw error }
         catch let error as HostConfirmationRequired { throw error }
         catch let error as CompanionHostError { throw error }
         catch is CancellationError { throw CancellationError() }
@@ -1267,6 +1669,43 @@ public enum CompanionParameter: Encodable, Equatable, Sendable {
 }
 
 struct EmptyBody: Encodable, Sendable {}
+/// HERDR-3 request bodies, field names exactly as core reads them.
+struct HerdrKeysBody: Encodable, Sendable { let keys: [String] }
+struct HerdrTextBody: Encodable, Sendable {
+    let text: String
+    let submit: Bool
+    /// ATTACH-1; left out of the body when there are none.
+    var attachments: [AttachmentRef]? = nil
+}
+
+/// ATTACH-1: what a send with pictures came back with.
+struct AgentSendReceipt: Equatable, Sendable {
+    /// codex would not take the pictures as pictures; it got their paths.
+    var imagesAsPaths = false
+    /// AGENT-PLAN-1: one of the basics the host handles itself (`plan`,
+    /// `compact`, `review`, `diff`), and whether it starts no turn of its own
+    /// (`delivery: "command"`).
+    var command: String? = nil
+    var startsNoTurn = false
+    /// `/diff`: the conversation's file changes, and how many earlier ones
+    /// core left out.
+    var changes: [AgentChatChange] = []
+    var changesOmitted = 0
+}
+
+/// ATTACH-1: one upload's progress, as its task's own delegate. Everything
+/// else - the pinned certificate above all - is still the session's delegate.
+final class UploadProgress: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    private let report: @Sendable (Double) -> Void
+    init(_ report: @escaping @Sendable (Double) -> Void) { self.report = report }
+    func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64,
+                    totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        guard totalBytesExpectedToSend > 0 else { return }
+        report(min(1, Double(totalBytesSent) / Double(totalBytesExpectedToSend)))
+    }
+}
+
+extension CompanionHostClient: AttachmentUploading {}
 struct EmptyResponse: Decodable, Sendable {}
 
 extension CompanionServing {
@@ -1277,5 +1716,46 @@ extension CompanionServing {
                 stateRevision: Int?, confirmToken: String?) async throws -> CompanionActionResponse {
         try await invoke(entryID: entryID, catalogRevision: catalogRevision, parameters: parameters,
                          targetToken: targetToken, stateRevision: stateRevision)
+    }
+}
+
+// TAIL-2 P0-4 / P1-1. The terminal's current address and the Tailscale SSH
+// flag, from the inventory read the SSH repair already uses.
+extension CompanionHostClient: SSHTargetReading {
+    private struct SSHKeyStateTarget: Decodable { let target: SSHTargetDTO? }
+    func fetchSSHTarget() async throws -> SSHTargetDTO? {
+        let value: SSHKeyStateTarget = try await request(path: "v1/ssh/key")
+        return value.target
+    }
+}
+
+// TAIL-2 P0-2. The host's roads, over this pinned, credentialed connection.
+extension CompanionHostClient: HostRoadsReading {
+    func fetchHostRoads() async -> HostRoadsDTO? {
+        try? await request(path: "v1/host/roads") as HostRoadsDTO
+    }
+}
+
+// LINKS-1: `hostOpen` is declared with the client's other routes.
+extension CompanionHostClient: HostOpening {}
+
+// NOTIFY-2. Whether this app is in front, and which kinds it alerts by itself,
+// so core holds Odomo's push back for exactly those (`contracts/presence.schema.json`).
+struct PresenceBody: Encodable, Sendable {
+    let foreground: Bool
+    let alerts: [String]
+}
+struct PresenceDTO: Decodable, Equatable, Sendable {
+    let foreground: Bool
+    let alerts: [String]
+    let quiets: [String]
+}
+protocol PresenceReporting: Sendable {
+    /// `nil` from a core from before the route (404) or on any failure.
+    func reportPresence(_ body: PresenceBody) async -> PresenceDTO?
+}
+extension CompanionHostClient: PresenceReporting {
+    func reportPresence(_ body: PresenceBody) async -> PresenceDTO? {
+        try? await request(path: "v1/presence", method: "PUT", body: body) as PresenceDTO
     }
 }

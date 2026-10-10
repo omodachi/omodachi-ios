@@ -64,42 +64,6 @@ import XCTest
         XCTAssertEqual(afterHiding, before)
     }
 
-    /// A-60 rev 5: locked, turning the device sends nothing; unlocking with the
-    /// device already turned spends exactly one resize.
-    func testTheRotationLockHoldsTheGeometryAndReleasesItOnce() async throws {
-        let (controller, host, _) = try await streaming()
-        let before = await host.resizeCount()
-
-        controller.toggleRotationLock()
-        XCTAssertTrue(controller.rotationLocked)
-        controller.viewportChanged(size: CGSize(width: 834, height: 1194), orientation: "portrait")
-        try? await Task.sleep(for: .milliseconds(450))
-        let whileLocked = await host.resizeCount()
-        XCTAssertEqual(whileLocked, before, "locked means the picture keeps its geometry")
-
-        controller.toggleRotationLock()
-        XCTAssertFalse(controller.rotationLocked)
-        for _ in 0..<400 where await host.resizeCount() == before {
-            try? await Task.sleep(for: .milliseconds(5))
-        }
-        let afterUnlock = await host.resizeCount()
-        XCTAssertEqual(afterUnlock, before + 1,
-                       "unlocking with the device already turned is one resize, not none and not two")
-    }
-
-    /// The lock belongs to the session. Ending one releases it, so the next
-    /// session does not start in an orientation the user locked an hour ago.
-    func testTheLockIsReleasedWithTheSession() async throws {
-        let (controller, _, _) = try await streaming()
-        controller.toggleRotationLock()
-        XCTAssertTrue(controller.rotationLocked)
-        controller.stop()
-        for _ in 0..<400 where controller.hasSession {
-            try? await Task.sleep(for: .milliseconds(5))
-        }
-        XCTAssertFalse(controller.rotationLocked)
-    }
-
     /// A-60's one backend-dependent quick action, against the controller rather
     /// than the table: VNC carries no audio channel.
     func testOnlyTheSunshineBackendCanPlayTheHostsSound() async throws {

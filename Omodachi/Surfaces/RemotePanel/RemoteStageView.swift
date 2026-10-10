@@ -143,8 +143,7 @@ struct RemoteStageView: View {
     }
 
     @ViewBuilder private var canvas: some View {
-        RemoteViewportReader(changed: { controller.viewportChanged(size: $0, orientation: $1) },
-                             orientationLock: controller.rotationLocked) {
+        RemoteViewportReader(changed: { controller.viewportChanged(size: $0, orientation: $1) }) {
             if controller.backend == .vnc, let vnc = controller.vnc {
                 VNCBackendCanvas(adapter: vnc.adapter)
             } else if let sunshine = controller.sunshine {
@@ -156,16 +155,16 @@ struct RemoteStageView: View {
     }
 }
 
-/// Reports the real presentation bounds and the window's interface orientation,
-/// and holds A-60's rotation lock.
+/// Reports the real presentation bounds and the window's interface orientation.
 ///
-/// UIKit is the authority for both: SwiftUI's geometry lags a rotation by a
-/// frame, and `supportedInterfaceOrientations` is the only lever that actually
-/// stops one. The lock is session-scoped (`RemoteSessionController` clears it on
-/// release), so this view never persists it.
+/// UIKit is the authority: SwiftUI's geometry lags a rotation by a frame.
+/// POLISH-R: this used to hold A-60's rotation lock as well, by overriding
+/// `supportedInterfaceOrientations` on this embedded controller — which UIKit
+/// never asks (it asks the window's root), so on Leo's iPad the lock changed
+/// nothing on screen. Leo removed the control: the system's own orientation
+/// lock in Control Center does the job.
 private struct RemoteViewportReader<Content: View>: UIViewControllerRepresentable {
     let changed: (CGSize, String) -> Void
-    let orientationLock: Bool
     @ViewBuilder let content: () -> Content
 
     func makeUIViewController(context: Context) -> Host<Content> {
@@ -176,43 +175,18 @@ private struct RemoteViewportReader<Content: View>: UIViewControllerRepresentabl
         controller.safeAreaRegions = []
         controller.view.backgroundColor = .black
         controller.changed = changed
-        controller.applyLock(orientationLock)
         return controller
     }
 
     func updateUIViewController(_ controller: Host<Content>, context: Context) {
         controller.changed = changed
         controller.rootView = content()
-        controller.applyLock(orientationLock)
     }
 
     final class Host<Root: View>: UIHostingController<Root> {
         var changed: ((CGSize, String) -> Void)?
         private var last: CGSize = .zero
         private var lastOrientation = ""
-        private var locked: UIInterfaceOrientationMask?
-
-        override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-            locked ?? .all
-        }
-
-        /// A-60 rev 5: lock the orientation the session is *currently* in.
-        func applyLock(_ on: Bool) {
-            let wanted: UIInterfaceOrientationMask? = on ? mask(for: view.window?.windowScene?.interfaceOrientation) : nil
-            guard wanted != locked else { return }
-            locked = wanted
-            setNeedsUpdateOfSupportedInterfaceOrientations()
-        }
-
-        private func mask(for orientation: UIInterfaceOrientation?) -> UIInterfaceOrientationMask {
-            switch orientation {
-            case .portrait: .portrait
-            case .portraitUpsideDown: .portraitUpsideDown
-            case .landscapeLeft: .landscapeLeft
-            case .landscapeRight: .landscapeRight
-            default: view.bounds.width >= view.bounds.height ? .landscape : .portrait
-            }
-        }
 
         override func viewDidLayoutSubviews() {
             super.viewDidLayoutSubviews()

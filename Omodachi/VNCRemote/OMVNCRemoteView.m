@@ -203,6 +203,7 @@ static void frame(void *context,const uint8_t *bytes,int width,int height) {
     if(!self.inputReady||!self.worker)return;OMVNCWorker *worker=self.worker;
     dispatch_async(worker.queue, ^{if(!worker.stopped)om_vnc_key(worker.client,keysym,down);});
 }
+- (void)tapKeysym:(uint32_t)keysym { [self sendKeysym:keysym down:YES];[self sendKeysym:keysym down:NO]; }
 - (void)sendPointerAtViewPoint:(CGPoint)point buttons:(int)buttons {
     if(!self.inputReady||!self.worker||self.framePixels.width<=0)return;
     CGRect video=[self videoRect];
@@ -296,6 +297,7 @@ static void frame(void *context,const uint8_t *bytes,int width,int height) {
     // A-62 / A-64: the arbiter already decided whether this cycle was a tap.
     id<OMRemoteGestureArbitrating> arbiter=self.gestureArbiter;
     if(arbiter&&!arbiter.keyboardTapConfirmed)return;
+    if(self.keyboardTapHandler){self.keyboardTapHandler();return;}
     [self toggleKeyboard];
 }
 - (BOOL)toggleKeyboard {
@@ -308,7 +310,18 @@ static void frame(void *context,const uint8_t *bytes,int width,int height) {
 /// what every printable character typed on the soft keyboard is. Anything
 /// outside it is sent as the X11 Unicode keysym (`0x01000000 + code point`),
 /// the encoding RFB 3.8 §7.4.4 names for exactly this case.
+// REMOTE-INPUT-1. The iOS keyboard must not rewrite what is typed into a
+// remote desktop: no autocorrect, no capitals it decided on, no smart quotes.
+- (UITextAutocorrectionType)autocorrectionType { return UITextAutocorrectionTypeNo; }
+- (UITextAutocapitalizationType)autocapitalizationType { return UITextAutocapitalizationTypeNone; }
+- (UITextSpellCheckingType)spellCheckingType { return UITextSpellCheckingTypeNo; }
+- (UITextSmartQuotesType)smartQuotesType { return UITextSmartQuotesTypeNo; }
+- (UITextSmartDashesType)smartDashesType { return UITextSmartDashesTypeNo; }
+- (UITextSmartInsertDeleteType)smartInsertDeleteType { return UITextSmartInsertDeleteTypeNo; }
+- (UITextInlinePredictionType)inlinePredictionType API_AVAILABLE(ios(17.0)) { return UITextInlinePredictionTypeNo; }
 - (void)insertText:(NSString *)text {
+    if(!self.inputReady)return;
+    if(self.textHandler){self.textHandler(text);return;}
     for(NSUInteger index=0;index<text.length;){
         NSRange range=[text rangeOfComposedCharacterSequenceAtIndex:index];
         uint32_t code=[[text substringWithRange:range] characterAtIndex:0];
@@ -316,7 +329,7 @@ static void frame(void *context,const uint8_t *bytes,int width,int height) {
             unichar high=[text characterAtIndex:range.location],low=[text characterAtIndex:range.location+1];
             code=0x10000+((high-0xD800)<<10)+(low-0xDC00);
         }
-        uint32_t keysym=code==10||code==13?0xFF0D:code<0x100?code:0x01000000+code;
+        uint32_t keysym=code==10||code==13?0xFF0D:code==9?0xFF09:code<0x100?code:0x01000000+code;
         [self sendKeysym:keysym down:YES];[self sendKeysym:keysym down:NO];
         index=NSMaxRange(range);
     }

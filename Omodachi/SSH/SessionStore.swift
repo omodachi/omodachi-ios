@@ -21,6 +21,14 @@ import UIKit
     /// UX-4 §2. What repairs a key the host no longer holds, shared by every
     /// runtime for the same reason the gate is.
     let keyOffer: (any SSHKeyOffering)?
+    /// TAIL-2 P0-4. Where a session's host is *now*. A restored descriptor
+    /// carries the address it resolved when it was created — on another road
+    /// that is the wrong one, and Reconnect kept dialling it (TAIL-1 §5.3).
+    var hostResolver: (@MainActor (HostProfile) -> HostProfile)?
+    /// LINKS-1: a web address tapped in a terminal, for the Safari view over
+    /// the app. Paths are never opened from here: the SSH target may not be
+    /// the computer the app is paired with.
+    var openWebLink: (@MainActor (URL) -> Void)?
 
     init(defaults: UserDefaults = .standard, trust: HostTrustCoordinator = HostTrustCoordinator(),
          keyOffer: (any SSHKeyOffering)? = SSHKeyOffer(), factory: TransportFactory? = nil) {
@@ -53,6 +61,7 @@ import UIKit
         // Non-command entries return to the same local session. Commands remain separate invocations.
         if descriptor.kind != .command, let existing = runtimes.first(where: {
             $0.descriptor.reuseIdentity == descriptor.reuseIdentity
+                || $0.descriptor.sameSessionOnAnotherRoad(descriptor)
         }) { return existing }
         let runtime = add(descriptor, restored: false)
         persist()
@@ -60,7 +69,9 @@ import UIKit
     }
     @discardableResult private func add(_ descriptor: SessionDescriptor, restored: Bool) -> Runtime {
         let runtime = Runtime(descriptor: descriptor, restored: restored, factory: transportFactory,
-                              gate: dialGate, keyOffer: keyOffer)
+                              gate: dialGate, keyOffer: keyOffer,
+                              resolver: { [weak self] host in self?.hostResolver?(host) ?? host })
+        runtime.onOpenLink = { [weak self] url in self?.openWebLink?(url) }
         observations[runtime.id] = runtime.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }
         runtimes.append(runtime)
         return runtime
@@ -115,6 +126,8 @@ import UIKit
     private var autoReattach = false
     private var restored: Bool
     var onHome: (() -> Void)?
+    /// LINKS-1: set by the store; a web address tapped here.
+    var onOpenLink: ((URL) -> Void)?
 
     lazy var terminal: NativeTerminalView = {
         let view = NativeTerminalView(frame: CGRect(x: 0, y: 0, width: 600, height: 400), font: OmodachiTheme.uiFont(size: fontSize), options: TerminalOptions(cursorStyle: .steadyBlock))
@@ -126,11 +139,25 @@ import UIKit
         TerminalPalette.apply(to: view)
         view.accessibilityIdentifier = "terminal-emulator"
         view.onHome = { [weak self] in self?.onHome?() }
+        // LINKS-1: alongside SwiftTerm's own taps, never instead of them.
+        let tap = UITapGestureRecognizer(target: self, action: #selector(linkTapped(_:)))
+        tap.cancelsTouchesInView = false
+        tap.delegate = TerminalTapAlongside.shared
+        view.addGestureRecognizer(tap)
         return view
     }()
 
+    @objc private func linkTapped(_ recognizer: UITapGestureRecognizer) {
+        tapped(at: recognizer.location(in: terminal))
+    }
+
+    /// TAIL-2 P0-4: the host as it is now, for each dial.
+    private let resolver: @MainActor (HostProfile) -> HostProfile
+
     init(descriptor: SessionDescriptor, restored: Bool, factory: @escaping SessionStore.TransportFactory,
-         gate: SSHDialGate = SSHDialGate(), keyOffer: (any SSHKeyOffering)? = nil) {
+         gate: SSHDialGate = SSHDialGate(), keyOffer: (any SSHKeyOffering)? = nil,
+         resolver: @escaping @MainActor (HostProfile) -> HostProfile = { $0 }) {
+        self.resolver = resolver
         self.descriptor = descriptor
         self.id = descriptor.id
         self.restored = restored
@@ -209,7 +236,9 @@ import UIKit
         state = .connecting
         let current = UUID()
         generation = current
-        let connection = factory(descriptor)
+        var dial = descriptor
+        dial.host = resolver(descriptor.host)
+        let connection = factory(dial)
         transport = connection
         outputTask = Task { [weak self] in
             do {
@@ -500,9 +529,26 @@ import UIKit
     func setTerminalTitle(source: TerminalView, title: String) {} // Do not collect host titles.
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
     func scrolled(source: TerminalView, position: Double) {}
-    func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {} // No outbound services.
+    /// LINKS-1: a marked link (OSC 8) the person tapped. Web addresses only,
+    /// and only to the app's own Safari view — nothing else leaves the app.
+    func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {
+        if case .web(let url)? = LinkTarget.classify(link) { onOpenLink?(url) }
+    }
+    /// A tap anywhere on the terminal: a web address under it (marked or just
+    /// printed, like `http.server`'s banner) opens.
+    func tapped(at point: CGPoint) {
+        if case .web(let url)? = TerminalLinkHit.target(in: terminal, at: point, bareNames: false) { onOpenLink?(url) }
+    }
     func bell(source: TerminalView) {}
     func rangeChanged(source: TerminalView, startY: Int, endY: Int) {}
     func clipboardCopy(source: TerminalView, content: Data) {} // OSC52 does not write local clipboard.
     func clipboardRead(source: TerminalView) -> Data? { nil }
+}
+
+/// LINKS-1: the SSH terminal's link tap is recognised together with
+/// SwiftTerm's own (focus, mouse report, selection), not in place of them.
+final class TerminalTapAlongside: NSObject, UIGestureRecognizerDelegate {
+    static let shared = TerminalTapAlongside()
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 }

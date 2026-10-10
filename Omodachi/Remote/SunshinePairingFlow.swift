@@ -15,6 +15,12 @@ import Foundation
     var onProgress: ((String) -> Void)?
     var onFinished: ((Bool) -> Void)?
     private(set) var attemptID: String?
+    /// REMOTE-PAIR-1. Whether the last run that did not pair stopped on
+    /// something a second try can get past - the host or the network not
+    /// answering, the fork not having registered the request yet, a handshake
+    /// that failed or ran out - rather than on something only a person can
+    /// change (no media approval, a certificate the host will not move).
+    private(set) var lastFailureRetriable = false
     private var work: Task<Void, Never>?
     var isRunning: Bool { work != nil }
 
@@ -56,6 +62,7 @@ import Foundation
 
     private func run(pin: String, fingerprint: String, service: any MediaPairingServing) async {
         defer { work = nil }
+        lastFailureRetriable = false
         var step = Step.discover
         do {
             RemotePairingTrace.step("flow.start", "fingerprint=\(fingerprint)")
@@ -87,16 +94,29 @@ import Foundation
                 ? Strings.remotePairNeverApproved
                 : Strings.remotePairGaveUp
             onProgress?(attempt.isTerminal ? attempt.progress : unfinished)
+            lastFailureRetriable = !attempt.paired && ["failed", "expired"].contains(attempt.status)
             onFinished?(attempt.paired)
         } catch let error as MediaPairingError {
             RemotePairingTrace.step("flow.failed", "step=\(step.rawValue) code=\(error.code) status=\(error.status)")
             onProgress?(Strings.remotePairStepFailed(step.title, error.userMessage))
+            lastFailureRetriable = Self.retriable(error)
             onFinished?(false)
         } catch is CancellationError {
         } catch {
             onProgress?(Strings.remotePairStepUnfinished(step.title))
+            lastFailureRetriable = true
             onFinished?(false)
         }
+    }
+
+    /// REMOTE-PAIR-1. The codes a second automatic try can get past. Anything
+    /// that needs the person at the computer - a media approval, a certificate
+    /// the host will not move - is not one of them.
+    static func retriable(_ error: MediaPairingError) -> Bool {
+        if error.status >= 500 { return true }
+        return ["media_pairing_request_not_unique", "media_pairing_request_not_pending", "media_pairing_timeout",
+                "media_pairing_unavailable", "pairing_request_expired", "pairing_request_not_pending"] // non-copy: wire codes
+            .contains(error.code)
     }
 
     /// The fork registers the pending request only when `getservercert` lands,

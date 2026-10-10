@@ -113,7 +113,9 @@ actor SSHKeyOffer: SSHKeyOffering {
 
     private func call(account rawAccount: String, keyAccount: String, replacing: Bool) async throws -> SSHKeyReport {
         let account = HostAccount.canonical(rawAccount)
-        guard let endpoint = URL(string: account), let host = endpoint.host, !host.isEmpty,
+        // TAIL-3b: over the host's one road (a Wi-Fi host moved to Tailscale
+        // is reached by its MagicDNS name, not the address it paired over).
+        guard let endpoint = HostRoads.dialURL(account: account, pins: pins), let host = endpoint.host, !host.isEmpty,
               let pin = pins.load(account: account),
               let token = try? credentials.loadToken(account: account), !token.isEmpty,
               token.utf8.count <= 4089,

@@ -1,8 +1,10 @@
 import SwiftUI
 import UIKit
 
-/// Study 03 §12 and §13. The first screen an unpaired app shows is the list of
-/// computers on this Wi-Fi — not a form with a field called "电脑端服务地址".
+/// Study 03 §12 and §13, and TAIL-3b. The first screen an unpaired app shows is
+/// the Tailscale page (paste the computer's name); the list of computers on
+/// this Wi-Fi is behind "I don't use Tailscale", and that is the only place the
+/// Bonjour browser — and so the Local Network question — ever starts.
 ///
 /// The list and the waiting card are one panel: selecting a host changes the
 /// title and the content in place and puts a back arrow in the corner (A-35).
@@ -22,6 +24,10 @@ struct ConnectionScreen: View {
     /// list again.
     var staleCredentialHosts: [HostCredentialGate.StaleCredential] = []
     @FocusState private var manualFocused: Bool
+    /// TAIL-3b W01: the Bonjour browser runs only after "Look on this Wi-Fi".
+    /// Once that has been pressed on this device, the Wi-Fi road goes straight
+    /// to the list next time — iOS has already asked.
+    @State private var lanSearching = false
 
     init(directory: PairedHostDirectory, onDismiss: (() -> Void)? = nil,
          staleCredentialHosts: [HostCredentialGate.StaleCredential] = []) {
@@ -52,11 +58,11 @@ struct ConnectionScreen: View {
         // Five acceptance suites were waiting for the name that lost, which is
         // half of what AGENT-2 §9.4 read as "it never returns to the list".
         .accessibilityElement(children: .contain)
-        .task {
-            browser.start()
-            _ = OmodachiTheme.appearanceRevision
-        }
+        .task { _ = OmodachiTheme.appearanceRevision }
         .onDisappear { browser.stop(); flow.cancel() }
+        .onChange(of: flow.stage) { _, stage in
+            if stage == .wifi, LanSearchMemory.started { startLanSearch() }
+        }
         // A-32 / PAIR-2 §3.3: each discovered host is asked once, over the same
         // unauthenticated /health the waiting card's fingerprint comes from.
         .task(id: candidates.map(\.id).joined(separator: "\u{1}")) {
@@ -64,7 +70,12 @@ struct ConnectionScreen: View {
         }
         .onChange(of: flow.claimed) { _, record in
             guard let record else { return }
+            home.linkMessage = nil
             directory.remember(record)
+            // TUTORIAL-1: a pairing that landed is the moment for the tour.
+            // `arm` does nothing on a device that has already seen it, so a
+            // second computer added from Settings does not bring it back.
+            home.tour.arm()
             var profile = home.profile
             profile.companionURL = record.account
             profile.mock = false
@@ -79,12 +90,34 @@ struct ConnectionScreen: View {
 
     // MARK: - Chrome
 
-    private var title: String { flow.stage == .pairing ? Strings.hostsTitlePairing : Strings.hostsTitleConnect }
+    private var title: String {
+        switch flow.stage {
+        case .pairing: Strings.hostsTitlePairing
+        case .wifi, .manual: Strings.lanTitle
+        case .tailscale: Strings.hostsTitleConnect
+        }
+    }
+
+    private func back() {
+        switch flow.stage {
+        case .manual: flow.stage = .wifi
+        case .wifi: flow.stage = .tailscale
+        default: flow.backToList()
+        }
+    }
+
+    /// W01's button: the one call that can make iOS ask about the local network.
+    private func startLanSearch() {
+        LanSearchMemory.started = true
+        guard !lanSearching else { return }
+        lanSearching = true
+        browser.start()
+    }
 
     private var header: some View {
         HStack(spacing: 8) {
-            if flow.stage != .list {
-                Tap(action: { flow.backToList() }) {
+            if flow.stage != .tailscale {
+                Tap(action: back) {
                     HostGlyphView(glyph: "\u{f053}", fallbackSymbol: "chevron.left", size: 14)
                         .foregroundStyle(OmodachiTheme.secondaryText)
                         .frame(width: 44, height: 44)
@@ -107,18 +140,49 @@ struct ConnectionScreen: View {
                 .foregroundStyle(OmodachiTheme.text)
             Spacer()
         }
-        .padding(.horizontal, flow.stage == .list && onDismiss == nil ? OmodachiTheme.rowPaddingX : 4)
+        .padding(.horizontal, flow.stage == .tailscale && onDismiss == nil ? OmodachiTheme.rowPaddingX : 4)
         .frame(height: 49)
     }
 
     @ViewBuilder private var content: some View {
         switch flow.stage {
-        case .list:
-            list
-            demoRow
+        case .tailscale:
+            staleNote
+            TailscaleConnectView(flow: flow, wide: sizeClass == .regular, showsDemo: onDismiss == nil,
+                                 onConnect: {
+                                     flow.connectTailscale(sshPublicKey: CompanionSSHKey.publicKeyLine(account: home.profile.keyAccount),
+                                                           sshKeyAccount: home.profile.keyAccount)
+                                 },
+                                 onLan: { flow.stage = .wifi },
+                                 onDemo: { home.enterDemo() })
+        case .wifi:
+            if lanSearching { list } else { lanIntro }
         case .manual: manual
         case .pairing: PairingCard(flow: flow)
         }
+    }
+
+    /// I01: an iPad gives the Tailscale page a second column for the help.
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    // MARK: - TAIL-3b W01: before the Local Network question
+
+    @ViewBuilder private var lanIntro: some View {
+        Text(Strings.lanExplain(DeviceWord.current))
+            .font(OmodachiTheme.bodyFont(size: 15))
+            .foregroundStyle(OmodachiTheme.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.top, 14)
+        note(Strings.lanPrompt)
+        FlowButton(title: Strings.lanGo, action: startLanSearch)
+            .padding(.horizontal, 12)
+            .accessibilityIdentifier("lan-go")
+        note(Strings.lanLater)
+        FlowButton(title: Strings.lanBack, kind: .ghost) { flow.stage = .tailscale }
+            .padding(.horizontal, 12)
+            .accessibilityIdentifier("lan-back")
     }
 
     // MARK: - §12 the list and its three empty states
@@ -188,8 +252,12 @@ struct ConnectionScreen: View {
         }
     }
 
-    /// PAIR-5 §2's optional line, drawn above the list it explains.
+    /// PAIR-5 §2's optional line, drawn above the list it explains. TAIL-3b I1:
+    /// and the sentence for a link to a computer this device does not know.
     @ViewBuilder private var staleNote: some View {
+        if let message = home.linkMessage {
+            InlineError(message: message, identifier: "connect-link-unknown") { EmptyView() }
+        }
         if !staleCredentialHosts.isEmpty {
             InlineError(message: Self.staleMessage(staleCredentialHosts),
                         identifier: "connect-credential-stale")
@@ -247,6 +315,11 @@ struct ConnectionScreen: View {
             .accessibilityIdentifier("connect-open-settings")
         }
         .padding(.horizontal, 12)
+        // TAIL-3b W03: the road that needs no such permission.
+        note(Strings.lanDeniedTailscale)
+        FlowButton(title: Strings.lanBack, kind: .ghost) { flow.stage = .tailscale }
+            .padding(.horizontal, 12)
+            .accessibilityIdentifier("lan-back")
         FlowRule()
         manualRow
     }
@@ -273,37 +346,6 @@ struct ConnectionScreen: View {
         }
         
         .accessibilityIdentifier("connect-add-manual")
-    }
-
-    /// STORE-1 §1. The first screen's last row: a way to see the app without
-    /// an Omarchy computer — App Review's way in, among others. It is only on
-    /// the unpaired first screen; the list reached from a paired Panel has a
-    /// host to show already.
-    @ViewBuilder private var demoRow: some View {
-        if onDismiss == nil {
-            FlowRule()
-            Tap(action: { home.enterDemo() }) {
-                HStack(spacing: 10) {
-                    HostGlyphView(glyph: "\u{f144}", fallbackSymbol: "play.rectangle", size: 16)
-                        .foregroundStyle(OmodachiTheme.secondaryText)
-                        .frame(width: 22)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(Strings.demoEnter)
-                            .font(OmodachiTheme.font(size: 13))
-                            .foregroundStyle(OmodachiTheme.text)
-                        Text(Strings.demoEnterDetail)
-                            .font(OmodachiTheme.font(size: 11))
-                            .foregroundStyle(OmodachiTheme.tertiaryText)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, OmodachiTheme.rowPaddingX)
-                .frame(minHeight: ConnectionParts.actionHeight)
-                .contentShape(Rectangle())
-            }
-            .accessibilityIdentifier("demo-enter")
-        }
     }
 
     // MARK: - §12 ⑤ manual add
@@ -333,7 +375,7 @@ struct ConnectionScreen: View {
                 }
             }
             .accessibilityIdentifier("connect-manual-submit")
-            FlowButton(title: Strings.actionCancel, kind: .ghost) { flow.stage = .list }
+            FlowButton(title: Strings.actionCancel, kind: .ghost) { flow.stage = .wifi }
         }
         .padding(.horizontal, 12)
     }
@@ -354,7 +396,7 @@ struct ConnectionScreen: View {
         // carry the key — an adoption — still has to be able to offer it.
         flow.select(candidate,
                     sshPublicKey: CompanionSSHKey.publicKeyLine(account: home.profile.keyAccount),
-                    sshKeyAccount: home.profile.keyAccount)
+                    sshKeyAccount: home.profile.keyAccount, from: flow.stage)
     }
 
     /// Stable for the lifetime of this install, so re-pairing after a revoke is

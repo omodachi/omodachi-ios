@@ -16,6 +16,50 @@ enum RemoteSessionTrace {
 
     private static func stamp() -> String { String(format: "%.3f", Date().timeIntervalSince1970) }
 
+    /// REMOTE-FIX-2 §4. Every request Moonlight made to the fork and how it
+    /// ended, kept where Settings ⑥ prints it. Leo's iPad said only "电脑端串流服务
+    /// 未响应" for a TLS refusal that was on this device all along; the host had
+    /// nothing to log because nothing ever reached it. Steps, ports, addresses
+    /// and the transport's own error code only — the same rule as
+    /// `DiagnosticsTranscript`.
+    static let transcript = DiagnosticsTranscript()
+
+    /// One Moonlight request (`serverinfo`, `applist`, `launch`) and its outcome.
+    static func sunshineRequest(step: String, host: String, port: Int, reason: String?) {
+        let outcome = reason.map { "failed reason=\($0)" } ?? "ok"
+        let line = "sunshine.request step=\(step) host=\(host) port=\(port) outcome=\(outcome)"
+        if reason == nil { log.notice("\(line, privacy: .public) epoch=\(stamp(), privacy: .public)") }
+        else { log.error("\(line, privacy: .public) epoch=\(stamp(), privacy: .public)") }
+        transcript.append(DiagnosticsTranscript.stamp() + " " + line)
+    }
+
+    /// Which host a session's Moonlight leg dials, next to the one core
+    /// named, once per connect — so a refusal can be read against the road
+    /// it happened on.
+    static func sunshineRoute(output: String, core: String, dial: String, note: String?) {
+        var line = "sunshine.route output=\(output) core=\(core) dial=\(dial)"
+        if let note { line += " note=\(note)" }
+        log.notice("\(line, privacy: .public) epoch=\(stamp(), privacy: .public)")
+        transcript.append(DiagnosticsTranscript.stamp() + " " + line)
+    }
+
+    /// POLISH-R item 3. The codec core planned for a new session next to what
+    /// this device declared it decodes, so "why is this H.264" has an answer
+    /// on the device itself.
+    static func codec(session: String, backend: String, planned: String, declared: [String]) {
+        let line = "remote.codec session=\(session) backend=\(backend) planned=\(planned) declared=\(declared.joined(separator: ","))"
+        log.notice("\(line, privacy: .public) epoch=\(stamp(), privacy: .public)")
+        transcript.append(DiagnosticsTranscript.stamp() + " " + line)
+    }
+
+    /// POLISH-R item 4. Whether the fork's desktop app was ended with the
+    /// session (`cancelled`), or why not.
+    static func sunshineQuit(session: String, outcome: String) {
+        let line = "sunshine.quit session=\(session) outcome=\(outcome)"
+        log.notice("\(line, privacy: .public) epoch=\(stamp(), privacy: .public)")
+        transcript.append(DiagnosticsTranscript.stamp() + " " + line)
+    }
+
     /// Every beat that went out, with the host's answer. `epoch` is wall clock
     /// so a host-side poller can be lined up against it without guessing.
     static func heartbeat(session: String, outcome: String, beat: Int) {
@@ -67,6 +111,23 @@ enum RemoteSessionTrace {
     /// from the outside: the host has no such row, so there is no such gesture.
     static func gesture(_ value: String, row: String, outcome: String) {
         log.notice("remote.gesture gesture=\(value, privacy: .public) row=\(row, privacy: .public) outcome=\(outcome, privacy: .public) epoch=\(stamp(), privacy: .public)")
+    }
+
+    /// REMOTE-INPUT-1. Text no key produces went to core to be typed. Only
+    /// the count is logged, never the text.
+    static func typing(session: String, outcome: String, characters: Int) {
+        log.notice("remote.typing session=\(session, privacy: .public) outcome=\(outcome, privacy: .public) chars=\(characters) epoch=\(stamp(), privacy: .public)")
+    }
+
+    /// REMOTE-INPUT-2. One step of a compose-field send. Counts only — never
+    /// the text.
+    static func compose(session: String, event: String, characters: Int, lineBreaks: Int) {
+        log.notice("remote.compose session=\(session, privacy: .public) event=\(event, privacy: .public) chars=\(characters) breaks=\(lineBreaks) epoch=\(stamp(), privacy: .public)")
+    }
+
+    /// REMOTE-INPUT-2. The compose bar, the keyboard and the mode.
+    static func composeBar(_ value: String) {
+        log.notice("remote.compose_bar \(value, privacy: .public) epoch=\(stamp(), privacy: .public)")
     }
 
     /// GEST-1 §4. Which of the four gestures are registered right now.

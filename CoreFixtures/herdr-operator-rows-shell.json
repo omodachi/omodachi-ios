@@ -1,0 +1,85 @@
+{
+  "agent": null,
+  "family": "shell",
+  "quick": [
+    {
+      "id": "confirm",
+      "title": null,
+      "items": [
+        "y",
+        "n"
+      ],
+      "operator": false
+    }
+  ],
+  "keys": [
+    {
+      "label": "Ctrl C",
+      "keys": [
+        "ctrl+c"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl D",
+      "keys": [
+        "ctrl+d"
+      ],
+      "danger": true,
+      "operator": false
+    },
+    {
+      "label": "Ctrl U",
+      "keys": [
+        "ctrl+u"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl R",
+      "keys": [
+        "ctrl+r"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl L",
+      "keys": [
+        "ctrl+l"
+      ],
+      "danger": false,
+      "operator": false
+    },
+    {
+      "label": "Ctrl Z",
+      "keys": [
+        "ctrl+z"
+      ],
+      "danger": true,
+      "operator": false
+    }
+  ],
+  "harness": [],
+  "commands": [],
+  "sources": [
+    {
+      "file": "quick-replies.toml",
+      "origin": "shipped",
+      "warning": null
+    },
+    {
+      "file": "keys.toml",
+      "origin": "shipped",
+      "warning": null
+    },
+    {
+      "file": "commands.toml",
+      "origin": "shipped",
+      "warning": null
+    }
+  ],
+  "contract_revision": "omodachi.v1"
+}

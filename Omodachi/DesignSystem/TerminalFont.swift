@@ -60,6 +60,7 @@ enum TerminalFont {
     /// an italic run is still an icon, not a slanted box.
     nonisolated static func faces(size: CGFloat, fonts: HostFontSet) -> Faces {
         let base = named(fonts.mono, size: size)
+            ?? named(standIn, size: size)
             ?? .monospacedSystemFont(ofSize: size, weight: .regular)
         let bold = named(fonts.monoBold, size: size)
             ?? traited(base, .traitBold)
@@ -70,6 +71,21 @@ enum TerminalFont {
                      italic: cascading(traited(base, .traitItalic) ?? base, chain),
                      boldItalic: cascading(traited(bold, .traitItalic) ?? bold, chain))
     }
+
+    /// The face a terminal uses until the host's monospace has registered (a
+    /// demo, a host without `/v1/fonts`, the seconds before the download
+    /// lands).
+    ///
+    /// REL2-POLISH-2: it used to be the platform's own monospace,
+    /// `.monospacedSystemFont` (SF Mono), and CoreText ignores
+    /// `kCTFontCascadeListAttribute` on a system UI font: the system face
+    /// keeps its own private chain, so every Nerd Font code point fell
+    /// through to `.LastResort` and `eza --icons` drew a box with a question
+    /// mark in front of each name while the bundled symbols face sat unused.
+    /// A named face honours the cascade (`TerminalFontTests`). SF Mono cannot
+    /// be named on iOS, so the stand-in is Menlo — on every iOS device, and
+    /// the face Odomo's own stack falls back to.
+    nonisolated static let standIn = "Menlo" // non-copy: a font family
 
     /// The families behind the host monospace, in the order they are asked:
     /// symbols, CJK, emoji.

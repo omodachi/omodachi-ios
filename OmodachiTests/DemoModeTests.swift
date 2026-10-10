@@ -144,10 +144,14 @@ final class DemoModeTests: XCTestCase {
             let url = try XCTUnwrap(Bundle.main.url(forResource: name, withExtension: "json"),
                                     "\(name).json is bundled with the app")
             let text = try String(contentsOf: url, encoding: .utf8).lowercased()
-            for forbidden in ["omarchy", "alex", "zxyleo", "secondfirst", "/home/", "/users/", "192.168.",
-                              "10.0.", "10.201.", "@gmail", "sf-omodachi"] {
+            for forbidden in ["omarchy", "alex", "zxyleo", "secondfirst", "/home/", "/users/", "@gmail"] {
                 XCTAssertFalse(text.contains(forbidden), "\(name).json contains \(forbidden)")
             }
+            // TAIL-3b (LISTING-1b note): no private address of any network,
+            // checked by shape rather than by listing a lab's own subnets and
+            // instance names in a public test.
+            let privateIPv4 = #/\b(10\.\d{1,3}|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}(\.\d{1,3})?\b/#
+            XCTAssertNil(text.firstMatch(of: privateIPv4), "\(name).json contains a private address")
         }
         XCTAssertFalse(DemoHost.profile.username.contains("leo"))
         XCTAssertFalse(DemoHost.hostname.lowercased().contains("omarchy"))

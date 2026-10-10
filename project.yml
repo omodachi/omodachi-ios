@@ -89,6 +89,8 @@ targets:
         OMODACHI_BUILD_COMMIT: unknown
         OMODACHI_BUILD_TIME: "000000000000"
         INFOPLIST_FILE: Omodachi/Info.plist
+        # TAIL-3b I1: applinks:omodachi.app (Odomo → app links).
+        CODE_SIGN_ENTITLEMENTS: Omodachi/Omodachi.entitlements
         SWIFT_EMIT_LOC_STRINGS: YES
         DEVELOPMENT_TEAM: ""
         "CODE_SIGN_IDENTITY[sdk=iphonesimulator*]": "-"

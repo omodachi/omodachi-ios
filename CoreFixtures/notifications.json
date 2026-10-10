@@ -20,7 +20,8 @@
       "urgency": "critical",
       "timestamp": 1789711988810,
       "has_action": true,
-      "active": true
+      "active": true,
+      "kind": "pairing_request"
     }
   ],
   "cursor": "1789711988810-1",

@@ -1,0 +1,25 @@
+{
+  "status": "native_action_required",
+  "native_request": {
+    "action": "choose_model",
+    "arguments": "gpt-6-astra high",
+    "model": "gpt-6-astra",
+    "effort": "high"
+  },
+  "result": {
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "applies_to": "next_turn",
+    "summary": "The next message uses GPT-6-Astra · high."
+  },
+  "display": {
+    "key": "model.selected",
+    "args": {
+      "model": "GPT-6-Astra",
+      "effort": "high"
+    }
+  },
+  "command_id": "model",
+  "request_id": "request-fixture-02",
+  "contract_revision": "omodachi.v1"
+}

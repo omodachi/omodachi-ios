@@ -67,6 +67,9 @@ extension RemoteSessionController {
     func setPanelVisible(_ visible: Bool) {
         panelVisible = visible
         if visible { panelActions.cancel() }
+        // REMOTE-INPUT-2: a panel over the picture takes the compose bar down
+        // with it (the draft stays); the per-key keyboard keeps A-43's rule.
+        if visible, keyboardVisible, composer.usesField { hideKeyboard() }
         applyInputPolicy()
     }
 

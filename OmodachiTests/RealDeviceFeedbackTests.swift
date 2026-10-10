@@ -177,7 +177,7 @@ final class RealDeviceFeedbackTests: XCTestCase {
                                           occupied: [1, 2, 7], entries: 6,
                                           actions: QuickAction.allCases)
         XCTAssertTrue(withoutSession.visibleActions.isEmpty)
-        XCTAssertEqual(withSession.visibleActions.count, 5)
+        XCTAssertEqual(withSession.visibleActions.count, 3)
         // Everything else is identical: the same entries, the same workspaces,
         // the same slot width.
         XCTAssertEqual(withoutSession.workspaces, withSession.workspaces)

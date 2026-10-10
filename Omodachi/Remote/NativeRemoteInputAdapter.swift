@@ -19,6 +19,10 @@ import UIKit
     private var latchedModifiers: RemoteModifiers = []
     private var directNativeTouch = false
     private var lastTouchPoint: InputPoint?
+    /// REMOTE-INPUT-1. Which road typed text takes, and the queue that keeps
+    /// keys behind a host-text request still in flight.
+    var typingRoute = RemoteTypingRoute.keysOnly
+    let typing = RemoteHostTextSequencer()
 
     init(client: OMRemoteClient) { self.client = client; super.init() }
 
@@ -35,6 +39,7 @@ import UIKit
             streamPixels: .init(width: Int(streamPixels.width), height: Int(streamPixels.height)))
     }
     func activate(generation: UInt64, geometryEpoch: UInt64, leaseSerial: UInt64) {
+        typing.reset()
         if let previous = self.generation { controller.disconnect(generation: previous) }
         _ = touchpadGesture.cancel(); relativeRemainder.reset(); scrollRemainder.reset(); latchedModifiers = []
         self.generation = generation; epoch = geometryEpoch; serial = leaseSerial
@@ -43,6 +48,7 @@ import UIKit
     }
     func deactivate(generation: UInt64, geometryEpoch: UInt64, leaseSerial: UInt64) {
         guard matches(generation, geometryEpoch, leaseSerial) else { return }
+        typing.reset()
         _ = touchpadGesture.cancel(); relativeRemainder.reset(); scrollRemainder.reset(); latchedModifiers = []
         controller.disconnect(generation: generation)
         self.generation = nil
@@ -137,7 +143,11 @@ import UIKit
         if !latchedModifiers.isEmpty, let usage = NativeShortcutText.usage(text) {
             controller.key(usage: .init(rawValue: usage), phase: .down, generation: generation, geometryEpoch: geometryEpoch)
             controller.key(usage: .init(rawValue: usage), phase: .up, generation: generation, geometryEpoch: geometryEpoch)
-        } else { controller.text(text, generation: generation, geometryEpoch: geometryEpoch) }
+        } else {
+            // REMOTE-INPUT-1: keys where a US key exists, host text for the rest.
+            controller.type(text, asciiAsKeys: typingRoute.asciiAsKeys, shiftedAsText: typingRoute.shiftedAsText,
+                            generation: generation, geometryEpoch: geometryEpoch)
+        }
         latchedModifiers = []
     }
     private func matches(_ generation: UInt64, _ epoch: UInt64, _ serial: UInt64) -> Bool {
@@ -165,12 +175,22 @@ import UIKit
             if modifiers.contains(.control) { mask |= 2 }
             if modifiers.contains(.alt) { mask |= 4 }
             if modifiers.contains(.superKey) { mask |= 8 }
-            client.sendKey(key.rawValue, down: phase == .down, modifiers: mask,
-                generation: event.generation, geometryEpoch: event.geometryEpoch, leaseSerial: serial)
+            // Behind any host text still in flight, so the two roads keep order.
+            let generation = event.generation, epoch = event.geometryEpoch, serial = self.serial
+            typing.perform { [weak client] in
+                client?.sendKey(key.rawValue, down: phase == .down, modifiers: mask,
+                    generation: generation, geometryEpoch: epoch, leaseSerial: serial)
+            }
         case .text(let data):
-            client.sendText(data, generation: event.generation, geometryEpoch: event.geometryEpoch, leaseSerial: serial)
+            // REMOTE-INPUT-1. Never `LiSendUtf8TextEvent`: the fork types that
+            // as Ctrl+Shift+U + hex, which is the "U+" Leo saw.
+            guard let text = String(data: data, encoding: .utf8) else { return }
+            typing.type(text)
         case .releaseAll:
-            client.releaseHeld(generation: event.generation, geometryEpoch: event.geometryEpoch, leaseSerial: serial)
+            let generation = event.generation, epoch = event.geometryEpoch, serial = self.serial
+            typing.perform { [weak client] in
+                client?.releaseHeld(generation: generation, geometryEpoch: epoch, leaseSerial: serial)
+            }
         }
     }
 }

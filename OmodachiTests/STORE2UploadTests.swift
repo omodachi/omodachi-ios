@@ -67,7 +67,8 @@ final class STORE2UploadTests: XCTestCase {
         XCTAssertEqual(byName["SwiftTerm 1.20.0"], "MIT")
         XCTAssertEqual(byName["OpenSSL-Package 3.3.2000"], "Apache-2.0, OpenSSL 3's own licence")
         XCTAssertNotNil(byName.keys.first { $0.hasPrefix("swift-nio, swift-crypto") }, "a row with no version keeps its name")
-        XCTAssertEqual(components.count, 15, components.map(\.name).joined(separator: " / "))
+        XCTAssertEqual(byName["ColliePWA (ported logic, HERDR-9 and AGENT-COLLIE-1)"], "MIT")
+        XCTAssertEqual(components.count, 16, components.map(\.name).joined(separator: " / "))
         for component in components {
             XCTAssertFalse(component.name.contains("`") || component.name.contains("**") || component.name.contains("]("), component.name)
         }

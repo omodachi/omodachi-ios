@@ -132,15 +132,22 @@ struct RemoteStreamStats: Equatable, Sendable {
     var rttVarianceMs: Int?
     var hostLatencyMs: Double
     var codec: String
+    /// POLISH-R item 6. Seconds since the last frame arrived, when that is
+    /// more than 1.5: the counters above are then the last *healthy* second,
+    /// not this one, and are not to be read as current.
+    var stalledSeconds: Double?
 
-    var receivedFPS: Double { window > 0 ? Double(receivedFrames) / window : 0 }
+    var receivedFPS: Double {
+        if stalledSeconds != nil { return 0 }
+        return window > 0 ? Double(receivedFrames) / window : 0
+    }
     var renderedFPS: Double? { renderedFrames.map { window > 0 ? Double($0) / window : 0 } }
     /// Frames the network lost as a share of the frames the host sent.
     var dropRate: Double { totalFrames > 0 ? Double(networkDroppedFrames) / Double(totalFrames) : 0 }
 
     init(window: Double, totalFrames: Int, receivedFrames: Int, networkDroppedFrames: Int,
          renderedFrames: Int? = nil, rttMs: Int? = nil, rttVarianceMs: Int? = nil,
-         hostLatencyMs: Double = 0, codec: String = "h264") {
+         hostLatencyMs: Double = 0, codec: String = "h264", stalledSeconds: Double? = nil) {
         self.window = window
         self.totalFrames = totalFrames
         self.receivedFrames = receivedFrames
@@ -150,6 +157,7 @@ struct RemoteStreamStats: Equatable, Sendable {
         self.rttVarianceMs = rttVarianceMs
         self.hostLatencyMs = hostLatencyMs
         self.codec = codec
+        self.stalledSeconds = stalledSeconds
     }
 
     /// The `stats` event `OMRemoteClient` emits.
@@ -161,7 +169,8 @@ struct RemoteStreamStats: Equatable, Sendable {
         self.init(window: window, totalFrames: total, receivedFrames: received, networkDroppedFrames: dropped,
                   renderedFrames: int("rendered_frames"), rttMs: int("rtt_ms"), rttVarianceMs: int("rtt_variance_ms"),
                   hostLatencyMs: (event["host_latency_ms"] as? NSNumber)?.doubleValue ?? 0,
-                  codec: event["codec"] as? String ?? "h264")
+                  codec: event["codec"] as? String ?? "h264",
+                  stalledSeconds: (event["stalled_s"] as? NSNumber)?.doubleValue)
     }
 
     /// A measurement, not a sentence: the same line in both languages, and
@@ -170,8 +179,10 @@ struct RemoteStreamStats: Equatable, Sendable {
         let codecName = codec == "hevc" ? "HEVC" : "H.264"
         let rtt = rttMs.map { "\($0)±\(rttVarianceMs ?? 0) ms" } ?? "– ms" // non-copy: a measurement
         let rendered = renderedFPS.map { String(format: "%.0f", $0) } ?? "–" // non-copy: a measurement
-        return String(format: "%@ · %.0f/%@ fps · RTT %@ · drop %.1f %% · host %.1f ms", // non-copy: a measurement
-                      codecName, receivedFPS, rendered, rtt, dropRate * 100, hostLatencyMs)
+        let base = String(format: "%@ · %.0f/%@ fps · RTT %@ · drop %.1f %% · host %.1f ms", // non-copy: a measurement
+                          codecName, receivedFPS, rendered, rtt, dropRate * 100, hostLatencyMs)
+        guard let stalledSeconds else { return base }
+        return base + String(format: " · no frame for %.1f s", stalledSeconds) // non-copy: a measurement
     }
 }
 
@@ -229,8 +240,10 @@ struct RemoteAdaptiveQuality: Equatable, Sendable {
             return .hold
         }
         let rttBad = sample.rttMs.map { $0 > thresholds.badRttMs } ?? false
-        let bad = sample.dropRate > thresholds.badDropRate || rttBad
-        let clean = sample.dropRate <= thresholds.cleanDropRate
+        // POLISH-R item 6: a second with no frame at all is the worst link
+        // there is, though the replayed counters said it was clean.
+        let bad = sample.dropRate > thresholds.badDropRate || rttBad || sample.stalledSeconds != nil
+        let clean = sample.stalledSeconds == nil && sample.dropRate <= thresholds.cleanDropRate
             && (sample.rttMs.map { $0 <= thresholds.cleanRttMs } ?? true)
         if bad { badFor += seconds; cleanFor = 0 }
         else if clean { cleanFor += seconds; badFor = 0 }
@@ -262,8 +275,24 @@ struct RemoteAdaptiveQuality: Equatable, Sendable {
 /// What this device can decode. HEVC is declared only where VideoToolbox says
 /// it is decoded in hardware; the simulator's answer is its host Mac's.
 enum RemoteDecoderSupport {
-    static let hevc: Bool = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)
+    static let hevc: Bool = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) || operatorDeclaresHEVC
     static var codecs: [String] { hevc ? ["h264", "hevc"] : ["h264"] }
+
+    /// POLISH-R item 3. Every iPhone and iPad Omodachi runs on decodes HEVC in
+    /// hardware, so the host plans it for them (Leo's iPad streamed HEVC on
+    /// 2026-10-05). The simulator answers `false`, which is the only reason
+    /// REMOTE-FIX-2 and INTEGRATE-3 saw H.264 plans. An operator run on the
+    /// simulator may declare it anyway to prove the HEVC path end to end
+    /// (VideoToolbox decodes it there in software). DEBUG, Simulator and an
+    /// explicit launch argument only; nothing on the product path reads it.
+    private static var operatorDeclaresHEVC: Bool {
+        #if DEBUG && targetEnvironment(simulator)
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("--remote-operator") && arguments.contains("--remote-operator-hevc")
+        #else
+        return false
+        #endif
+    }
 }
 
 /// STREAM-1. The last second of the running stream, for ⑥'s diagnostics line.
@@ -278,21 +307,60 @@ enum RemoteDecoderSupport {
         let bitrateKbps: Int?
     }
     @Published private(set) var reading: Reading?
+    /// POLISH-R item 6. This session's stalls so far, and the last one.
+    @Published private(set) var stalls = 0
+    @Published private(set) var lastStall: RemoteStall?
+    private var detector = RemoteStallDetector()
+    private var sessionID: String?
+    let log: RemoteStallLog
+
+    init(log: RemoteStallLog = .shared) { self.log = log }
 
     func publish(_ stats: RemoteStreamStats, preset: RemoteStreamPreset, tier: RemoteStreamTier,
-                 session: RemoteSessionDTO) {
+                 session: RemoteSessionDTO, at now: Date = Date()) {
+        if sessionID != session.id { detector = RemoteStallDetector(); sessionID = session.id; stalls = 0; lastStall = nil }
         reading = Reading(stats: stats, preset: preset, tier: tier,
                           fps: session.profile?.fps, bitrateKbps: session.profile?.bitrate_kbps)
+        let context = RemoteStall.Context(session: session.id, backend: session.backend.rawValue,
+                                          codec: stats.codec, plannedFPS: session.profile?.fps,
+                                          plannedKbps: session.profile?.bitrate_kbps)
+        for event in detector.observe(stats, plannedFPS: session.profile?.fps, at: now) {
+            switch event {
+            case .began(let stall):
+                stalls += 1
+                lastStall = stall
+                log.began(stall, context: context)
+            case .ended(let stall):
+                lastStall = stall
+                log.ended(stall, context: context, how: "recovered")
+            }
+        }
     }
 
-    func clear() { reading = nil }
+    /// The session is over. A stall still open is written down as such, so a
+    /// stall that ended in Leave (or in the app being closed) is not lost.
+    func clear(at now: Date = Date()) {
+        if let open = detector.close(at: now), let sessionID {
+            log.ended(open, context: RemoteStall.Context(session: sessionID, backend: "-", codec: open.codec,
+                                                         plannedFPS: nil, plannedKbps: nil),
+                      how: "session-ended")
+        }
+        reading = nil
+        detector = RemoteStallDetector()
+        sessionID = nil
+    }
 
-    /// Planned rate and the measured second, as one measurement line.
+    /// Planned rate and the measured second, as one measurement line, with
+    /// this session's stalls after it.
     var line: String? {
         guard let reading else { return nil }
         let planned = reading.fps.map { fps in
             "\(fps) fps · \(String(format: "%.1f", Double(reading.bitrateKbps ?? 0) / 1000)) Mbps · " // non-copy: a measurement
         } ?? ""
-        return planned + reading.stats.line
+        var value = planned + reading.stats.line
+        if stalls > 0, let shown = detector.open ?? lastStall {
+            value += " · stalls \(stalls), last \(shown.summary)" // non-copy: a measurement
+        }
+        return value
     }
 }

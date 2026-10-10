@@ -139,6 +139,13 @@ extension UIColor {
     /// `ui-study-02.md` §5).
     static var background: Color { current.shellColor("menu", "background", fallback: .background) }
     static var panel: Color { background }
+    /// AGENT-UI-1: `[menu] background` with its `-alpha` left out. For a
+    /// surface that must hide what is behind it (a text box over a scrolling
+    /// conversation or a streamed picture): the colour is the theme's, the
+    /// translucency is not wanted there.
+    static var solidBackground: Color {
+        Color(rgb: current.shellRGBA("menu", "background", fallback: .background).rgb)
+    }
     /// `[notifications] background` is the raised surface in the same map.
     static var elevated: Color { current.shellColor("notifications", "background", fallback: .lighterBackground) }
     /// `[menu] border`.

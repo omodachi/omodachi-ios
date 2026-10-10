@@ -424,11 +424,9 @@ enum Icon {
     static let bellOff     = (symbol: "bell.slash", nerd: "\u{f1f6}")
     static let keyboard    = (symbol: "keyboard", nerd: "\u{f11c}")
     static let keyboardDown = (symbol: "keyboard.chevron.compact.down", nerd: "\u{f11c}")
-    static let rotationLock = (symbol: "lock.rotation", nerd: "\u{f023}")
     static let pointer     = (symbol: "cursorarrow.motionlines", nerd: "\u{f245}")
     static let speaker     = (symbol: "speaker.wave.2", nerd: "\u{f028}")
     static let speakerOff  = (symbol: "speaker.slash", nerd: "\u{f026}")
-    static let stop        = (symbol: "stop.circle", nerd: "\u{f04d}")
     static let warning     = (symbol: "exclamationmark.triangle", nerd: "\u{f071}")
     static let error       = (symbol: "exclamationmark.circle", nerd: "\u{f06a}")
     static let working     = (symbol: "ellipsis", nerd: "\u{f141}")
@@ -437,9 +435,23 @@ enum Icon {
     static let retry       = (symbol: "arrow.clockwise", nerd: "\u{f01e}")
     static let dnd         = (symbol: "moon", nerd: "\u{f186}")
     static let more        = (symbol: "ellipsis", nerd: "\u{f141}")
+    /// ATTACH-1: the paperclip beside a composer (`nf-fa-paperclip`).
+    static let attach      = (symbol: "paperclip", nerd: "\u{f0c6}")
     /// `nf-md-application`. The generic stand-in for a `kind == "app"` row whose
     /// XDG icon name this device cannot resolve (MENU-1 §2).
     static let app         = (symbol: "macwindow", nerd: "\u{f08c6}")
+    /// Leo, 2026-10-05 ("agent 的 reset 图标不对"): the Agent header's new
+    /// conversation, a speech bubble with a plus (`nf-md-message_plus_outline`,
+    /// U+F10BB in Symbols Nerd Font Mono 3.5.1, read from the bundled face).
+    static let newConversation = (symbol: "plus.bubble", nerd: "\u{f10bb}")
+    /// REMOTE-INPUT-2b: put the words in without pressing Return — an I-beam
+    /// (`nf-md-cursor_text`, U+F05E7 in the bundled Symbols Nerd Font Mono).
+    static let insertText  = (symbol: "character.cursor.ibeam", nerd: "\u{f05e7}")
+    /// TUTORIAL-1: the tour and the tips (`nf-fa-lightbulb_o`).
+    static let tip         = (symbol: "lightbulb", nerd: "\u{f0eb}")
+    /// AGENT-PLAN-1: codex's Plan mode - a list with its marks (`nf-fa-tasks`,
+    /// U+F0AE in the bundled Symbols Nerd Font Mono).
+    static let plan        = (symbol: "checklist", nerd: "\u{f0ae}")
 }
 
 extension Glyph {

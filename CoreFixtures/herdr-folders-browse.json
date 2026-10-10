@@ -1,0 +1,32 @@
+{
+  "contract_revision": "omodachi.v1",
+  "home": "/home/user",
+  "recent": null,
+  "common": null,
+  "browse": {
+    "path": "/home/user/Work",
+    "display": "~/Work",
+    "name": "Work",
+    "parent": {
+      "path": "/home/user",
+      "display": "~",
+      "name": "~"
+    },
+    "hidden": false,
+    "dirs": [
+      {
+        "path": "/home/user/Work/notes",
+        "display": "~/Work/notes",
+        "name": "notes"
+      },
+      {
+        "path": "/home/user/Work/omodachi",
+        "display": "~/Work/omodachi",
+        "name": "omodachi"
+      }
+    ],
+    "truncated": false
+  },
+  "favourites": null,
+  "launchers": null
+}

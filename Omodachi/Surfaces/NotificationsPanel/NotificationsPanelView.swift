@@ -21,6 +21,8 @@ import SwiftUI
 struct NotificationsPanelView: View {
     @EnvironmentObject private var home: HomeStore
     @State private var showingAll = false
+    /// LITE-1d: where the Odomo card's "Use Tailscale for…" goes.
+    var onMove: () -> Void = {}
 
     /// A-45's fold: a screenful, then a count.
     private static let preview = 8
@@ -37,6 +39,10 @@ struct NotificationsPanelView: View {
             dnd
         } content: {
             VStack(alignment: .leading, spacing: 0) {
+                // LITE-1d: the computer reaching a locked phone, offered first.
+                OdomoOfferCard(onMove: onMove)
+                // NOTIFY-2: and the app's own alerts, with the real question.
+                AlertsCard(attention: AttentionNotifier.shared)
                 if !rows.isEmpty { clearAll }
                 if home.notifications.dnd == true {
                     Text(Strings.notificationsDndOn)
@@ -110,6 +116,13 @@ struct NotificationsPanelView: View {
 /// A-18: the menu row stays 50 high on every device; only the number of visible
 /// rows changes. Swiping left dismisses, which is the one gesture the desktop
 /// has no equivalent for and the phone does.
+///
+/// NOTIFY-3: every row answers a tap. The newest one on the desktop with an
+/// action still fires it there (as before); every other row opens to show all
+/// of its text, and one of Omodachi's own requests says where it is decided —
+/// on the computer. Before this, only that one newest row reacted at all, and
+/// on a request it summoned a panel on the computer's screen, which is why Leo
+/// read the list as "没办法点击".
 struct NotificationRow: View {
     let row: HostNotification
     let canInvoke: Bool
@@ -118,6 +131,7 @@ struct NotificationRow: View {
     /// A-45. Take this row off the list. Available on history rows too.
     var onDelete: () -> Void
     @State private var offset: CGFloat = 0
+    @State private var expanded = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var urgencyRole: ThemeColorRole {
@@ -161,10 +175,16 @@ struct NotificationRow: View {
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("notification-\(row.id)")
             .accessibilityLabel(Strings.pair(row.app, row.summary + " " + row.body))
+            .accessibilityValue(expanded && row.isRequest ? Strings.notificationsRequestOnComputer : "")
             .accessibilityActions {
                 if canInvoke { TextTap(Strings.notificationsInvoke, action: onInvoke) }
+                else { TextTap(expanded ? Strings.actionCollapse : Strings.notificationsOpen) { toggle() } }
                 TextTap(Strings.actionDelete, action: onDelete)
             }
+    }
+
+    private func toggle() {
+        if reduceMotion { expanded.toggle() } else { withAnimation(.easeOut(duration: 0.14)) { expanded.toggle() } }
     }
 
     private var dismissGesture: some Gesture {
@@ -204,12 +224,22 @@ struct NotificationRow: View {
                 // A-07: a notification is prose. Upstream's own card says so.
                 Text(row.summary)
                     .font(OmodachiTheme.bodyFont("subtitle"))
-                    .lineLimit(1).truncationMode(.tail)
+                    .lineLimit(expanded ? nil : 1).truncationMode(.tail)
                 if !row.body.isEmpty {
                     Text(row.body)
                         .font(OmodachiTheme.bodyFont("body-small"))
                         .foregroundStyle(OmodachiTheme.secondaryText)
-                        .lineLimit(2).truncationMode(.tail)
+                        .lineLimit(expanded ? nil : 2).truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: expanded)
+                }
+                // NOTIFY-3: a request is decided on the computer, never here.
+                if expanded && row.isRequest {
+                    Text(Strings.notificationsRequestOnComputer)
+                        .font(OmodachiTheme.bodyFont("body-small"))
+                        .foregroundStyle(OmodachiTheme.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, OmodachiTheme.space("sm"))
+                        .accessibilityIdentifier("notification-request-note-\(row.id)")
                 }
             }
         }
@@ -219,13 +249,10 @@ struct NotificationRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(row.active ? 1 : 0.6)
 
-        if canInvoke {
-            Tap(action: onInvoke) { body.contentShape(Rectangle()) }
-                
-                .padding(.trailing, NativeBarMetrics.hit)
-        } else {
-            body
-        }
+        // The × at the end of the row is its own target either way.
+        Tap(action: { if canInvoke { onInvoke() } else { toggle() } }) { body.contentShape(Rectangle()) }
+            .padding(.trailing, NativeBarMetrics.hit)
+            .accessibilityIdentifier("notification-open-\(row.id)")
     }
 }
 

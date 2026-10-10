@@ -20,6 +20,7 @@
     "below"
   ],
   "lock_local_input_supported": true,
+  "default_backend": "sunshine",
   "bar_occlusion": true,
   "encoder_limits": {
     "max_width": 4096,
@@ -32,6 +33,14 @@
     "codecs": [
       "h264"
     ]
+  },
+  "text_input": {
+    "available": true,
+    "layout": "us",
+    "variant": null,
+    "max_chars": 1024,
+    "max_bytes": 4096,
+    "compose": true
   },
   "contract_revision": "omodachi.v1"
 }

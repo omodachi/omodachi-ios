@@ -7,6 +7,9 @@ struct PairingReceipt: Equatable, Sendable {
     let deviceName: String
     let expiresAt: Date
     let status: Status
+    /// TAIL-2 P0-2 / TAIL-3b E08: core says this device already holds a live
+    /// credential there; approving replaces it.
+    var alreadyPaired = false
 }
 
 enum PairingError: Error, LocalizedError, Equatable {
@@ -24,6 +27,15 @@ enum PairingError: Error, LocalizedError, Equatable {
     /// list, and points at where that list is. (The command that does the same
     /// thing from a terminal is in the PAIR-5 report, not in the app.)
     case deviceAlreadyRegistered(deviceID: String)
+    /// TAIL-2 P0-2: the host answered 429 — too many requests waiting from
+    /// this address, or in all. Nothing is wrong with this device.
+    case busy
+    /// TAIL-2 P0-2: the request never reached the host (no route, no answer,
+    /// a name that does not resolve). Not a security failure.
+    case unreachable
+    /// TAIL-2 P0-0: a Tailscale address literal. ATS only lets this app reach
+    /// the computer by its MagicDNS name.
+    case tailnetAddress
     var errorDescription: String? {
         switch self {
         case .invalidInput: Strings.pairErrorInvalidInput
@@ -41,6 +53,9 @@ enum PairingError: Error, LocalizedError, Equatable {
         case .invitationRequired: Strings.pairErrorInvitationRequired
         case let .deviceAlreadyRegistered(deviceID):
             Strings.pairErrorDeviceRegistered(deviceID)
+        case .busy: Strings.pairErrorBusy
+        case .unreachable: Strings.pairErrorUnreachable
+        case .tailnetAddress: Strings.errNoPtrBody
         }
     }
 }
@@ -70,7 +85,7 @@ actor PairingClient {
         let secret: String
     }
     private struct Response: Decodable {
-        struct Endpoint: Decodable { let host: String; let port: Int }
+        struct Endpoint: Decodable { let host: String; let port: Int; let kind: String? }
         let requestID: String
         let deviceID: String
         let deviceName: String
@@ -88,15 +103,22 @@ actor PairingClient {
         /// SPEC-I: what the one approval actually landed, and where the
         /// terminal it granted lives.
         struct Grants: Decodable { let companion: Bool; let media: Bool; let ssh: Bool }
-        struct SSH: Decodable { let user: String?; let host: String?; let port: Int? }
+        struct SSH: Decodable {
+            struct Road: Decodable { let host: String; let kind: String? }
+            let user: String?; let host: String?; let port: Int?
+            /// TAIL-2 P0-4 / P1-1. Absent on a core from before TAIL-2.
+            let hosts: [Road]?
+            let tailscale_ssh: Bool?
+        }
         let grants: Grants?
         let ssh: SSH?
+        let alreadyPaired: Bool?
         enum CodingKeys: String, CodingKey {
             case requestID = "request_id", deviceID = "device_id", deviceName = "device_name", status
             case expiresAt = "expires_at", requestSecret = "request_secret", credential
             case issuedAt = "issued_at", credentialExpiresAt = "credential_expires_at"
             case hostID = "host_id", hostName = "host_name", fingerprint = "tls_fingerprint_sha256", endpoints
-            case grants, ssh
+            case grants, ssh, alreadyPaired = "already_paired"
         }
     }
     private let pins: HostPinStore
@@ -172,7 +194,8 @@ actor PairingClient {
               response.status == "pending", response.credential == nil,
               let secret = response.requestSecret, Self.validSecret(secret),
               expiry > Date(), expiry.timeIntervalSinceNow <= 305 else { throw PairingError.invalidResponse }
-        let receipt = PairingReceipt(requestID: response.requestID, deviceID: deviceID, deviceName: deviceName, expiresAt: expiry, status: .pending)
+        let receipt = PairingReceipt(requestID: response.requestID, deviceID: deviceID, deviceName: deviceName, expiresAt: expiry,
+                                     status: .pending, alreadyPaired: response.alreadyPaired == true)
         pending = Pending(receipt: receipt, secret: secret)
         return receipt
     }
@@ -214,11 +237,13 @@ actor PairingClient {
             do {
                 try pins.save(HostPin(hostID: hostID, hostName: response.hostName ?? configuration.endpoint.host ?? "",
                                       fingerprintSHA256: fingerprint,
-                                      endpoints: (response.endpoints ?? []).map { .init(host: $0.host, port: $0.port) },
+                                      endpoints: Self.endpoints(response.endpoints ?? []),
                                       ssh: Self.sshEndpoint(response.ssh),
                                       grants: response.grants.map {
                                           .init(companion: $0.companion, media: $0.media, ssh: $0.ssh)
-                                      }),
+                                      },
+                                      // TAIL-3b: the road is the address this pairing used.
+                                      road: HostRoads.road(forAccount: configuration.account)),
                               account: configuration.account)
             } catch { throw PairingError.keychain }
             return PairingReceipt(requestID: request.receipt.requestID, deviceID: request.receipt.deviceID,
@@ -236,7 +261,22 @@ actor PairingClient {
               SSHTargetResolver.isValidAccount(user), SSHTargetResolver.isValidHost(host) else { return nil }
         let port = value.port ?? 22
         guard (1...65535).contains(port) else { return nil }
-        return HostPin.SSHEndpoint(user: user, host: host, port: port)
+        let hosts = value.hosts?.prefix(24).compactMap { road -> HostRoad? in
+            SSHTargetResolver.isValidHost(road.host)
+                ? HostRoad(host: road.host, port: port, kind: HostRoads.kind(road.kind, host: road.host)) : nil
+        }
+        return HostPin.SSHEndpoint(user: user, host: host, port: port, hosts: hosts,
+                                   tailscaleSSH: value.tailscale_ssh)
+    }
+
+    /// TAIL-2 P0-2: the claim's addresses, typed. A core from before TAIL-2
+    /// sends no `kind`, and the address says which road it is.
+    private static func endpoints(_ values: [Response.Endpoint]) -> [HostPin.Endpoint] {
+        values.prefix(24).compactMap { value in
+            guard !value.host.isEmpty, value.host.utf8.count <= 255, (1...65535).contains(value.port) else { return nil }
+            return HostPin.Endpoint(host: value.host, port: value.port,
+                                    kind: HostRoads.kind(value.kind, host: value.host))
+        }
     }
 
     func cancel() { generation = UUID(); pending = nil }
@@ -272,12 +312,34 @@ actor PairingClient {
             // only one whose next step is on the computer.
             case 409 where Self.errorCode(data) == "pairing_device_exists":
                 throw PairingError.deviceAlreadyRegistered(deviceID: deviceID)
+            // TAIL-2 P0-2: every refusal the host names gets its own sentence.
+            // "Could not finish securely" is for a TLS failure and nothing else.
+            case 409 where Self.errorCode(data) == "pairing_request_unavailable":
+                throw PairingError.rejectedOrExpired
+            case 429 where Self.errorCode(data) == "pairing_source_capacity",
+                 429 where Self.errorCode(data) == "pairing_capacity":
+                throw PairingError.busy
             case 400, 401, 403, 404, 409, 410: throw PairingError.rejectedOrExpired
             case 429, 503: throw PairingError.unavailable
             default: throw PairingError.transport
             }
         } catch is CancellationError { throw CancellationError() }
         catch let error as PairingError { throw error }
-        catch { throw PairingError.transport }
+        catch { throw Self.classify(error) }
+    }
+
+    /// TAIL-2 P0-2. A request that never reached the host is not a pairing
+    /// that "could not finish securely": a name that does not resolve, a
+    /// timeout and a refused connection are a host that did not answer. Only a
+    /// TLS failure — ATS, a handshake, a certificate — keeps that wording.
+    static func classify(_ error: Error) -> PairingError {
+        guard let url = error as? URLError else { return .transport }
+        switch url.code {
+        case .timedOut, .cannotFindHost, .cannotConnectToHost, .networkConnectionLost,
+             .dnsLookupFailed, .notConnectedToInternet, .cannotLoadFromNetwork:
+            return .unreachable
+        default:
+            return .transport
+        }
     }
 }

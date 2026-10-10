@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Simulator-only launch controls for reproducible UI/transport tests.
 /// Production builds contain no credential or test-host bootstrap path.
@@ -26,6 +27,35 @@ enum AppDefaults {
 
 @MainActor enum DevelopmentLaunch {
     static func defaults() -> UserDefaults { AppDefaults.shared }
+
+    /// TUTORIAL-1. Whether a first pairing or the demo starts the tour by
+    /// itself. Always, except in a UI-test launch, which asks for it with
+    /// `--tour`: the suites that walk the demo are not walking a tour.
+    static func tourStartsByItself() -> Bool {
+        #if DEBUG && targetEnvironment(simulator)
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--ui-testing") { return arguments.contains("--tour") }
+        #endif
+        return true
+    }
+
+    /// LITE-1d harness (simulator, DEBUG): a host's Odomo is on its
+    /// `*.ts.net` name, which a simulator on a Mac outside the tailnet cannot
+    /// open. `--odomo-harness-url=<loopback Odomo>` is what the Safari view
+    /// opens instead, for a host that does have an Odomo. Everything else —
+    /// whether it has one, how many devices get its pushes — is still what the
+    /// host said. It is read without `--ui-testing`, so a harness keeps its
+    /// pairing across launches.
+    nonisolated static func harness(_ reading: OdomoReading) -> OdomoReading {
+        #if DEBUG && targetEnvironment(simulator)
+        let flag = "--odomo-harness-url=" // non-copy: a launch flag
+        if reading.url != nil, let value = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(flag) }),
+           let url = URL(string: String(value.dropFirst(flag.count))) {
+            return OdomoReading(url: url, pushDevices: reading.pushDevices)
+        }
+        #endif
+        return reading
+    }
 
     /// PAIR-5's three cases, seeded before the Shell reads anything, because
     /// the whole point of them is what the app does with records it finds at
@@ -74,7 +104,29 @@ enum AppDefaults {
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("--import-development-host") { importHost(home: home) }
         guard arguments.contains("--ui-testing") else { return }
+        // LITE-1c: the Odomo row needs an Odomo address, which only a live
+        // host's roads give; a UI run names one instead.
+        let odomoFlag = "--odomo-url=" // non-copy: a launch flag
+        if let odomo = arguments.first(where: { $0.hasPrefix(odomoFlag) }) {
+            home.odomo = OdomoReading(url: URL(string: String(odomo.dropFirst(odomoFlag.count))), pushDevices: home.odomo?.pushDevices)
+        }
+        // LITE-1d: a host with no front door (`--odomo-none`), and how many of
+        // its devices get Odomo's pushes (`--odomo-push-devices=N`).
+        if arguments.contains("--odomo-none") { home.odomo = OdomoReading(url: nil, pushDevices: home.odomo?.pushDevices) }
+        let pushFlag = "--odomo-push-devices=" // non-copy: a launch flag
+        if let push = arguments.first(where: { $0.hasPrefix(pushFlag) }), let count = Int(push.dropFirst(pushFlag.count)) {
+            home.odomo = OdomoReading(url: home.odomo?.url, pushDevices: count)
+        }
         if arguments.contains("--development-companion") { importCompanion(home: home) }
+        // ATTACH-1: a picture on the clipboard, as a copied screenshot would
+        // leave it. A UI-test runner cannot put one there for the app on iOS
+        // 27 (its write never reaches the app's pasteboard), so the app does.
+        if arguments.contains("--clipboard-picture") {
+            UIPasteboard.general.image = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 40)).image { context in
+                UIColor.systemOrange.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: 64, height: 40))
+            }
+        }
         guard arguments.contains("--ssh-fixture") else { return }
         // Public synthetic fixture key, accepted only by Tools/SSHFixture/server.py.
         var profile = home.profile

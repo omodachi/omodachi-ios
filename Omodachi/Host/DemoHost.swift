@@ -91,7 +91,11 @@ enum DemoHost {
     }
 
     static func herdr() -> Herdr? {
-        data("demo-herdr").flatMap { try? JSONDecoder().decode(Herdr.self, from: $0) }
+        guard var raw = data("demo-herdr") else { return nil }
+        if HerdrAgentsFixture.requested { raw = HerdrAgentsFixture.apply(raw) ?? raw }
+        if HerdrChoicesFixture.requested { raw = HerdrChoicesFixture.apply(raw) ?? raw }
+        if OverviewFixture.requested { raw = OverviewFixture.apply(raw) ?? raw }
+        return try? JSONDecoder().decode(Herdr.self, from: raw)
     }
 
     // MARK: - Pins
@@ -131,10 +135,14 @@ extension HomeStore {
         demoReturnProfile = profile
         demoActive = true
         profile = DemoHost.profile
+        // TUTORIAL-1: the demo is a first look, so it gets the tour too
+        // (once per device, like a first pairing).
+        tour.arm()
     }
 
     func exitDemo() {
         guard demoActive else { return }
+        tour.suspend()
         let previous = demoReturnProfile ?? HostProfile()
         demoReturnProfile = nil
         // Still inside the demo while the old profile comes back, so the
@@ -157,5 +165,63 @@ extension HomeStore {
     /// host's success draws, with where it ran in place of the host's detail.
     func demoRan(_ label: String) {
         reportToast(.init(stage: .applied, label: label, detail: Strings.demoRanHere))
+    }
+}
+
+/// HERDR-7, simulator UI runs only (`--ui-testing --herdr-agents-fixture`):
+/// the demo's Herdr session with agents in it. The shipped demo has three
+/// shell panes and no agent, so nothing in it shows how a pane that runs an
+/// agent is drawn; this puts codex (waiting for you), a shell, claude
+/// (working) and codex (done) side by side, in the shapes Herdr publishes,
+/// so the UI tests and the screenshots see every state through the same
+/// decoder and view a paired computer's answer goes through.
+enum HerdrAgentsFixture {
+    static var requested: Bool {
+        #if DEBUG && targetEnvironment(simulator)
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("--ui-testing") && arguments.contains("--herdr-agents-fixture")
+        #else
+        return false
+        #endif
+    }
+
+    /// Pane id → (agent kind, Herdr's status word). `w1:p4` is new, a copy of
+    /// `w1:p3` with its own id.
+    static let agents: [String: (kind: String, status: String)] = [ // non-copy: Herdr's wire values
+        "w1:p1": ("codex", "blocked"), "w1:p3": ("claude", "working"), "w1:p4": ("codex", "done"),
+    ]
+
+    static func apply(_ data: Data) -> Data? {
+        guard var root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              var layout = root["layout"] as? [String: Any],
+              var workspaces = layout["workspaces"] as? [[String: Any]], !workspaces.isEmpty,
+              var tabs = workspaces[0]["tabs"] as? [[String: Any]], !tabs.isEmpty,
+              var panes = tabs[0]["panes"] as? [[String: Any]], panes.count >= 3,
+              var screens = root["screens"] as? [String: String],
+              var sessions = root["sessions"] as? [String: Any],
+              var list = sessions["sessions"] as? [[String: Any]], !list.isEmpty
+        else { return nil }
+        var copy = panes[2]
+        copy["id"] = "w1:p4" // non-copy: a pane id
+        copy["focused"] = false
+        panes.append(copy)
+        screens["w1:p4"] = screens["w1:p3"] // non-copy: pane ids
+        panes = panes.map { pane in
+            var pane = pane
+            guard let id = pane["id"] as? String, let agent = agents[id] else { return pane }
+            pane["agent"] = ["name": agent.kind, "kind": agent.kind, "status": agent.status] // non-copy: wire keys
+            pane["agent_status"] = agent.status // non-copy: a wire key
+            return pane
+        }
+        tabs[0]["panes"] = panes
+        workspaces[0]["tabs"] = tabs
+        layout["workspaces"] = workspaces
+        list[0]["panes"] = panes.count // non-copy: a wire key
+        list[0]["agents"] = agents.count // non-copy: a wire key
+        sessions["sessions"] = list
+        root["layout"] = layout
+        root["screens"] = screens
+        root["sessions"] = sessions
+        return try? JSONSerialization.data(withJSONObject: root)
     }
 }

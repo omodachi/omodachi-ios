@@ -25,6 +25,16 @@ enum RemoteBackendChoice: String, CaseIterable, Sendable {
         case .auto: capabilities?.resolvedDefault ?? .sunshine
         }
     }
+
+    /// The backend a press actually starts. An explicit choice stands while
+    /// the host says it can run; when it cannot, Sunshine if that can, else
+    /// VNC. REMOTE-FIX-1: the entry card and the controller both ask this, so
+    /// the card never warns about a backend the button is not going to use.
+    func effective(_ capabilities: RemoteCapabilitiesDTO?) -> RemoteBackend {
+        let chosen = resolve(capabilities)
+        guard let capabilities, self != .auto, !capabilities.available(chosen) else { return chosen }
+        return capabilities.available(.sunshine) ? .sunshine : .vnc
+    }
 }
 
 /// Where the extra screen sits next to the physical one, and which long edge

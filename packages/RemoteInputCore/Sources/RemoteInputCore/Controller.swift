@@ -140,6 +140,16 @@ public final class RemoteInputController {
         return deliver([event(generation, epoch, payload)])
     }
 
+    /// REMOTE-INPUT-1. Soft-keyboard text: keys where a US key exists, text
+    /// for the rest. See `KeyboardInputEngine.type`.
+    @discardableResult
+    public func type(_ value: String, asciiAsKeys: Bool = true, shiftedAsText: Bool = false,
+                     generation: UInt64, geometryEpoch: UInt64? = nil) -> [RemoteInputEvent] {
+        guard let epoch = acceptedEpoch(geometryEpoch), activeGeneration == generation else { return [] }
+        return deliver(keyboard.type(value, asciiAsKeys: asciiAsKeys, shiftedAsText: shiftedAsText)
+            .map { event(generation, epoch, $0) })
+    }
+
     @discardableResult
     public func release(generation: UInt64, reason: ReleaseReason = .explicit) -> [RemoteInputEvent] {
         guard let epoch = activeGeometryEpoch, activeGeneration == generation else { return [] }

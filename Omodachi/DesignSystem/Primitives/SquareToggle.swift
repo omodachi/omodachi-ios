@@ -43,6 +43,8 @@ struct SquareToggle: View {
     }
 }
 
+/// SETTINGS-LAYOUT-1: a switch is always beside its title, on every width,
+/// and its detail line is under the title. The callers pad it horizontally.
 struct SquareToggleRow: View {
     let title: String
     var identifier: String?
@@ -50,22 +52,9 @@ struct SquareToggleRow: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(OmodachiTheme.font(size: 13))
-                    .foregroundStyle(OmodachiTheme.text)
-                if let detail {
-                    Text(detail)
-                        .font(OmodachiTheme.bodyFont(size: 11))
-                        .foregroundStyle(OmodachiTheme.tertiaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Spacer(minLength: 6)
+        SettingLine(title: title, detail: detail, arrangement: .beside, identifier: identifier, inset: false) {
             SquareToggle(isOn: $isOn, label: title, identifier: identifier)
         }
-        .padding(.vertical, 8)
     }
 }
 
@@ -75,7 +64,7 @@ struct SegmentedRow<Value: Equatable>: View {
     @Binding var selection: Value
 
     var body: some View {
-        HStack(spacing: 0) {
+        EqualSegments {
             ForEach(Array(options.enumerated()), id: \.offset) { _, option in
                 Button { selection = option.1 } label: {
                     Text(option.0)
@@ -92,6 +81,30 @@ struct SegmentedRow<Value: Equatable>: View {
             }
         }
         .overlay(Rectangle().stroke(OmodachiTheme.controlBorder, lineWidth: OmodachiTheme.controlBorderWidth))
+    }
+}
+
+/// The segments of one control share its width equally, as they always did
+/// in a given width. SETTINGS-LAYOUT-1: asked for its *own* width (by a
+/// `fixedSize`, or by `ViewThatFits` deciding whether it fits beside its
+/// title), it answers the widest segment times the count, so no segment is
+/// ever cut short to make the control look narrower than it is.
+private struct EqualSegments: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard !subviews.isEmpty else { return .zero }
+        let ideal = subviews.map { $0.sizeThatFits(.unspecified) }
+        let height = ideal.map(\.height).max() ?? 0
+        let width = proposal.width ?? (ideal.map(\.width).max() ?? 0) * CGFloat(subviews.count)
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard !subviews.isEmpty else { return }
+        let each = bounds.width / CGFloat(subviews.count)
+        for (index, subview) in subviews.enumerated() {
+            subview.place(at: CGPoint(x: bounds.minX + each * CGFloat(index), y: bounds.minY),
+                          anchor: .topLeading, proposal: ProposedViewSize(width: each, height: bounds.height))
+        }
     }
 }
 

@@ -1,0 +1,24 @@
+{
+  "identity": {
+    "hostID": "omarchy-fixture",
+    "agentID": "default",
+    "provider": "codex",
+    "providerSessionID": "01a11332-4d95-7e10-bf77-a7a95540db4b"
+  },
+  "sequence": 1,
+  "event": {
+    "type": "agent.queue.changed",
+    "queue": [
+      {
+        "id": "q-01",
+        "request_id": "request-fixture-q1",
+        "text": "And then run the tests on SQLite."
+      },
+      {
+        "id": "q-02",
+        "request_id": "request-fixture-q2",
+        "text": "Keep the old port as a fallback."
+      }
+    ]
+  }
+}
