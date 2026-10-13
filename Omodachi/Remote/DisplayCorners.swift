@@ -97,6 +97,7 @@ struct DisplayCorners: Equatable, Sendable {
         "iPhone18,5": .init(47.33, 1170, 2532),  // iPhone 17e
         "iPhone19,2": .init(62, 1206, 2622),  // iPhone 18 Pro
         "iPhone19,3": .init(62, 1320, 2868), "iPhone19,7": .init(62, 1320, 2868),  // iPhone 18 Pro Max
+        "iPhone19,4": .init(59, 1398, 2034),  // iPhone Duo, the outer screen (Xcode 27.1)
         "iPad13,1": .init(18, 1640, 2360), "iPad13,2": .init(18, 1640, 2360),  // iPad Air (4th generation)
         "iPad13,4": .init(18, 1668, 2388), "iPad13,5": .init(18, 1668, 2388), "iPad13,6": .init(18, 1668, 2388), "iPad13,7": .init(18, 1668, 2388),  // iPad Pro (11-inch) (3rd generation)
         "iPad13,8": .init(18, 2048, 2732), "iPad13,9": .init(18, 2048, 2732), "iPad13,10": .init(18, 2048, 2732), "iPad13,11": .init(18, 2048, 2732),  // iPad Pro (12.9-inch) (5th generation)
@@ -123,6 +124,19 @@ struct DisplayCorners: Equatable, Sendable {
         "iPad8,11": .init(18, 2048, 2732), "iPad8,12": .init(18, 2048, 2732),  // iPad Pro (12.9-inch) (4th generation)
     ]
 
+    /// DUO-1. A model's other built-in panels: the iPhone Duo opens onto an
+    /// inner screen with its own corners (`displays[1]` of its Xcode 27.1
+    /// profile, 55 at every corner). Without this the inner screen, not being
+    /// the model's main panel, would read as an external display and square.
+    ///
+    /// The Duo's outer screen is not round at every corner either — 59 on one
+    /// long side, 8 on the hinge side — and the table keeps one radius per
+    /// panel: over-estimating moves the host bar's end items a little further
+    /// in than they had to go, never under the corner.
+    static let innerDisplays: [String: Display] = [
+        "iPhone19,4": .init(55, 2007, 2853),  // iPhone Duo, the inner screen
+    ]
+
     /// The radius in points of each model the table knows.
     static var radii: [String: CGFloat] { displays.mapValues(\.radius) }
 
@@ -144,9 +158,13 @@ struct DisplayCorners: Equatable, Sendable {
     static func radius(model: String, isPad: Bool, homeIndicatorInset: CGFloat,
                        nativePixels: CGSize? = nil) -> CGFloat {
         if let known = displays[model] {
-            if let pixels = nativePixels, pixels != known.native,
-               pixels != CGSize(width: known.native.height, height: known.native.width) { return 0 }
-            return known.radius
+            guard let pixels = nativePixels else { return known.radius }
+            for panel in [known] + (innerDisplays[model].map { [$0] } ?? []) {
+                if pixels == panel.native || pixels == CGSize(width: panel.native.height, height: panel.native.width) {
+                    return panel.radius
+                }
+            }
+            return 0
         }
         guard homeIndicatorInset > 0 else { return 0 }
         return isPad ? unknownPadRadius : unknownPhoneRadius
@@ -207,6 +225,42 @@ struct DisplayCorners: Equatable, Sendable {
         let top = near(frame.minY, screen.minY), bottom = near(frame.maxY, screen.maxY)
         return DisplayCorners(topLeft: top && left ? radius : 0, topRight: top && right ? radius : 0,
                               bottomLeft: bottom && left ? radius : 0, bottomRight: bottom && right ? radius : 0)
+    }
+}
+
+/// DUO-1 round 2. A band the system keeps down one side edge only — the
+/// closed iPhone Duo keeps about 84 points on its right, in both
+/// orientations, for its status column. The picture is laid out beside it and
+/// the host's output is planned for what is left, so no host pixel sits under
+/// it. Measured, not looked up: a window whose left and right insets are the
+/// same (every other iPhone and iPad — zero upright, the island's band on both
+/// sides held wide) has no column, and the picture stays edge to edge (A-58).
+struct RemotePictureColumn: Equatable, Sendable {
+    /// From the window's left edge.
+    var leading: CGFloat = 0
+    /// From the window's right edge.
+    var trailing: CGFloat = 0
+
+    static let none = RemotePictureColumn()
+
+    /// `left` and `right` are the window's safe-area insets.
+    static func measure(left: CGFloat, right: CGFloat) -> RemotePictureColumn {
+        guard abs(left - right) >= 1 else { return .none }
+        return RemotePictureColumn(leading: max(0, left), trailing: max(0, right))
+    }
+
+    /// The picture's size in a window of `window`.
+    func picture(_ window: CGSize) -> CGSize {
+        CGSize(width: max(0, window.width - leading - trailing), height: window.height)
+    }
+
+    /// The display corners the picture still reaches: none on a side the
+    /// column keeps it away from.
+    func corners(_ window: DisplayCorners) -> DisplayCorners {
+        var value = window
+        if leading > 0 { value.topLeft = 0; value.bottomLeft = 0 }
+        if trailing > 0 { value.topRight = 0; value.bottomRight = 0 }
+        return value
     }
 }
 

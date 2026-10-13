@@ -158,6 +158,13 @@ import UIKit
     /// session holds its geometry through a turn, so the next session is
     /// planned for the window it actually opens in.
     private var windowReading: (size: CGSize, orientation: String)?
+    /// DUO-1 round 2: the hinge of a foldable, and the moment it last opened
+    /// from closed (`RemoteUnfold`).
+    private var unfold = RemoteUnfold()
+    /// How long after the hinge opens the window it opens onto may still
+    /// re-plan an extend session. Long enough for the window to settle on the
+    /// inner screen; a test shortens it.
+    var unfoldWindow: Duration = .seconds(3)
     /// The host's own rate preference. It is a planning input, never a local
     /// default: without it the request carries this client's own ceiling.
     private var hostQuality: RemoteHostPreferences.Quality?
@@ -1133,7 +1140,16 @@ import UIKit
         // layer aspect-fits it; the next latched frame re-maps the pointer).
         // The rule sits here, where a re-plan is decided, rather than in what
         // detects a turn, so it holds whatever reports one.
-        if changed, let session, !Self.replans(mode: session.mode) {
+        //
+        // DUO-1 round 2 (Leo), the one exception: a foldable opened from
+        // closed during an extend session re-plans once, to fill the inner
+        // screen — unfolding is asking for the bigger screen. Only closed →
+        // open, and only the window it opens onto (`unfoldWindow`): a turn
+        // afterwards keeps the geometry again, and closing it keeps the
+        // output, shown scaled in the outer screen as any turn is. A fold is
+        // otherwise a turn: `replans(mode:unfolding:)`.
+        if changed, let session,
+           !Self.replans(mode: session.mode, unfolding: unfold.allows(now: .now)) {
             sunshine?.invalidateViewportGeometry()
             RemoteSessionTrace.phase("viewport-kept mode=\(session.mode.rawValue) window=\(Int(size.width))x\(Int(size.height))",
                                      streaming: isStreaming, panelVisible: panelVisible)
@@ -1185,7 +1201,26 @@ import UIKit
     }
 
     /// ROTATE-1: whether a new window shape re-plans the host's output.
-    nonisolated static func replans(mode: RemoteMode) -> Bool { mode == .takeover }
+    nonisolated static func replans(mode: RemoteMode) -> Bool { replans(mode: mode, unfolding: false) }
+
+    /// DUO-1 round 2: and while a foldable has just opened from closed, an
+    /// extend session's too — once, for the window it opens onto.
+    nonisolated static func replans(mode: RemoteMode, unfolding: Bool) -> Bool {
+        mode == .takeover || unfolding
+    }
+
+    /// DUO-1 round 2. The Shell's hinge reading (`FoldReader`): nil where
+    /// there is no hinge. A reading of the window that arrived before the
+    /// hinge said it opened was held as an extend turn; it is read again now.
+    func hingeChanged(open: Bool?) {
+        guard unfold.hinge(open: open, now: .now, window: unfoldWindow) else { return }
+        if session != nil {
+            RemoteSessionTrace.phase("hinge-opened mode=\(mode.rawValue)", streaming: isStreaming, panelVisible: panelVisible)
+        }
+        if let reading = windowReading {
+            viewportChanged(size: reading.size, orientation: reading.orientation, source: "unfold") // non-copy: a trace source
+        }
+    }
 
     /// Stop decoding and release input, ask the host for new geometry, reconnect
     /// with the connection it answers with, and keep the old image until the new
@@ -1792,4 +1827,24 @@ import UIKit
 private func requireSession(_ value: RemoteSessionDTO?) throws -> RemoteSessionDTO {
     guard let value else { throw RemoteRequestError(code: "session_not_found", status: 404) }
     return value
+}
+
+/// DUO-1 round 2. A foldable's hinge as Remote needs it: whether it just
+/// opened from closed, and until when that may re-plan an extend session.
+/// Opening from a reading that was not "closed" (the App started on the open
+/// screen, or a device with no hinge) is not an unfold; closing ends it.
+struct RemoteUnfold: Sendable {
+    private(set) var open: Bool?
+    private(set) var until: ContinuousClock.Instant?
+
+    /// Takes a hinge reading; true when it is the hinge opening from closed.
+    mutating func hinge(open next: Bool?, now: ContinuousClock.Instant, window: Duration) -> Bool {
+        defer { open = next }
+        guard next == true else { until = nil; return false }
+        guard open == false else { return false }
+        until = now + window
+        return true
+    }
+
+    func allows(now: ContinuousClock.Instant) -> Bool { until.map { now < $0 } ?? false }
 }

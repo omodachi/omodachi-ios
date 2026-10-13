@@ -30,7 +30,7 @@ struct RemotePanelView: View {
                 // does (N-32) — so the two cannot disagree about whether there
                 // is something to go back to.
                 if home.demoActive {
-                    demoPlaceholder
+                    demoPlaceholder(area: proxy.size)
                 } else if controller.hasSession || router.stage == .picture {
                     sessionCard(narrow: PanelMeasure.isNarrow(proxy.size.width))
                 } else {
@@ -56,16 +56,31 @@ struct RemotePanelView: View {
 
     /// STORE-1 §1. The demo has no computer to stream, so the panel shows a
     /// desktop the app draws itself and says what the real thing needs.
-    private var demoPlaceholder: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            DesktopSketch()
-                .frame(maxWidth: 560)
-                .padding(OmodachiTheme.rowPaddingX)
-                .accessibilityElement()
-                .accessibilityLabel(Strings.demoRemoteSketch)
-                .accessibilityIdentifier("demo-remote-sketch")
-            EmptyState(title: Strings.demoRemoteNeedsHost, detail: Strings.demoRemoteDetail,
-                       identifier: "demo-remote-needs-host")
+    ///
+    /// DUO-1 round 2: where the drawing above the words would push the words
+    /// off a short panel (the closed iPhone Duo held wide, a phone in
+    /// landscape), the drawing goes beside them instead.
+    @ViewBuilder private func demoPlaceholder(area: CGSize) -> some View {
+        let sketch = DesktopSketch()
+            .accessibilityElement()
+            .accessibilityLabel(Strings.demoRemoteSketch)
+            .accessibilityIdentifier("demo-remote-sketch")
+        let words = EmptyState(title: Strings.demoRemoteNeedsHost, detail: Strings.demoRemoteDetail,
+                               identifier: "demo-remote-needs-host")
+        if DemoSketchLayout.beside(area: area, padding: OmodachiTheme.rowPaddingX) {
+            HStack(alignment: .top, spacing: 0) {
+                sketch
+                    .frame(width: DemoSketchLayout.besideWidth(area: area))
+                    .padding(OmodachiTheme.rowPaddingX)
+                words
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                sketch
+                    .frame(maxWidth: DemoSketchLayout.maxWidth)
+                    .padding(OmodachiTheme.rowPaddingX)
+                words
+            }
         }
     }
 
@@ -105,5 +120,32 @@ struct RemotePanelView: View {
         rows.append((Strings.remoteSessionState, controller.statusText))
         rows.append((Strings.remoteSessionReturnTo, router.returnTo.title))
         return rows
+    }
+}
+
+/// DUO-1 round 2. Where the demo's desktop drawing goes, as arithmetic.
+enum DemoSketchLayout {
+    /// STORE-1's cap on the drawing.
+    static let maxWidth: CGFloat = 560
+    /// The drawing is 16:10 (`DesktopSketch`).
+    static let aspect: CGFloat = 10.0 / 16.0
+    /// The title row of the panel, and what the words under the drawing need
+    /// at their longest (a title and four lines of detail).
+    static let titleRow: CGFloat = 44
+    static let words: CGFloat = 110
+
+    /// Beside, when the drawing at the column's width and the words under it
+    /// would not fit in the panel's height.
+    static func beside(area: CGSize, padding: CGFloat) -> Bool {
+        guard area.width > 0, area.height > 0 else { return false }
+        let width = min(maxWidth, min(area.width, PanelMeasure.column) - padding * 2)
+        return titleRow + width * aspect + padding * 2 + words > area.height
+    }
+
+    /// Beside the words, the drawing takes at most half the width, and no
+    /// more than the height leaves it.
+    static func besideWidth(area: CGSize) -> CGFloat {
+        let byHeight = max(0, area.height - titleRow - 48) / aspect
+        return max(120, min(min(area.width, PanelMeasure.column) * 0.45, byHeight, maxWidth))
     }
 }

@@ -56,6 +56,64 @@ enum PanelMeasure {
     }
 
     static func isNarrow(_ width: CGFloat) -> Bool { width > 0 && width < narrowColumn }
+
+    /// DUO-1 (Leo, 2026-10-13: "对于duo 我们menu/keybinding 不如正好分割成屏幕一半一半？").
+    /// On an open foldable held wide, ① puts the menu and Keybindings one in
+    /// each half of the screen, divided at the fold (variant B). Held tall it
+    /// keeps the width rule — one column behind the segmented control (Leo,
+    /// round 2: the two halves were too short stacked). This is the one
+    /// switch: `false` puts back variant A held wide too, which there is the
+    /// width rule's 360 | the rest. `--fold-split-off` turns it off in a
+    /// simulator build so both can be put side by side.
+    static var splitsAtFold: Bool {
+        #if DEBUG && targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--fold-split-off") { return false } // non-copy: a launch flag
+        #endif
+        return true
+    }
+    /// The least a half may be across before the fold stops splitting ①: the
+    /// Keybindings list's key block alone is about this wide.
+    static let foldColumnMinimum: CGFloat = 280
+
+    /// Where ① divides on an open foldable, in its own coordinates, or nil to
+    /// use the width rule. `panel` is ①'s rectangle in the window's
+    /// coordinates, the same space `fold` is in. Only a fold that runs top to
+    /// bottom divides ①; one that runs across (held tall) does not.
+    static func foldSplit(_ fold: FoldLine?, panel: CGRect, enabled: Bool = splitsAtFold) -> FoldSplit? {
+        guard enabled, let fold, fold.axis == .vertical, panel.width > 0, panel.height > 0 else { return nil }
+        let lead = fold.position - panel.minX
+        guard lead >= foldColumnMinimum, panel.width - lead >= foldColumnMinimum else { return nil }
+        return .columns(lead: lead)
+    }
+}
+
+/// DUO-1. Where a foldable's fold runs through the window, in the window's
+/// points. Nil everywhere but a foldable that is open (or half open).
+struct FoldLine: Equatable, Sendable {
+    enum Axis: Equatable, Sendable {
+        /// Top to bottom — the open Duo held wide. The halves are left and right.
+        case vertical
+        /// Side to side — the open Duo held tall. The halves are top and bottom.
+        case horizontal
+    }
+    var axis: Axis
+    /// x for a vertical fold, y for a horizontal one.
+    var position: CGFloat
+
+    /// iOS 27.1 reports *whether* the hinge is open (`UIHinge.status`) and its
+    /// angle, but not where the fold is: the SDK has no fold rectangle. A book
+    /// fold runs across the middle of the display's long side, so that is
+    /// where it is put. `screen` is the display in the window's coordinates.
+    static func middle(of screen: CGRect) -> FoldLine {
+        screen.width >= screen.height ? FoldLine(axis: .vertical, position: screen.midX)
+                                      : FoldLine(axis: .horizontal, position: screen.midY)
+    }
+}
+
+/// DUO-1. How ① divides at the fold, in ①'s own coordinates.
+enum FoldSplit: Equatable, Sendable {
+    /// Menu on the left `lead` points, Keybindings on the rest.
+    case columns(lead: CGFloat)
 }
 
 /// The container every panel is drawn in: a 44-high title row, optional search,
@@ -143,4 +201,6 @@ extension EnvironmentValues {
     /// SHELL-FIX-1: the window's size, from the Shell's window reader. Never
     /// keyboard-avoided: the keyboard is a layer over the window, not a turn.
     @Entry var windowSize: CGSize = .zero
+    /// DUO-1: the fold of an open foldable, from the Shell's fold reader.
+    @Entry var fold: FoldLine? = nil
 }

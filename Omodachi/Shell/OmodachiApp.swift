@@ -85,6 +85,10 @@ struct ShellView: View {
     /// HERDR-5: what the soft keyboard really covers (`KeyboardOverlapReader`).
     @State private var keyboardOverlap: CGFloat = 0
     @State private var windowSize = CGSize.zero
+    /// DUO-1: the fold of an open foldable (`FoldReader`), nil elsewhere.
+    @State private var fold: FoldLine?
+    /// DUO-1 round 2: the side column the Remote picture keeps clear of.
+    @State private var pictureColumn = RemotePictureColumn.none
     @State private var preferences = ShellPreferences.load()
     /// NOTIFY-2: the app's own alerts (for the Agent badge and the tap).
     @ObservedObject private var attention = AttentionNotifier.shared
@@ -188,6 +192,7 @@ struct ShellView: View {
         }
         .background(insetsReader)
         .background(keyboardReader)
+        .background(foldReader)
         // HERDR-5: the panels clear the keyboard UIKit says is on screen
         // (`SafeAreaLayoutPolicy.stage(…, keyboard:)`), not SwiftUI's keyboard
         // safe area, which kept a band of empty space after the keyboard went
@@ -210,6 +215,7 @@ struct ShellView: View {
         // SHELL-FIX-1: every orientation decision below reads the window,
         // never the keyboard-avoided rectangle a panel is drawn in.
         .environment(\.windowSize, windowSize)
+        .environment(\.fold, fold)
         // TUTORIAL-1: the tour reads where the bar and its entries are
         // (`tourAnchor`) and draws over the whole window, the bar included.
         .overlayPreferenceValue(TourAnchorKey.self) { anchors in
@@ -377,9 +383,15 @@ struct ShellView: View {
             // `maxHeight: .infinity` the picture grew with the stack (402×890…
             // 962 in a 402×874 window on the host run) — a size a takeover
             // would have re-planned the host's output for.
+            // DUO-1 round 2: beside a side column the system keeps, not under
+            // it (`RemotePictureColumn`); the column itself is letterbox.
+            OmodachiTheme.pictureLetterbox
+                .frame(width: size.width, height: size.height)
+                .accessibilityHidden(true)
             RemoteStageView(controller: remote, profile: home.profile,
                             onBarMark: { remote.barMarkTapped($0) })
-                .frame(width: size.width, height: size.height)
+                .frame(width: pictureColumn.picture(size).width, height: size.height)
+                .padding(.leading, pictureColumn.leading)
                 .accessibilityHidden(router.overlayVisible)
 
             if router.overlayVisible {
@@ -727,15 +739,18 @@ struct ShellView: View {
     private var insetsReader: some View {
         WindowInteractionInsetsReader(
             changed: { windowInsets = $0 },
-            windowChanged: { size, corners in
+            windowChanged: { size, corners, column in
                 windowSize = size
+                pictureColumn = column
                 placement.update(width: size.width, height: size.height, reason: .windowGeometry)
                 // A-61: the *window* is the viewport. The soft keyboard shrinks
                 // the safe area, not the window, so it can never reach this and
-                // can never make the host re-plan its output.
-                remote.viewportChanged(size: size,
-                                       orientation: size.width >= size.height ? "landscape_left" : "portrait", // non-copy: wire value
-                                       corners: corners, source: "window") // non-copy: a trace source
+                // can never make the host re-plan its output. DUO-1 round 2:
+                // less a side column the system keeps (`RemotePictureColumn`).
+                let picture = column.picture(size)
+                remote.viewportChanged(size: picture,
+                                       orientation: picture.width >= picture.height ? "landscape_left" : "portrait", // non-copy: wire value
+                                       corners: column.corners(corners), source: "window") // non-copy: a trace source
             })
         // TUTORIAL-1: as large as the window, not 0×0. A 0×0 view gets no
         // layout pass when the window turns, and an iPad's safe area is the
@@ -743,6 +758,13 @@ struct ShellView: View {
         // portrait bar in landscape. At the window's size it is laid out
         // again on every turn, and that is when it reads the window.
         .frame(maxWidth: .infinity, maxHeight: .infinity).allowsHitTesting(false).accessibilityHidden(true)
+    }
+
+    /// DUO-1. As large as the window, for the same reason as the insets
+    /// reader: a fold or a turn lays it out again.
+    private var foldReader: some View {
+        FoldReader(changed: { fold = $0 }, hinge: { remote.hingeChanged(open: $0) })
+            .frame(maxWidth: .infinity, maxHeight: .infinity).allowsHitTesting(false).accessibilityHidden(true)
     }
 
     private var keyboardReader: some View {

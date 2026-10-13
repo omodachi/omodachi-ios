@@ -710,5 +710,93 @@ final class RemoteComposePassthroughTests: XCTestCase {
     func testTheRuleIsTheModes() {
         XCTAssertFalse(RemoteSessionController.replans(mode: .extend))
         XCTAssertTrue(RemoteSessionController.replans(mode: .takeover))
+        // DUO-1 round 2: the one exception is the unfold.
+        XCTAssertTrue(RemoteSessionController.replans(mode: .extend, unfolding: true))
+        XCTAssertFalse(RemoteSessionController.replans(mode: .extend, unfolding: false))
+    }
+
+    // MARK: - DUO-1 round 2: a foldable opened from closed
+
+    /// The closed iPhone Duo is 466 × 678; opened, the window is 951 × 669.
+    private let closedDuo = CGSize(width: 466, height: 678)
+    private let openDuo = CGSize(width: 951, height: 669)
+
+    private func extendOnTheClosedDuo() async -> (RemoteSessionController, FakeRemoteHost, FakeBackend) {
+        let (controller, host, backend) = await streaming(.extend)
+        controller.unfoldWindow = .milliseconds(400)
+        controller.hingeChanged(open: false)
+        return (controller, host, backend)
+    }
+
+    /// Closed → open during an extend session re-plans once, for the inner screen.
+    func testUnfoldingReplansAnExtendSessionOnce() async {
+        let (controller, host, _) = await extendOnTheClosedDuo()
+        controller.hingeChanged(open: true)
+        controller.viewportChanged(size: openDuo, orientation: "landscape_left", source: "window")
+        try? await Task.sleep(for: .milliseconds(450))
+        let resizes = await host.resizeCount()
+        XCTAssertEqual(resizes, 1, "one re-plan to fill the inner screen")
+        XCTAssertFalse(controller.viewportDiffersFromPlan)
+    }
+
+    /// The window may report before the hinge does; the held reading is re-read.
+    func testAWindowThatComesBeforeTheHingeStillReplans() async {
+        let (controller, host, _) = await extendOnTheClosedDuo()
+        controller.viewportChanged(size: openDuo, orientation: "landscape_left", source: "window")
+        try? await Task.sleep(for: .milliseconds(100))
+        let before = await host.resizeCount()
+        XCTAssertEqual(before, 0, "a new window alone is a turn: kept")
+        controller.hingeChanged(open: true)
+        try? await Task.sleep(for: .milliseconds(450))
+        let after = await host.resizeCount()
+        XCTAssertEqual(after, 1)
+    }
+
+    /// After the unfold, a turn is a turn again: kept.
+    func testATurnAfterTheUnfoldDoesNotReplan() async {
+        let (controller, host, _) = await extendOnTheClosedDuo()
+        controller.hingeChanged(open: true)
+        controller.viewportChanged(size: openDuo, orientation: "landscape_left", source: "window")
+        try? await Task.sleep(for: .milliseconds(1_200))
+        controller.viewportChanged(size: CGSize(width: 669, height: 951), orientation: "portrait", source: "window")
+        try? await Task.sleep(for: .milliseconds(450))
+        let resizes = await host.resizeCount()
+        XCTAssertEqual(resizes, 1, "the unfold's one re-plan and nothing for the turn")
+    }
+
+    /// Open → closed never re-plans an extend session: the output is shown scaled.
+    func testClosingDoesNotReplanAnExtendSession() async {
+        let (controller, host, _) = await streaming(.extend)
+        controller.unfoldWindow = .milliseconds(400)
+        controller.hingeChanged(open: true)
+        controller.hingeChanged(open: false)
+        controller.viewportChanged(size: closedDuo, orientation: "portrait", source: "window")
+        try? await Task.sleep(for: .milliseconds(450))
+        let resizes = await host.resizeCount()
+        XCTAssertEqual(resizes, 0)
+    }
+
+    /// The App opened on the open Duo, or a device with no hinge, has not unfolded.
+    func testAHingeFirstReadOpenIsNotAnUnfold() async {
+        let (controller, host, _) = await streaming(.extend)
+        controller.hingeChanged(open: true)
+        controller.hingeChanged(open: nil)
+        controller.viewportChanged(size: openDuo, orientation: "landscape_left", source: "window")
+        try? await Task.sleep(for: .milliseconds(450))
+        let resizes = await host.resizeCount()
+        XCTAssertEqual(resizes, 0)
+    }
+
+    func testTheUnfoldAllowanceIsOnlyClosedToOpen() {
+        let now = ContinuousClock.now
+        var unfold = RemoteUnfold()
+        XCTAssertFalse(unfold.hinge(open: true, now: now, window: .seconds(3)), "first reading")
+        XCTAssertFalse(unfold.hinge(open: false, now: now, window: .seconds(3)))
+        XCTAssertTrue(unfold.hinge(open: true, now: now, window: .seconds(3)), "closed → open")
+        XCTAssertTrue(unfold.allows(now: now + .seconds(1)))
+        XCTAssertFalse(unfold.allows(now: now + .seconds(4)), "only for the window it opens onto")
+        XCTAssertFalse(unfold.hinge(open: true, now: now, window: .seconds(3)), "half open → fully open is not another")
+        XCTAssertFalse(unfold.hinge(open: false, now: now, window: .seconds(3)))
+        XCTAssertFalse(unfold.allows(now: now), "closing ends it")
     }
 }

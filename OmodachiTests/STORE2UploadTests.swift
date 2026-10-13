@@ -99,6 +99,6 @@ final class STORE2UploadTests: XCTestCase {
     func testTheVersionLineIsReleaseAndBuild() {
         XCTAssertEqual(BuildStamp.versionLine("0.1.0", "202609232039"), "0.1.0 (202609232039)")
         XCTAssertEqual(BuildStamp.versionLine("0.1.0", ""), "0.1.0")
-        XCTAssertEqual(BuildStamp.marketingVersion, "0.1.0")
+        XCTAssertEqual(BuildStamp.marketingVersion, "0.2.0")
     }
 }

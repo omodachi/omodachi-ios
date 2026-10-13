@@ -1105,11 +1105,30 @@ private let herdrGridLog = Logger(subsystem: "app.omodachi", category: "herdr.gr
         let current: HerdrMirrorMode = showsWrap ? .wrap : (fitView.zoomMode == .actual && !phone ? .actual : .fit)
         let next = current.next(phone: phone)
         mirrorPreference.remember(next, agent: HerdrPaneKind.agentName(selectedPane))
-        mirrorMode = next
-        switch next {
+        show(next, around: point, chosen: true)
+    }
+
+    /// DUO-1 round 2. An open foldable (the iPhone Duo's inner screen) shows
+    /// the mirror the iPad's way — Actual size in the cycle, Fit to width by
+    /// default — and a closed one the phone's way. Decided by the hinge the
+    /// Shell reads (`FoldReader`), never by the model; the type size is not
+    /// touched. A kind of pane with a remembered choice keeps it (a phone
+    /// shows a remembered Actual size as Fit, as before).
+    func setFoldOpen(_ open: Bool) {
+        let phone = HerdrMirrorPreference.devicePhone && !open
+        guard phone != mirrorPreference.phone else { return }
+        mirrorPreference = HerdrMirrorPreference(defaults: mirrorPreference.defaults, phone: phone)
+        guard selected != nil else { return }
+        show(mirrorPreference.mode(agent: HerdrPaneKind.agentName(selectedPane)), around: nil, chosen: false)
+    }
+
+    /// Puts the mirror in `mode`. `chosen`: the person picked it just now
+    /// (the chip or a double tap), so Wrap shows even over a full-screen program.
+    private func show(_ mode: HerdrMirrorMode, around point: CGPoint?, chosen: Bool) {
+        mirrorMode = mode
+        switch mode {
         case .wrap:
-            // Chosen here, on purpose: shown even over a full-screen program.
-            wrapForced = true
+            wrapForced = chosen
             fitView.setZoom(.fit)
             applyMirror()
             // HERDR-10: a selection left in the text from before would hold

@@ -6,8 +6,9 @@ import UIKit
 struct WindowInteractionInsetsReader: UIViewRepresentable {
     let changed: (EdgeInsets) -> Void
     /// The window's size, and which of its corners are the display's rounded
-    /// ones (REMOTE-SAFE-1) — both change only when the window does.
-    let windowChanged: (CGSize, DisplayCorners) -> Void
+    /// ones (REMOTE-SAFE-1) — both change only when the window does — and the
+    /// side column the Remote picture keeps clear of (DUO-1 round 2).
+    let windowChanged: (CGSize, DisplayCorners, RemotePictureColumn) -> Void
     func makeUIView(context: Context) -> Reader {
         let view = Reader(); view.changed = changed; view.windowChanged = windowChanged
         view.isUserInteractionEnabled = false
@@ -18,9 +19,10 @@ struct WindowInteractionInsetsReader: UIViewRepresentable {
     }
     final class Reader: UIView {
         var changed: ((EdgeInsets) -> Void)?
-        var windowChanged: ((CGSize, DisplayCorners) -> Void)?
+        var windowChanged: ((CGSize, DisplayCorners, RemotePictureColumn) -> Void)?
         private var lastWindowSize: CGSize?
         private var lastCorners: DisplayCorners?
+        private var lastColumn: RemotePictureColumn?
         private var last: UIEdgeInsets?
         override func didMoveToWindow() { super.didMoveToWindow(); publish() }
         override func safeAreaInsetsDidChange() { super.safeAreaInsetsDidChange(); publish() }
@@ -29,10 +31,12 @@ struct WindowInteractionInsetsReader: UIViewRepresentable {
             guard let window else { return }
             let size = window.bounds.size
             let corners = Self.corners(of: window)
-            if size != lastWindowSize || corners != lastCorners {
+            let column = RemotePictureColumn.measure(left: window.safeAreaInsets.left, right: window.safeAreaInsets.right)
+            if size != lastWindowSize || corners != lastCorners || column != lastColumn {
                 lastWindowSize = size
                 lastCorners = corners
-                DispatchQueue.main.async { [weak self] in self?.windowChanged?(size, corners) }
+                lastColumn = column
+                DispatchQueue.main.async { [weak self] in self?.windowChanged?(size, corners, column) }
             }
             let value = window.safeAreaInsets
             guard value != last else { return }

@@ -1,5 +1,5 @@
 {
-  "core_commit": "301ae568e6d5543e592810a1412262408a03f37e",
+  "core_commit": "acb35562012b955650532b52061ca1dafd0e7e02",
   "files": {
     "agent-chat-approvals.json": "d611bfb0855cbcf965fd0eeaa0e0f7951f94216f954b437254bb182a667658bd",
     "agent-chat-command-model-selected.json": "9dba3a0116ba607ed5db1ea35c096af76b4e563ce48e80ca267f9f76baa62c0c",

@@ -194,11 +194,35 @@ struct AgentApprovalCard: View {
     private var decisions: some View {
         // The provider decides what may be answered; this list is never padded
         // out with a decision it did not offer.
+        //
+        // DUO-1: one row while every label fits on one line; otherwise two to
+        // a row, then one. The iPhone Duo's outer screen leaves the card 20
+        // points less than an iPhone 17 does, and a single row there broke
+        // "Decline" in the middle of the word.
+        ViewThatFits(in: .horizontal) {
+            decisionRow(approval.decisions, spinner: true)
+            VStack(alignment: .leading, spacing: OmodachiTheme.space("lg")) {
+                ForEach(Array(stride(from: 0, to: approval.decisions.count, by: 2)), id: \.self) { start in
+                    decisionRow(Array(approval.decisions[start..<min(start + 2, approval.decisions.count)]),
+                                spinner: start == 0)
+                }
+            }
+            VStack(alignment: .leading, spacing: OmodachiTheme.space("lg")) {
+                ForEach(Array(approval.decisions.enumerated()), id: \.element) { index, decision in
+                    decisionRow([decision], spinner: index == 0)
+                }
+            }
+        }
+    }
+
+    private func decisionRow(_ decisions: [String], spinner: Bool) -> some View {
         HStack(spacing: OmodachiTheme.space("lg")) {
-            ForEach(approval.decisions, id: \.self) { decision in
+            ForEach(decisions, id: \.self) { decision in
                 Tap(action: { onDecide(approval.requestID, decision) }) {
                     Text(AgentChatApproval.label(decision: decision))
                         .font(OmodachiTheme.font("body-small"))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                         .padding(.horizontal, OmodachiTheme.space("xl"))
                         .frame(height: OmodachiTheme.controlHeight)
                         .frame(minHeight: NativeBarMetrics.hit)
@@ -208,7 +232,7 @@ struct AgentApprovalCard: View {
                 .disabled(approval.isDeciding)
                 .accessibilityIdentifier("agent-approval-\(decision)-\(approval.requestID)")
             }
-            if approval.isDeciding { ProgressView().controlSize(.small) }
+            if spinner && approval.isDeciding { ProgressView().controlSize(.small) }
         }
     }
 }

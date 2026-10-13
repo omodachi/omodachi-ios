@@ -108,6 +108,21 @@ final class DisplayCornersTests: XCTestCase {
                     XCTAssertEqual(DisplayCorners.displays[model]?.native,
                                    CGSize(width: (screen["width"] as? NSNumber)?.doubleValue ?? 0,
                                           height: (screen["height"] as? NSNumber)?.doubleValue ?? 0), "\(name) \(model)")
+                    // DUO-1: a second built-in panel (the iPhone Duo's inner
+                    // screen) is in the table with its own pixels and corners.
+                    let others = ((find(capabilities, "displays") as? [[String: Any]]) ?? []).filter {
+                        ($0["displayType"] as? String) == "integrated" && ($0["screenID"] as? NSNumber)?.intValue != 1
+                    }
+                    XCTAssertEqual(others.count, DisplayCorners.innerDisplays[model] == nil ? 0 : 1, "\(name) \(model)")
+                    for panel in others {
+                        let corners = ["cornerRadiusUL", "cornerRadiusUR", "cornerRadiusLL", "cornerRadiusLR"]
+                            .compactMap { (panel[$0] as? NSNumber)?.doubleValue }
+                        XCTAssertEqual(Double(DisplayCorners.innerDisplays[model]?.radius ?? -1), corners.max() ?? 0,
+                                       accuracy: 0.01, "\(name) \(model) inner")
+                        XCTAssertEqual(DisplayCorners.innerDisplays[model]?.native,
+                                       CGSize(width: (panel["width"] as? NSNumber)?.doubleValue ?? 0,
+                                              height: (panel["height"] as? NSNumber)?.doubleValue ?? 0), "\(name) \(model) inner")
+                    }
                 } else {
                     XCTAssertNil(DisplayCorners.radii[model], "\(name) \(model) is a home-button device")
                 }
@@ -127,6 +142,20 @@ final class DisplayCornersTests: XCTestCase {
                                              nativePixels: CGSize(width: 2420, height: 1668)), 30, "either orientation")
         XCTAssertEqual(DisplayCorners.radius(model: "iPad17,1", isPad: true, homeIndicatorInset: 0,
                                              nativePixels: CGSize(width: 3840, height: 2160)), 0)
+    }
+
+    /// DUO-1. The iPhone Duo is one model with two built-in screens: closed,
+    /// the outer one (59); open, the inner one (55). Neither is an external
+    /// display.
+    func testTheDuoHasTwoBuiltInScreens() {
+        XCTAssertEqual(DisplayCorners.radius(model: "iPhone19,4", isPad: false, homeIndicatorInset: 21,
+                                             nativePixels: CGSize(width: 1398, height: 2034)), 59)
+        XCTAssertEqual(DisplayCorners.radius(model: "iPhone19,4", isPad: false, homeIndicatorInset: 21,
+                                             nativePixels: CGSize(width: 2007, height: 2853)), 55)
+        XCTAssertEqual(DisplayCorners.radius(model: "iPhone19,4", isPad: false, homeIndicatorInset: 21,
+                                             nativePixels: CGSize(width: 2853, height: 2007)), 55, "either way up")
+        XCTAssertEqual(DisplayCorners.radius(model: "iPhone19,4", isPad: false, homeIndicatorInset: 0,
+                                             nativePixels: CGSize(width: 3840, height: 2160)), 0, "a monitor")
     }
 
     // MARK: - The shape

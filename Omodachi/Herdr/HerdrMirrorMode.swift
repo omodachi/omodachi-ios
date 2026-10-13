@@ -33,8 +33,13 @@ enum HerdrMirrorMode: String, CaseIterable, Sendable {
 
     init(defaults: UserDefaults = .standard, phone: Bool? = nil) {
         self.defaults = defaults
-        self.phone = phone ?? (UIDevice.current.userInterfaceIdiom == .phone)
+        self.phone = phone ?? Self.devicePhone
     }
+
+    /// The device's own answer. DUO-1 round 2: an open foldable is still a
+    /// phone to UIKit, and is shown the iPad's way anyway
+    /// (`HerdrStore.setFoldOpen`).
+    static var devicePhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
 
     static let shell = "shell" // non-copy: a preference key part
     static func key(_ kind: String) -> String { "omodachi.herdr.mirror." + kind + ".v1" } // non-copy: defaults key

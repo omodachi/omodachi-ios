@@ -17,6 +17,8 @@ struct HerdrSurface: View {
     @EnvironmentObject private var stores: SurfaceStores
     @Environment(\.horizontalSizeClass) private var horizontal
     @Environment(\.scenePhase) private var scenePhase
+    /// DUO-1 round 2: an open foldable shows the mirror the iPad's way.
+    @Environment(\.fold) private var fold
     @State private var closing: (action: HerdrControlAction, request: HerdrControlRequest)?
     /// The composer and the bar together; the terminal leaves this much room.
     @State private var bottomHeight: CGFloat = NativeBarMetrics.hit
@@ -127,6 +129,7 @@ struct HerdrSurface: View {
             }
         }
         .onAppear { store.appear() }
+        .onChange(of: fold != nil, initial: true) { _, open in store.setFoldOpen(open) }
         .onDisappear { store.disappear() }
         // HERDR-3: nothing types into a pane from a phone in a pocket, and a
         // taken keyboard goes back to the computer at once.
@@ -190,6 +193,21 @@ struct HerdrSurface: View {
             .frame(height: NativeBarMetrics.edgeRule).accessibilityHidden(true)
     }
 
+    private var showsFullScreenNote: Bool {
+        store.mirrorMode == .wrap && store.fullScreenFallback && !store.showsWrap
+    }
+
+    /// HERDR-8: Wrap, Fit or Actual; a tap goes to the next. HERDR-12: Wrap
+    /// or Fit on a phone.
+    private var zoomChip: some View {
+        TextTap(store.mirrorLabel,
+                step: "caption", bordered: true,
+                minimumHeight: OmodachiTheme.controlHeight, action: store.toggleZoom)
+            .background(OmodachiTheme.background.opacity(0.85))
+            .accessibilityHint(store.mirrorHint)
+            .accessibilityIdentifier("herdr-zoom")
+    }
+
     @ViewBuilder private var stage: some View {
         VStack(spacing: 0) {
             if store.herdrDown {
@@ -233,6 +251,29 @@ struct HerdrSurface: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
+                VStack(spacing: 0) {
+                // HERDR-8: Wrap is chosen but the pane runs a full-screen
+                // program, so its screen is shown as it is - said once, in one
+                // line. DUO-1 round 2: in a row of its own above the mirror,
+                // with the chip at its end. Laid over the mirror it ran under
+                // the chip on a narrow phone and hid the mirror's top rows.
+                if showsFullScreenNote {
+                    HStack(spacing: OmodachiTheme.space("sm")) {
+                        Text(Strings.herdrFullScreenNote)
+                            .font(OmodachiTheme.font("caption"))
+                            .foregroundStyle(OmodachiTheme.secondaryText)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("herdr-fullscreen-note")
+                        if store.zoomable { zoomChip }
+                    }
+                    .padding(.leading, OmodachiTheme.space("md"))
+                    .padding(.trailing, OmodachiTheme.space("sm"))
+                    .padding(.vertical, OmodachiTheme.space("xs"))
+                    .frame(minHeight: OmodachiTheme.controlHeight)
+                    .background(OmodachiTheme.background)
+                }
                 HerdrTerminalRepresentable(store: store,
                                            appearanceRevision: OmodachiTheme.appearanceRevision)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -256,22 +297,13 @@ struct HerdrSurface: View {
                     }
                     // HERDR-4: what the mirror is showing, and the other way
                     // to see it (the double tap's twin, findable by eye).
+                    // DUO-1 round 2: over the mirror only when the note is
+                    // not up; with the note it sits in the note's row.
                     .overlay(alignment: .topTrailing) {
-                        if store.zoomable {
-                            // HERDR-8: Wrap, Fit or Actual; a tap goes to the next.
-                            // HERDR-12: Wrap or Fit on an iPhone.
-                            TextTap(store.mirrorLabel,
-                                    step: "caption", bordered: true,
-                                    minimumHeight: OmodachiTheme.controlHeight, action: store.toggleZoom)
-                                .background(OmodachiTheme.background.opacity(0.85))
-                                .padding(OmodachiTheme.space("sm"))
-                                .accessibilityHint(store.mirrorHint)
-                                .accessibilityIdentifier("herdr-zoom")
+                        if store.zoomable && !showsFullScreenNote {
+                            zoomChip.padding(OmodachiTheme.space("sm"))
                         }
                     }
-                    // HERDR-8: Wrap is chosen but the pane runs a full-screen
-                    // program, so its screen is shown as it is - said once,
-                    // in one line, over the top of the mirror.
                     // HERDR-9: the keys that just went in, for a moment.
                     .overlay(alignment: .bottomTrailing) {
                         HerdrKeyEchoStrip(echo: store.echo, spoken: store.echoSpoken)
@@ -279,19 +311,7 @@ struct HerdrSurface: View {
                             .allowsHitTesting(false)
                             .animation(.easeOut(duration: 0.2), value: store.echo)
                     }
-                    .overlay(alignment: .topLeading) {
-                        if store.mirrorMode == .wrap, store.fullScreenFallback, !store.showsWrap {
-                            Text(Strings.herdrFullScreenNote)
-                                .font(OmodachiTheme.font("caption"))
-                                .foregroundStyle(OmodachiTheme.secondaryText)
-                                .lineLimit(1)
-                                .padding(.horizontal, OmodachiTheme.space("md"))
-                                .frame(minHeight: OmodachiTheme.controlHeight)
-                                .background(OmodachiTheme.background.opacity(0.85))
-                                .padding(OmodachiTheme.space("sm"))
-                                .accessibilityIdentifier("herdr-fullscreen-note")
-                        }
-                    }
+                }
             }
         }
         .padding(.bottom, bottomHeight)

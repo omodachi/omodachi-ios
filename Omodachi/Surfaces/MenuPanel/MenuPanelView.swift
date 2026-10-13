@@ -28,6 +28,8 @@ struct MenuPanelView: View {
     @Environment(\.horizontalSizeClass) private var horizontal
     /// SHELL-FIX-1: which way up is the window's answer, not this panel's.
     @Environment(\.windowSize) private var windowSize
+    /// DUO-1: the fold of an open foldable, nil elsewhere.
+    @Environment(\.fold) private var fold
 
     @State private var editingMenuPins = false
     @State private var editingKeyPins = false
@@ -44,8 +46,12 @@ struct MenuPanelView: View {
         GeometryReader { proxy in
             let landscape = PanelMeasure.isLandscape(window: windowSize, area: proxy.size)
             let sideBySide = PanelMeasure.sideBySide(landscape: landscape, width: proxy.size.width)
+            // DUO-1: an open foldable divides ① at the fold (variant B).
+            let split = PanelMeasure.foldSplit(fold, panel: proxy.frame(in: .global))
             Group {
-                if sideBySide {
+                if let split {
+                    foldHalves(split, size: proxy.size)
+                } else if sideBySide {
                     HStack(spacing: 0) {
                         menuHalf(width: PanelMeasure.menuColumn, showsSegments: false)
                             .frame(width: PanelMeasure.menuColumn)
@@ -71,6 +77,27 @@ struct MenuPanelView: View {
         .onChange(of: home.profile) { _, _ in reloadPins() }
         .onChange(of: home.demoActive) { _, _ in reloadPins() }
         .onChange(of: home.menu) { _, _ in refreshLabels() }
+    }
+
+    // MARK: - DUO-1: the halves at the fold
+
+    /// The menu in one half of the screen and Keybindings in the other, with
+    /// the rule on the fold. Each half is the same view as side by side, so its
+    /// search, pins and scroll are its own.
+    @ViewBuilder private func foldHalves(_ split: FoldSplit, size: CGSize) -> some View {
+        let rule = NativeBarMetrics.edgeRule
+        switch split {
+        case .columns(let lead):
+            HStack(spacing: 0) {
+                menuHalf(width: lead - rule / 2, showsSegments: false)
+                    .frame(width: max(0, lead - rule / 2))
+                Rectangle().fill(OmodachiTheme.border)
+                    .frame(width: rule)
+                    .accessibilityHidden(true)
+                keybindingsHalf(showsSegments: false)
+                    .frame(maxWidth: .infinity)
+            }
+        }
     }
 
     // MARK: - The menu half
